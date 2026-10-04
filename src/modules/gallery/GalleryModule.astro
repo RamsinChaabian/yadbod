@@ -1,0 +1,187 @@
+---
+import { render } from 'astro:content';
+import { getMemories, extractAllTags } from '../../utils/content';
+import MemoryCard from './MemoryCard.astro';
+import MemoryModal from './MemoryModal.astro';
+
+const memories = await getMemories();
+const tags = extractAllTags(memories);
+
+// رندر محتوای هر خاطره برای استفاده در modal
+const rendered = await Promise.all(
+  memories.map(async (memory) => {
+    const { Content } = await render(memory);
+    return { memory, Content };
+  })
+);
+---
+
+<div class="px-4 py-8 max-w-5xl mx-auto">
+  <header class="mb-6">
+    <h2 class="text-xl font-bold text-gold mb-2">گالری خاطرات</h2>
+    <p class="text-sm text-ivory-muted">
+      {memories.length} خاطره ثبت شده
+    </p>
+  </header>
+
+  {memories.length === 0 && (
+    <p class="text-ivory-muted italic">هنوز خاطره‌ای اضافه نشده است.</p>
+  )}
+
+  {memories.length > 0 && (
+    <>
+      {tags.length > 0 && (
+        <div
+          class="flex gap-2 overflow-x-auto pb-3 mb-5 -mx-4 px-4 scrollbar-thin"
+          role="group"
+          aria-label="فیلتر بر اساس تگ"
+        >
+          <button
+            type="button"
+            data-tag-filter="*"
+            class="shrink-0 text-xs px-3 py-1.5 rounded-full border border-gold bg-gold text-obsidian font-medium transition-colors"
+          >
+            همه
+          </button>
+          {tags.map((tag) => (
+            <button
+              type="button"
+              data-tag-filter={tag}
+              class="shrink-0 text-xs px-3 py-1.5 rounded-full border border-gold/30 text-ivory-soft hover:border-gold hover:text-gold transition-colors"
+            >
+              #{tag}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div
+        data-gallery-grid
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+      >
+        {rendered.map(({ memory }) => (
+          <MemoryCard memory={memory} />
+        ))}
+      </div>
+
+      {rendered.map(({ memory, Content }) => (
+        <MemoryModal memory={memory}>
+          <Content />
+        </MemoryModal>
+      ))}
+
+      <p
+        data-gallery-empty
+        hidden
+        class="text-center text-ivory-muted italic py-12"
+      >
+        خاطره‌ای با این تگ یافت نشد.
+      </p>
+    </>
+  )}
+</div>
+
+<script>
+  function initGallery() {
+    const grid = document.querySelector<HTMLElement>('[data-gallery-grid]');
+    if (!grid) return;
+
+    const cards = Array.from(grid.querySelectorAll<HTMLElement>('[data-memory-card]'));
+    const filterButtons = Array.from(
+      document.querySelectorAll<HTMLButtonElement>('[data-tag-filter]')
+    );
+    const emptyMsg = document.querySelector<HTMLElement>('[data-gallery-empty]');
+
+    // ---------- Modal ----------
+    function openModal(id: string) {
+      const modal = document.querySelector<HTMLElement>(`[data-memory-modal="${id}"]`);
+      if (!modal) return;
+
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+
+      const closeBtn = modal.querySelector<HTMLButtonElement>('[data-modal-close]');
+      closeBtn?.focus();
+
+      // ESC key handler per modal
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') closeModal(modal, onKey);
+      };
+      document.addEventListener('keydown', onKey);
+      modal.dataset.escHandler = '1';
+      (modal as HTMLElement & { _escHandler?: (e: KeyboardEvent) => void })._escHandler = onKey;
+    }
+
+    function closeModal(modal: HTMLElement, onKey?: (e: KeyboardEvent) => void) {
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+
+      const handler =
+        onKey ??
+        (modal as HTMLElement & { _escHandler?: (e: KeyboardEvent) => void })._escHandler;
+      if (handler) {
+        document.removeEventListener('keydown', handler);
+        delete (modal as HTMLElement & { _escHandler?: (e: KeyboardEvent) => void })._escHandler;
+      }
+    }
+
+    document.querySelectorAll<HTMLElement>('[data-memory-open]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.memoryOpen;
+        if (id) openModal(id);
+      });
+    });
+
+    document.querySelectorAll<HTMLElement>('[data-memory-modal]').forEach((modal) => {
+      modal.querySelector('[data-modal-close]')?.addEventListener('click', () => {
+        closeModal(modal);
+      });
+      modal.querySelector('[data-modal-backdrop]')?.addEventListener('click', () => {
+        closeModal(modal);
+      });
+    });
+
+    // ---------- Tag Filter ----------
+    let activeTag = '*';
+
+    function updateFilterButtons() {
+      filterButtons.forEach((btn) => {
+        const isActive = btn.dataset.tagFilter === activeTag;
+        btn.classList.toggle('bg-gold', isActive);
+        btn.classList.toggle('text-obsidian', isActive);
+        btn.classList.toggle('font-medium', isActive);
+        btn.classList.toggle('border-gold', isActive);
+        btn.classList.toggle('text-ivory-soft', !isActive);
+        btn.classList.toggle('border-gold/30', !isActive);
+      });
+    }
+
+    function applyFilter(tag: string) {
+      activeTag = tag;
+      let visibleCount = 0;
+
+      cards.forEach((card) => {
+        const tags = (card.dataset.tags ?? '').split(',').filter(Boolean);
+        const matches = tag === '*' || tags.includes(tag);
+        card.hidden = !matches;
+        if (matches) visibleCount++;
+      });
+
+      if (emptyMsg) emptyMsg.hidden = visibleCount > 0;
+      updateFilterButtons();
+    }
+
+    filterButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const tag = btn.dataset.tagFilter;
+        if (tag) applyFilter(tag);
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initGallery);
+  } else {
+    initGallery();
+  }
+</script>

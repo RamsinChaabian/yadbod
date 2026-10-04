@@ -1,0 +1,336 @@
+---
+import { config } from '../../utils/config';
+
+const { location } = config;
+---
+
+<div class="px-4 py-8 max-w-4xl mx-auto">
+  <header class="mb-5">
+    <h2 class="text-xl font-bold text-gold mb-1">مسیریابی به محل قبر</h2>
+    <p class="text-sm text-ivory-muted">
+      {location.cemeteryName} — {location.city}، {location.province}
+    </p>
+  </header>
+
+  <div
+    data-map-root
+    data-lat={location.latitude}
+    data-lng={location.longitude}
+    data-zoom={location.defaultZoom}
+    class="relative"
+  >
+    <div
+      data-map
+      class="w-full h-[60vh] min-h-[340px] sm:min-h-[420px] rounded-lg overflow-hidden border border-gold/20 bg-obsidian-elevated"
+      aria-label="نقشه محل قبر"
+    >
+      <div class="w-full h-full flex items-center justify-center text-ivory-muted text-sm" data-map-loading>
+        <span>در حال بارگذاری نقشه…</span>
+      </div>
+    </div>
+
+    <div class="mt-4 flex flex-wrap gap-3">
+      <button
+        type="button"
+        data-action="navigate"
+        class="touch-target inline-flex items-center gap-2 rounded-lg bg-gold text-obsidian font-semibold px-5 py-3 transition-colors hover:bg-gold-light disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <span aria-hidden="true">🧭</span>
+        <span data-navigate-label>مسیریابی از موقعیت من</span>
+      </button>
+
+      <a
+        data-google-link
+        href={location.googleMapsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="touch-target inline-flex items-center gap-2 rounded-lg border border-gold/40 text-gold font-medium px-5 py-3 transition-colors hover:bg-gold/10"
+      >
+        <span aria-hidden="true">📍</span>
+        <span>باز کردن در Google Maps</span>
+      </a>
+    </div>
+
+    <div
+      data-route-info
+      hidden
+      class="mt-4 rounded-lg bg-obsidian-elevated border border-gold/20 p-4 text-sm"
+    >
+      <p class="text-ivory-muted mb-1">مسیر پیشنهادی</p>
+      <div class="flex flex-wrap gap-x-6 gap-y-1 text-ivory">
+        <p>📏 فاصله: <span data-route-distance class="text-gold font-semibold">—</span></p>
+        <p>⏱️ زمان تقریبی: <span data-route-duration class="text-gold font-semibold">—</span></p>
+      </div>
+      <p class="mt-3 text-xs text-ivory-muted leading-relaxed">
+        این مسیر فقط جهت راهنمایی است. لطفاً قوانین رانندگی را رعایت کنید.
+      </p>
+    </div>
+
+    <p
+      data-map-error
+      hidden
+      class="mt-4 rounded-lg bg-danger/10 border border-danger/40 p-4 text-sm text-ivory"
+      role="alert"
+    ></p>
+  </div>
+</div>
+
+<style is:global>
+  /* استایل کاشی‌ها روی تم تیره */
+  .leaflet-container {
+    background: #16161A;
+    font-family: var(--font-sans);
+  }
+  .leaflet-tile-pane {
+    filter: brightness(0.85) contrast(1.05) saturate(0.85);
+  }
+  .leaflet-popup-content-wrapper,
+  .leaflet-popup-tip {
+    background: #1E1E24;
+    color: #F5EFE0;
+    border: 1px solid rgba(184, 145, 90, 0.35);
+    border-radius: 8px;
+  }
+  .leaflet-popup-content {
+    margin: 10px 12px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .leaflet-control-attribution {
+    background: rgba(11, 11, 12, 0.8) !important;
+    color: #9A9488 !important;
+    font-size: 10px;
+  }
+  .leaflet-control-attribution a {
+    color: #B8915A !important;
+  }
+  .leaflet-bar a,
+  .leaflet-bar a:hover {
+    background: #1E1E24;
+    color: #F5EFE0;
+    border-bottom-color: rgba(184, 145, 90, 0.25);
+  }
+  .leaflet-bar a:hover {
+    background: #B8915A;
+    color: #0B0B0C;
+  }
+  .grave-marker, .user-marker {
+    background: transparent !important;
+    border: none !important;
+  }
+</style>
+
+<script>
+  type RouteResult = {
+    distanceMeters: number;
+    durationSeconds: number;
+    coordinates: [number, number][];
+  };
+
+  async function initMap() {
+    const root = document.querySelector<HTMLElement>('[data-map-root]');
+    if (!root) return;
+
+    const mapEl = root.querySelector<HTMLElement>('[data-map]');
+    const loadingEl = root.querySelector<HTMLElement>('[data-map-loading]');
+    const errorEl = root.querySelector<HTMLElement>('[data-map-error]');
+    const navigateBtn = root.querySelector<HTMLButtonElement>('[data-action="navigate"]');
+    const navigateLabel = root.querySelector<HTMLElement>('[data-navigate-label]');
+    const googleLink = root.querySelector<HTMLAnchorElement>('[data-google-link]');
+    const routeInfo = root.querySelector<HTMLElement>('[data-route-info]');
+    const distanceEl = root.querySelector<HTMLElement>('[data-route-distance]');
+    const durationEl = root.querySelector<HTMLElement>('[data-route-duration]');
+
+    if (!mapEl) return;
+
+    const lat = parseFloat(root.dataset.lat ?? '0');
+    const lng = parseFloat(root.dataset.lng ?? '0');
+    const zoom = parseFloat(root.dataset.zoom ?? '17');
+
+    // ---------- Lazy load Leaflet + ORS ----------
+    let L: typeof import('leaflet');
+    try {
+      L = await import('leaflet');
+      await import('leaflet/dist/leaflet.css');
+    } catch (e) {
+      showError('بارگذاری کتابخانه نقشه با مشکل مواجه شد.');
+      return;
+    }
+
+    // ---------- Initialize Map ----------
+    loadingEl?.remove();
+
+    const map = L.map(mapEl, {
+      center: [lat, lng],
+      zoom,
+      zoomControl: true,
+      attributionControl: true,
+      scrollWheelZoom: true,
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+
+    // ---------- Grave Marker ----------
+    const graveIcon = L.divIcon({
+      className: 'grave-marker',
+      html: `
+        <div style="position:relative;width:40px;height:52px;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.5));">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 52" style="width:100%;height:100%;">
+            <path d="M20 0 C9 0 0 9 0 20 C0 34 20 52 20 52 C20 52 40 34 40 20 C40 9 31 0 20 0 Z" fill="#B8915A" stroke="#8C6D3F" stroke-width="1.5"/>
+            <circle cx="20" cy="20" r="7" fill="#0B0B0C"/>
+            <circle cx="20" cy="20" r="3" fill="#F5EFE0"/>
+          </svg>
+        </div>`,
+      iconSize: [40, 52],
+      iconAnchor: [20, 52],
+      popupAnchor: [0, -52],
+    });
+
+    const graveMarker = L.marker([lat, lng], { icon: graveIcon, title: 'محل قبر' }).addTo(map);
+    graveMarker.bindPopup(`<strong>قبرستان صاحب‌الزمان</strong><br/>شوشتر، خوزستان`);
+
+    // ---------- Route Layer (empty for now) ----------
+    let routeLine: L.Polyline | null = null;
+    let userMarker: L.Marker | null = null;
+
+    // ---------- Helpers ----------
+    function showError(msg: string) {
+      if (!errorEl) return;
+      errorEl.textContent = msg;
+      errorEl.hidden = false;
+    }
+    function hideError() {
+      if (errorEl) errorEl.hidden = true;
+    }
+    function setLoading(loading: boolean) {
+      if (!navigateBtn || !navigateLabel) return;
+      navigateBtn.disabled = loading;
+      navigateLabel.textContent = loading ? 'در حال محاسبه مسیر…' : 'مسیریابی از موقعیت من';
+    }
+
+    // ---------- Navigate ----------
+    if (navigateBtn) {
+      navigateBtn.addEventListener('click', async () => {
+        hideError();
+        setLoading(true);
+
+        try {
+          // 1. موقعیت کاربر
+          const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+            if (!navigator.geolocation) {
+              reject(new Error('مرورگر شما از GPS پشتیبانی نمی‌کند.'));
+              return;
+            }
+            navigator.geolocation.getCurrentPosition(resolve, (err) => {
+              const msgs: Record<number, string> = {
+                1: 'دسترسی به موقعیت رد شد. لطفاً در تنظیمات مرورگر مجوز بدهید.',
+                2: 'موقعیت شما در دسترس نیست.',
+                3: 'زمان دریافت موقعیت به پایان رسید.',
+              };
+              reject(new Error(msgs[err.code] ?? 'خطا در دریافت موقعیت.'));
+            }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 });
+          });
+
+          const userLat = pos.coords.latitude;
+          const userLng = pos.coords.longitude;
+
+          // لینک گوگل با مبدأ
+          if (googleLink) {
+            googleLink.href = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${lat},${lng}&travelmode=driving`;
+          }
+
+          // 2. رسم مارکر کاربر
+          if (userMarker) userMarker.remove();
+          const userIcon = L.divIcon({
+            className: 'user-marker',
+            html: `
+              <div style="position:relative;width:24px;height:24px;">
+                <span style="position:absolute;inset:0;border-radius:50%;background:#4A9EFF;opacity:.3;animation:user-pulse 2s ease-out infinite;"></span>
+                <span style="position:absolute;inset:4px;border-radius:50%;background:#4A9EFF;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);"></span>
+              </div>`,
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+          });
+          userMarker = L.marker([userLat, userLng], { icon: userIcon, title: 'موقعیت شما' }).addTo(map);
+
+          // 3. درخواست ORS
+          const key = import.meta.env.PUBLIC_ORS_API_KEY;
+          if (!key) throw new Error('کلید OpenRouteService تنظیم نشده است.');
+
+          const res = await fetch('https://api.openrouteservice.org/v2/directions/driving-car/geojson', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: key,
+              Accept: 'application/geo+json, application/json',
+            },
+            body: JSON.stringify({
+              coordinates: [[userLng, userLat], [lng, lat]],
+              instructions: false,
+              preference: 'recommended',
+              units: 'm',
+            }),
+          });
+
+          if (!res.ok) {
+            const t = await res.text().catch(() => '');
+            throw new Error(`خطای سرویس مسیریابی (${res.status}). ${t ? '' : 'لطفاً بعداً امتحان کنید.'}`);
+          }
+
+          const data = await res.json();
+          const feature = data?.features?.[0];
+          if (!feature) throw new Error('مسیری برای این مقصد یافت نشد.');
+
+          const coords = feature.geometry.coordinates as [number, number][];
+          const distance = feature.properties?.summary?.distance ?? 0;
+          const duration = feature.properties?.summary?.duration ?? 0;
+
+          // 4. رسم مسیر
+          if (routeLine) routeLine.remove();
+          const latlngs = coords.map(([x, y]) => [y, x]) as [number, number][];
+          routeLine = L.polyline(latlngs, {
+            color: '#B8915A',
+            weight: 4,
+            opacity: 0.9,
+            lineJoin: 'round',
+            lineCap: 'round',
+          }).addTo(map);
+
+          map.fitBounds(routeLine.getBounds(), { padding: [40, 40] });
+
+          // 5. نمایش اطلاعات مسیر
+          if (routeInfo && distanceEl && durationEl) {
+            const distText = distance < 1000
+              ? `${Math.round(distance)} متر`
+              : `${(distance / 1000).toFixed(1)} کیلومتر`;
+            const totalMin = Math.round(duration / 60);
+            const durText = totalMin < 60
+              ? `${totalMin} دقیقه`
+              : (totalMin % 60 === 0
+                  ? `${Math.floor(totalMin / 60)} ساعت`
+                  : `${Math.floor(totalMin / 60)} ساعت و ${totalMin % 60} دقیقه`);
+
+            distanceEl.textContent = distText;
+            durationEl.textContent = durText;
+            routeInfo.hidden = false;
+          }
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : 'خطای ناشناخته در مسیریابی.';
+          showError(msg);
+          console.warn('[map]', err);
+        } finally {
+          setLoading(false);
+        }
+      });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMap);
+  } else {
+    initMap();
+  }
+</script>

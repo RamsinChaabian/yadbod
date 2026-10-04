@@ -1,0 +1,27 @@
+<script>
+  console.log('[yadbod-three] script tag executed');
+  async function bootThree() {
+    const canvas = document.querySelector<HTMLCanvasElement>('[data-three-bg]');
+    console.log('[yadbod-three] canvas found:', !!canvas);
+    if (!canvas) return;
+
+    try {
+      const mod = await import('../../animations/three/background');
+      console.log('[yadbod-three] module loaded:', Object.keys(mod));
+      mod.initThreeBackground(canvas);
+      console.log('[yadbod-three] initialized OK');
+    } catch (err) {
+      console.error('[yadbod-three] failed:', err);
+    }
+  }
+
+  const w = window as Window & {
+    requestIdleCallback?: (cb: () => void) => void;
+  };
+
+  if (typeof w.requestIdleCallback === 'function') {
+    w.requestIdleCallback(bootThree);
+  } else {
+    window.addEventListener('load', () => setTimeout(bootThree, 300));
+  }
+</script>

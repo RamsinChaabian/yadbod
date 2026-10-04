@@ -1,0 +1,67 @@
+---
+import '../styles/global.css';
+import { config } from '../utils/config';
+import ThreeBackground from '../components/layout/ThreeBackground.astro';
+import ThreeBackgroundBoot from '../components/layout/ThreeBackgroundBoot.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = config.site.title,
+  description = config.site.description,
+} = Astro.props;
+
+const fullTitle = title === config.site.title ? title : `${title} | ${config.site.title}`;
+const animationsEnabled = config.features.animations;
+---
+
+<!doctype html>
+<html lang={config.site.lang} dir={config.site.dir}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content={config.theme.colors.obsidian} />
+    <meta name="description" content={description} />
+    <title>{fullTitle}</title>
+
+    <script is:inline>
+      console.log('[yadbod-test] inline script in <head> ran');
+    </script>
+
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css"
+    />
+
+    <slot name="head" />
+  </head>
+  <body class="bg-obsidian text-ivory min-h-dvh antialiased">
+    <ThreeBackground />
+    <ThreeBackgroundBoot />
+    <slot />
+  </body>
+</html>
+
+<script>
+  async function bootGSAP() {
+    console.log('[yadbod-gsap] boot() called, readyState=', document.readyState);
+    try {
+      const mod = await import('../animations/gsap');
+      console.log('[yadbod-gsap] module loaded:', Object.keys(mod));
+      await mod.initAnimations();
+      console.log('[yadbod-gsap] initAnimations() done');
+    } catch (err) {
+      console.error('[yadbod-gsap] failed:', err);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootGSAP);
+  } else {
+    bootGSAP();
+  }
+</script>

@@ -1,0 +1,32 @@
+﻿// @ts-check
+import { defineConfig } from 'astro/config';
+import tailwindcss from '@tailwindcss/vite';
+import sitemap from '@astrojs/sitemap';
+import robots from 'astro-robots';
+
+export default defineConfig({
+  site: 'https://RamsinChaabian.github.io',
+  base: '/yadbod',
+  trailingSlash: 'ignore',
+  vite: {
+    plugins: [tailwindcss()],
+  },
+  integrations: [
+    sitemap({
+      filter: (page) => !page.includes('/qr-print'),
+    }),
+    robots({
+      host: 'https://RamsinChaabian.github.io',
+      sitemap: [
+        'https://RamsinChaabian.github.io/yadbod/sitemap-index.xml',
+      ],
+      policy: [
+        {
+          userAgent: ['Googlebot', 'Bingbot', 'Applebot', 'Yandex', '*'],
+          allow: ['/'],
+          disallow: ['/qr-print'],
+        },
+      ],
+    }),
+  ],
+});
