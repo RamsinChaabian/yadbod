@@ -1,23 +1,16 @@
 ---
 import { getEnabledTabs } from '../../utils/config';
-
 import BiographyModule from '../../modules/biography/BiographyModule.astro';
 import GalleryModule from '../../modules/gallery/GalleryModule.astro';
 import TimelineModule from '../../modules/timeline/TimelineModule.astro';
-import MapModule from '../../modules/map/MapModule.astro';
-import ARModule from '../../modules/ar/ARModule.astro';
+import NavigateModule from '../../modules/navigate/NavigateModule.astro';
 import MemoriesModule from '../../modules/memories/MemoriesModule.astro';
 
 const tabs = getEnabledTabs();
 const firstTabId = tabs[0]?.id ?? '';
-
 const moduleMap = {
-  biography: BiographyModule,
-  gallery: GalleryModule,
-  timeline: TimelineModule,
-  map: MapModule,
-  ar: ARModule,
-  memories: MemoriesModule,
+  biography: BiographyModule, gallery: GalleryModule, timeline: TimelineModule,
+  navigate: NavigateModule, memories: MemoriesModule,
 } as const;
 ---
 
@@ -26,13 +19,7 @@ const moduleMap = {
     const Module = moduleMap[tab.id as keyof typeof moduleMap];
     const isActive = tab.id === firstTabId;
     return (
-      <section
-        role="tabpanel"
-        id={`panel-${tab.id}`}
-        aria-labelledby={`tab-${tab.id}`}
-        data-tab-panel={tab.id}
-        hidden={!isActive}
-      >
+      <section role="tabpanel" id={`panel-${tab.id}`} aria-labelledby={`tab-${tab.id}`} data-tab-panel={tab.id} hidden={!isActive}>
         <Module />
       </section>
     );

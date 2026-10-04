@@ -1,28 +1,37 @@
 ---
 import { getIcon } from '../../utils/icons';
-
 interface Props {
-  id: string;
-  label: string;
-  icon: string;
-  ariaLabel: string;
-  isActive: boolean;
+  id: string; label: string; icon: string; ariaLabel: string; isActive: boolean;
 }
-
 const { id, label, icon, ariaLabel, isActive } = Astro.props;
 const emoji = getIcon(icon);
 ---
 
 <button
-  type="button"
-  role="tab"
+  type="button" role="tab"
   id={`tab-${id}`}
   aria-selected={isActive}
   aria-controls={`panel-${id}`}
   aria-label={ariaLabel}
   data-tab-id={id}
-  class="touch-target flex flex-col items-center justify-center gap-1 rounded-lg px-2 py-1.5 min-w-[52px] sm:min-w-[68px] transition-colors duration-200 text-ivory-muted hover:text-ivory hover:bg-obsidian-elevated aria-selected:text-gold aria-selected:bg-gold/10"
+  class="group relative flex flex-col items-center justify-center gap-1.5 rounded-2xl px-3 py-2.5 min-w-[56px] transition-all duration-300 text-stone-500 active:scale-95"
 >
-  <span class="text-base sm:text-lg leading-none" aria-hidden="true">{emoji}</span>
-  <span class="text-[10px] sm:text-xs leading-tight whitespace-nowrap font-medium">{label}</span>
+  <!-- نشانگر فعال — نوار بالای دکمه -->
+  {isActive && (
+    <span class="absolute -top-1 inset-x-2 h-1 rounded-full bg-gradient-to-r from-amber-400 to-coral-400 shadow-[0_0_8px_rgba(245,166,35,0.6)]"></span>
+  )}
+
+  <!-- آیکون در یک دایره سهبعدی -->
+  <span class={`relative flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300 ${
+    isActive
+      ? 'bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-[0_4px_12px_rgba(232,131,58,0.4)]'
+      : 'bg-stone-100 text-stone-500 group-hover:bg-stone-200'
+  }`}>
+    <span class="text-lg leading-none" aria-hidden="true">{emoji}</span>
+    {isActive && <span class="absolute inset-0 rounded-xl bg-white/20 animate-pulse"></span>}
+  </span>
+
+  <span class={`text-[11px] leading-tight whitespace-nowrap font-medium transition-colors ${
+    isActive ? 'text-amber-700' : 'text-stone-500'
+  }`}>{label}</span>
 </button>

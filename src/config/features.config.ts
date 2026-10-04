@@ -8,7 +8,7 @@ export const featuresConfig = {
   timeline: true,
   visitorMemories: true,
   qrCode: true,
-  threeBackground: true,
+  threeBackground: false,
   animations: true,
   analytics: false,
   floatingTabBar: true,

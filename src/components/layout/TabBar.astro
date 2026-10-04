@@ -1,27 +1,15 @@
 ---
 import { getEnabledTabs } from '../../utils/config';
 import TabButton from '../ui/TabButton.astro';
-
 const tabs = getEnabledTabs();
 const firstTabId = tabs[0]?.id ?? '';
 ---
 
-<nav
-  role="tablist"
-  aria-label="بخش‌های سایت"
-  data-tabbar
-  class="fixed bottom-0 inset-x-0 z-50"
->
-  <div class="mx-auto max-w-2xl px-2 pb-[env(safe-area-inset-bottom)]">
-    <div class="flex items-center justify-around gap-0.5 bg-obsidian-soft/95 backdrop-blur-md rounded-t-2xl border-t border-x border-gold/20 shadow-2xl px-1.5 py-1.5">
+<nav role="tablist" aria-label="بخش‌های سایت" data-tabbar class="fixed bottom-0 inset-x-0 z-50 pointer-events-none">
+  <div class="mx-auto max-w-lg px-3 pb-4 pointer-events-auto">
+    <div class="flex items-center justify-around gap-1 bg-white/95 backdrop-blur-xl rounded-3xl border border-stone-200/50 shadow-[0_-4px_24px_-4px_rgba(74,63,53,0.15)] px-2 py-2">
       {tabs.map((tab) => (
-        <TabButton
-          id={tab.id}
-          label={tab.label}
-          icon={tab.icon}
-          ariaLabel={tab.ariaLabel}
-          isActive={tab.id === firstTabId}
-        />
+        <TabButton id={tab.id} label={tab.label} icon={tab.icon} ariaLabel={tab.ariaLabel} isActive={tab.id === firstTabId} />
       ))}
     </div>
   </div>
