@@ -1,10 +1,8 @@
 ---
 import { config } from '../../utils/config';
-
 const { location } = config;
 ---
 
-<!-- صحنه A-Frame — فقط زمانی نمایش داده می‌شود که کاربر دکمه شروع را بزند -->
 <div
   data-ar-scene
   data-lat={location.latitude}
@@ -40,54 +38,10 @@ const { location } = config;
     <p>📱 دوربین را به آرامی بچرخانید تا نشانگر قبر را پیدا کنید…</p>
   </div>
 
-  <!-- صحنه A-Frame -->
-  <a-scene
-    embedded
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false"
-    renderer="antialias: true; alpha: true; precision: medium; logarithmicDepthBuffer: true"
-    data-ar-aframe
-  >
-    <!-- دوربین GPS-enabled -->
-    <a-camera
-      locar-camera="gpsMinDistance: 2; positionMinAccuracy: 20; smoothingFactor: 5"
-      data-ar-camera
-    ></a-camera>
-
-    <!-- نشانگر قبر -->
-    <a-entity
-      data-ar-marker
-      locar-entity-place={`latitude: ${location.latitude}; longitude: ${location.longitude}`}
-      visible="true"
-    >
-      <!-- حلقه طلایی روی زمین -->
-      <a-ring
-        color="#E8833A"
-        radius-inner="0.8"
-        radius-outer="1.2"
-        rotation="-90 0 0"
-        position="0 0.05 0"
-        material="opacity: 0.9; transparent: true; side: double"
-      ></a-ring>
-
-      <!-- ستون نور -->
-      <a-cylinder
-        color="#F5A623"
-        radius="0.15"
-        height="3"
-        position="0 1.5 0"
-        material="opacity: 0.6; transparent: true"
-      ></a-cylinder>
-
-      <!-- متن بالای ستون -->
-      <a-text
-        value="اینجاست"
-        color="#FFFFFF"
-        align="center"
-        position="0 3.5 0"
-        scale="3 3 3"
-        look-at="[camera]"
-      ></a-text>
-    </a-entity>
-  </a-scene>
+  <!--
+    ⚠️ مهم: صحنه A-Frame اینجا نیست!
+    در JavaScript بعد از بارگذاری کتابخانه‌ها ساخته می‌شود.
+    این کار از خطای "systems[e] is not a constructor" جلوگیری می‌کند.
+  -->
+  <div data-ar-scene-container class="absolute inset-0"></div>
 </div>
