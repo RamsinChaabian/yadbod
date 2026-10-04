@@ -1,0 +1,160 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { config } from '../utils/config';
+
+const siteUrl = `${config.site.baseUrl}/`;
+const cemeteryName = config.location.cemeteryName;
+const personName = config.person.fullName;
+---
+
+<BaseLayout title="QR کد سایت" description="QR کد برای چاپ روی سنگ قبر" noindex>
+  <div class="min-h-dvh flex flex-col items-center justify-center px-6 py-12">
+    <div class="max-w-md w-full text-center space-y-8">
+      <div>
+        <h1 class="text-2xl font-bold text-gold mb-2">QR کد سایت یادبود</h1>
+        <p class="text-sm text-ivory-muted">
+          این QR کد را روی سنگ قبر چاپ کنید تا بازدیدکنندگان به سایت یادبود دسترسی داشته باشند.
+        </p>
+      </div>
+
+      <!-- QR Code Container -->
+      <div class="bg-ivory rounded-2xl p-6 inline-block shadow-2xl">
+        <canvas id="qr-canvas" class="w-full max-w-[280px] mx-auto block"></canvas>
+        <p class="mt-3 text-xs text-obsidian text-center font-medium">
+          {personName} — {cemeteryName}
+        </p>
+      </div>
+
+      <p class="text-xs text-ivory-muted break-all" dir="ltr">{siteUrl}</p>
+
+      <!-- Buttons -->
+      <div class="flex flex-wrap gap-3 justify-center">
+        <button
+          type="button"
+          id="download-png"
+          class="touch-target inline-flex items-center gap-2 rounded-lg bg-gold text-obsidian font-semibold px-5 py-3 transition-colors hover:bg-gold-light"
+        >
+          ⬇️ دانلود PNG
+        </button>
+        <button
+          type="button"
+          id="download-svg"
+          class="touch-target inline-flex items-center gap-2 rounded-lg border border-gold/40 text-gold font-medium px-5 py-3 transition-colors hover:bg-gold/10"
+        >
+          ⬇️ دانلود SVG
+        </button>
+        <button
+          type="button"
+          id="print-qr"
+          class="touch-target inline-flex items-center gap-2 rounded-lg border border-gold/40 text-gold font-medium px-5 py-3 transition-colors hover:bg-gold/10"
+        >
+          🖨️ چاپ
+        </button>
+      </div>
+
+      <p class="text-xs text-ivory-muted leading-relaxed">
+        پیشنهاد: QR کد را با کیفیت بالا چاپ کنید (حداقل ۵×۵ سانتی‌متر) و در محلی قرار دهید که رطوبت و نور مستقیم خورشید به آن نرسد.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const SITE_URL = document.querySelector('[dir="ltr"]')?.textContent?.trim() ?? '';
+
+    async function initQR() {
+      const canvas = document.querySelector<HTMLCanvasElement>('#qr-canvas');
+      if (!canvas || !SITE_URL) return;
+
+      try {
+        const { generate } = await import('lean-qr');
+        const qr = generate(SITE_URL);
+
+        // رسم روی canvas با رنگ‌های تم
+        const size = 280;
+        const scale = Math.max(1, Math.floor(size / qr.size));
+        const realSize = qr.size * scale;
+        canvas.width = realSize;
+        canvas.height = realSize;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // پس‌زمینه عاجی
+        ctx.fillStyle = '#F5EFE0';
+        ctx.fillRect(0, 0, realSize, realSize);
+
+        // نقاط مشکی
+        ctx.fillStyle = '#0B0B0C';
+        for (let y = 0; y < qr.size; y++) {
+          for (let x = 0; x < qr.size; x++) {
+            if (qr.get(x, y)) {
+              ctx.fillRect(x * scale, y * scale, scale, scale);
+            }
+          }
+        }
+
+        console.log('[yadbod-qr] QR generated:', SITE_URL);
+      } catch (err) {
+        console.error('[yadbod-qr] failed:', err);
+      }
+    }
+
+    // ---------- Download PNG ----------
+    document.querySelector('#download-png')?.addEventListener('click', () => {
+      const canvas = document.querySelector<HTMLCanvasElement>('#qr-canvas');
+      if (!canvas) return;
+      const link = document.createElement('a');
+      link.download = 'yadbod-qr.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+
+    // ---------- Download SVG ----------
+    document.querySelector('#download-svg')?.addEventListener('click', async () => {
+      const canvas = document.querySelector<HTMLCanvasElement>('#qr-canvas');
+      if (!canvas) return;
+      const { generate } = await import('lean-qr');
+      const qr = generate(SITE_URL);
+
+      // ساخت SVG دستی
+      let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${qr.size} ${qr.size}">`;
+      svg += `<rect width="${qr.size}" height="${qr.size}" fill="#F5EFE0"/>`;
+      for (let y = 0; y < qr.size; y++) {
+        for (let x = 0; x < qr.size; x++) {
+          if (qr.get(x, y)) {
+            svg += `<rect x="${x}" y="${y}" width="1" height="1" fill="#0B0B0C"/>`;
+          }
+        }
+      }
+      svg += '</svg>';
+
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const link = document.createElement('a');
+      link.download = 'yadbod-qr.svg';
+      link.href = URL.createObjectURL(blob);
+      link.click();
+      URL.revokeObjectURL(link.href);
+    });
+
+    // ---------- Print ----------
+    document.querySelector('#print-qr')?.addEventListener('click', () => {
+      window.print();
+    });
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initQR);
+    } else {
+      initQR();
+    }
+  </script>
+
+  <style is:global>
+    @media print {
+      nav[data-tabbar] { display: none !important; }
+      .touch-target { display: none !important; }
+      body { background: white !important; }
+      h1 { color: #0B0B0C !important; }
+      p { color: #333 !important; }
+    }
+  </style>
+</BaseLayout>

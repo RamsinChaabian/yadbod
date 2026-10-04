@@ -1,0 +1,65 @@
+---
+import { config } from '../utils/config';
+import { withBase } from '../utils/paths';
+
+interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  type?: 'website' | 'profile' | 'article';
+  noindex?: boolean;
+}
+
+const {
+  title = config.seo.metaTitle,
+  description = config.seo.metaDescription,
+  image = config.seo.ogImage,
+  type = config.seo.ogType,
+  noindex = false,
+} = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, config.site.baseUrl).href;
+const ogImageUrl = new URL(withBase(image), config.site.baseUrl).href;
+
+// JSON-LD ساختاریافته — Person schema
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: config.person.fullName,
+  birthDate: config.person.birthDateGregorian,
+  deathDate: config.person.deathDateGregorian,
+  description: config.person.shortBio,
+  image: ogImageUrl,
+  url: config.site.baseUrl,
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: config.location.city,
+    addressRegion: config.location.province,
+    addressCountry: 'IR',
+  },
+};
+---
+
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+{noindex && <meta name="robots" content="noindex, nofollow" />}
+
+<!-- Open Graph -->
+<meta property="og:type" content={type} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={ogImageUrl} />
+<meta property="og:locale" content="fa_IR" />
+<meta property="og:site_name" content={config.site.title} />
+
+<!-- Twitter -->
+<meta name="twitter:card" content={config.seo.twitterCard} />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImageUrl} />
+
+<!-- JSON-LD -->
+{config.seo.jsonLd && (
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+)}

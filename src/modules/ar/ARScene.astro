@@ -1,0 +1,94 @@
+---
+import { config } from '../../utils/config';
+
+const { location } = config;
+---
+
+<!-- صحنه A-Frame — فقط زمانی نمایش داده می‌شود که کاربر دکمه شروع را بزند -->
+<div
+  data-ar-scene
+  hidden
+  class="fixed inset-0 z-[200] bg-black"
+>
+  <!-- دکمه بستن — همیشه روی صحنه -->
+  <button
+    type="button"
+    data-ar-close
+    aria-label="بستن واقعیت افزوده"
+    class="absolute top-4 end-4 z-30 w-12 h-12 rounded-full bg-obsidian/85 backdrop-blur border border-gold/40 text-ivory flex items-center justify-center hover:bg-gold hover:text-obsidian transition-colors touch-target"
+  >
+    <span aria-hidden="true" class="text-lg">✕</span>
+  </button>
+
+  <!-- HUD فاصله و جهت -->
+  <div
+    data-ar-hud
+    class="absolute top-4 start-4 z-30 rounded-lg bg-obsidian/85 backdrop-blur border border-gold/30 px-4 py-3 text-sm text-ivory"
+  >
+    <p class="text-ivory-muted text-xs mb-1">فاصله تا قبر</p>
+    <p data-ar-distance class="text-gold font-bold text-lg tabular-nums">—</p>
+    <p data-ar-bearing class="text-ivory-muted text-xs mt-1">—</p>
+  </div>
+
+  <!-- پیام راهنما -->
+  <div
+    data-ar-hint
+    class="absolute bottom-24 inset-x-4 z-30 rounded-lg bg-obsidian/80 backdrop-blur border border-gold/20 px-4 py-3 text-center text-sm text-ivory-soft"
+  >
+    <p>📱 دوربین را به آرامی بچرخانید تا نشانگر قبر را پیدا کنید…</p>
+  </div>
+
+  <!-- صحنه A-Frame -->
+  <a-scene
+    embedded
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+    renderer="antialias: true; alpha: true; precision: medium; logarithmicDepthBuffer: true"
+    data-ar-aframe
+  >
+    <a-camera
+      locar-camera="
+        gpsMinDistance: 2;
+        positionMinAccuracy: 20;
+        smoothingFactor: 5;
+      "
+      data-ar-camera
+    ></a-camera>
+
+    <!-- نشانگر قبر — به صورت مخفی شروع می‌شود -->
+    <a-entity
+      data-ar-marker
+      locar-entity-place={`latitude: ${location.latitude}; longitude: ${location.longitude}`}
+      visible="false"
+    >
+      <!-- حلقه‌ی طلایی -->
+      <a-ring
+        color="#B8915A"
+        radius-inner="0.8"
+        radius-outer="1.0"
+        rotation="-90 0 0"
+        position="0 0.05 0"
+        material="opacity: 0.9; transparent: true; side: double"
+      ></a-ring>
+
+      <!-- ستون نور -->
+      <a-cylinder
+        color="#B8915A"
+        radius="0.15"
+        height="3"
+        position="0 1.5 0"
+        material="opacity: 0.6; transparent: true"
+      ></a-cylinder>
+
+      <!-- برچسب متنی — با فاصله‌ی مشخص -->
+      <a-text
+        value="اینجاست"
+        color="#F5EFE0"
+        align="center"
+        position="0 3.5 0"
+        scale="3 3 3"
+        look-at="[camera]"
+      ></a-text>
+    </a-entity>
+  </a-scene>
+</div>

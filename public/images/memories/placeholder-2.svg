@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1E1E24"/>
+      <stop offset="1" stop-color="#16161A"/>
+    </linearGradient>
+    <radialGradient id="g2" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#D4B483" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#D4B483" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="600" height="400" fill="url(#bg2)"/>
+  <rect width="600" height="400" fill="url(#g2)"/>
+  <circle cx="300" cy="200" r="70" fill="none" stroke="#D4B483" stroke-opacity="0.5" stroke-width="1.5"/>
+  <text x="300" y="220" text-anchor="middle" font-size="56" fill="#D4B483">🌸</text>
+</svg>
