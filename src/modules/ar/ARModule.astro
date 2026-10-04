@@ -6,7 +6,6 @@ const { location } = config;
 ---
 
 <div class="px-4 py-6 max-w-3xl mx-auto">
-  <!-- عنوان -->
   <header class="mb-6">
     <h2 class="text-2xl font-bold text-stone-800 mb-1">یافتن قبر با دوربین</h2>
     <p class="text-sm text-stone-500">
@@ -14,7 +13,6 @@ const { location } = config;
     </p>
   </header>
 
-  <!-- پنل شروع -->
   <div data-ar-start-panel class="space-y-5">
     <div class="aspect-video rounded-3xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 flex items-center justify-center relative overflow-hidden shadow-card">
       <div class="text-center px-4">
@@ -33,7 +31,6 @@ const { location } = config;
       <span>شروع واقعیت افزوده</span>
     </button>
 
-    <!-- پیام عدم پشتیبانی -->
     <div data-ar-unsupported hidden class="rounded-2xl bg-amber-50 border border-amber-200 p-4 text-sm" role="alert">
       <p data-ar-unsupported-msg class="text-stone-700"></p>
       <a
@@ -46,7 +43,6 @@ const { location } = config;
       </a>
     </div>
 
-    <!-- پیام خطا -->
     <div data-ar-error hidden class="rounded-2xl bg-red-50 border border-red-200 p-4 text-sm" role="alert">
       <p data-ar-error-msg class="text-red-700"></p>
       <button type="button" data-ar-retry class="mt-3 text-amber-700 hover:text-amber-800 underline underline-offset-4 font-medium">
@@ -54,7 +50,6 @@ const { location } = config;
       </button>
     </div>
 
-    <!-- راهنما -->
     <div class="rounded-2xl bg-white border border-stone-200 p-5 shadow-card">
       <h3 class="text-sm font-bold text-stone-800 mb-3">راهنما</h3>
       <ul class="space-y-2 text-xs text-stone-600 leading-relaxed">
@@ -70,71 +65,68 @@ const { location } = config;
 </div>
 
 <script>
-  // ---------- Type Declarations ----------
   declare global {
     interface Window {
       AFRAME?: {
         components: Record<string, unknown>;
       };
-      THREE?: unknown;
     }
   }
 
-  // ---------- Load AR Libraries from CDN ----------
+  // ---------- Helper: load external script ----------
+  function loadScript(src: string, name: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      if (document.querySelector(`script[src="${src}"]`)) {
+        console.log(`[AR] ${name} already in DOM`);
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = () => {
+        console.log(`[AR] loaded: ${name}`);
+        resolve(true);
+      };
+      script.onerror = (e) => {
+        console.error(`[AR] failed to load ${name}:`, e);
+        resolve(false);
+      };
+      document.head.appendChild(script);
+    });
+  }
+
+  // ---------- Load AR libs from local vendor ----------
   async function loadARLibs(): Promise<boolean> {
-    // اگر قبلاً لود شده، رد شو
     if (window.AFRAME && window.AFRAME.components['locar-camera']) {
       console.log('[AR] libs already loaded');
       return true;
     }
 
-    console.log('[AR] loading libs from CDN...');
+    console.log('[AR] loading libs from local vendor...');
 
-    return new Promise((resolve) => {
-      let loaded = 0;
-      const total = 3;
-      const done = (name: string) => {
-        loaded++;
-        console.log(`[AR] loaded: ${name} (${loaded}/${total})`);
-        if (loaded === total) {
-          // صبر کوتاه تا کامپوننت‌ها register شوند
-          setTimeout(() => {
-            const ok = !!(window.AFRAME && window.AFRAME.components['locar-camera']);
-            console.log('[AR] all libs loaded, locar-camera registered:', ok);
-            resolve(ok);
-          }, 300);
-        }
-      };
-      const fail = (name: string) => (e: Event) => {
-        console.error(`[AR] failed to load ${name}:`, e);
-        resolve(false);
-      };
+    const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+    const vendorPath = `${base}/vendor/ar`;
 
-      // ۱. A-Frame 1.3.0
-      const s1 = document.createElement('script');
-      s1.src = 'https://aframe.io/releases/1.3.0/aframe.min.js';
-      s1.onload = () => done('aframe');
-      s1.onerror = fail('aframe');
-      document.head.appendChild(s1);
+    // ۱. A-Frame (شامل three.js داخلی)
+    const aframeLoaded = await loadScript(`${vendorPath}/aframe.min.js`, 'aframe');
+    if (!aframeLoaded) return false;
 
-      // ۲. three.js — نسخه‌ای که LocAR.js با آن سازگار است
-      const s2 = document.createElement('script');
-      s2.src = 'https://cdn.jsdelivr.net/npm/three@0.175.0/build/three.min.js';
-      s2.onload = () => done('three');
-      s2.onerror = fail('three');
-      document.head.appendChild(s2);
+    // ۲. صبر تا A-Frame کامل initialize شود
+    await new Promise((r) => setTimeout(r, 800));
 
-      // ۳. LocAR.js
-      const s3 = document.createElement('script');
-      s3.src = 'https://cdn.jsdelivr.net/npm/locar-aframe@0.2.0/dist/locar-aframe.min.js';
-      s3.onload = () => done('locar');
-      s3.onerror = fail('locar');
-      document.head.appendChild(s3);
-    });
+    // ۳. locar-aframe UMD (محلی)
+    const locarLoaded = await loadScript(`${vendorPath}/locar-aframe.js`, 'locar');
+    if (!locarLoaded) return false;
+
+    // ۴. بررسی ثبت شدن کامپوننت
+    await new Promise((r) => setTimeout(r, 500));
+    const ok = !!(window.AFRAME && window.AFRAME.components['locar-camera']);
+    console.log('[AR] all libs loaded, locar-camera registered:', ok);
+    return ok;
   }
 
   // ---------- Init AR ----------
-  async function initAR() {
+  function initAR() {
     const startPanel = document.querySelector<HTMLElement>('[data-ar-start-panel]');
     const startBtn = document.querySelector<HTMLButtonElement>('[data-ar-start]');
     const sceneWrap = document.querySelector<HTMLElement>('[data-ar-scene]');
@@ -150,7 +142,6 @@ const { location } = config;
 
     if (!startBtn || !sceneWrap || !startPanel) return;
 
-    // ---------- Check Support ----------
     function checkSupport(): { supported: boolean; reason?: string } {
       if (!window.isSecureContext) {
         return { supported: false, reason: 'واقعیت افزوده فقط روی HTTPS کار می‌کند.' };
@@ -174,7 +165,6 @@ const { location } = config;
       return { supported: true };
     }
 
-    // ---------- Errors ----------
     function showError(msg: string) {
       if (errorBox && errorMsg) {
         errorMsg.textContent = msg;
@@ -188,7 +178,6 @@ const { location } = config;
       if (unsupportedBox) unsupportedBox.hidden = true;
     }
 
-    // ---------- Distance & Bearing ----------
     function calcDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
       const R = 6371000;
       const toRad = (d: number) => (d * Math.PI) / 180;
@@ -216,7 +205,6 @@ const { location } = config;
       return `${(m / 1000).toFixed(1)} کیلومتر`;
     }
 
-    // ---------- Position Watch ----------
     let watchId: number | null = null;
 
     function startPositionWatch(lat: number, lng: number) {
@@ -238,7 +226,6 @@ const { location } = config;
       );
     }
 
-    // ---------- Reset Start Button ----------
     function resetStartButton() {
       if (!startBtn) return;
       startBtn.disabled = false;
@@ -246,12 +233,10 @@ const { location } = config;
         '<span aria-hidden="true" class="text-xl">📸</span><span>شروع واقعیت افزوده</span>';
     }
 
-    // ---------- Start AR ----------
     startBtn.addEventListener('click', async () => {
       hideError();
       hideUnsupported();
 
-      // ۱. بررسی پشتیبانی
       const support = checkSupport();
       if (!support.supported) {
         if (unsupportedBox && unsupportedMsg) {
@@ -261,7 +246,6 @@ const { location } = config;
         return;
       }
 
-      // ۲. لود کتابخانه‌ها از CDN
       startBtn.disabled = true;
       startBtn.innerHTML = '<span>در حال بارگذاری…</span>';
 
@@ -272,9 +256,7 @@ const { location } = config;
         return;
       }
 
-      // ۳. درخواست مجوزها (ترتیب: جهت‌یاب → دوربین → GPS)
       try {
-        // ۳-الف. DeviceOrientation — اول! (در iOS مهم است)
         const DOE = DeviceOrientationEvent as unknown as {
           requestPermission?: () => Promise<string>;
         };
@@ -289,7 +271,6 @@ const { location } = config;
           }
         }
 
-        // ۳-ب. دوربین
         console.log('[AR] requesting camera...');
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: 'environment' } },
@@ -297,7 +278,6 @@ const { location } = config;
         stream.getTracks().forEach((t) => t.stop());
         console.log('[AR] camera permission granted');
 
-        // ۳-ج. GPS
         console.log('[AR] getting initial position...');
         const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -315,18 +295,15 @@ const { location } = config;
         return;
       }
 
-      // ۴. مخفی کردن پنل شروع، نمایش صحنه
       startPanel.hidden = true;
       sceneWrap.hidden = false;
       document.body.style.overflow = 'hidden';
 
-      // ۵. شروع watch موقعیت
       const lat = parseFloat(sceneWrap.dataset.lat ?? '') || 32.0498053;
       const lng = parseFloat(sceneWrap.dataset.lng ?? '') || 48.8765405;
       startPositionWatch(lat, lng);
     });
 
-    // ---------- Close AR ----------
     if (closeBtn) {
       closeBtn.addEventListener('click', () => {
         sceneWrap.hidden = true;
@@ -341,7 +318,6 @@ const { location } = config;
       });
     }
 
-    // ---------- Retry ----------
     if (retryBtn) {
       retryBtn.addEventListener('click', () => {
         hideError();
