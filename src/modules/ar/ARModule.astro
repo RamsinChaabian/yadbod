@@ -15,8 +15,8 @@ const { location } = config;
     <div class="aspect-video rounded-3xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 flex items-center justify-center relative overflow-hidden shadow-card">
       <div class="text-center px-4">
         <div class="text-6xl mb-3">📷</div>
-        <p class="text-stone-700 font-semibold text-base">دوربین گوشی شما فعال می‌شود</p>
-        <p class="text-stone-500 text-sm mt-1">برای مشاهده نشانگر قبر، دکمه‌ی زیر را بزنید</p>
+        <p class="text-stone-700 font-semibold text-base">دوربین گوشی شما فعال میشود</p>
+        <p class="text-stone-500 text-sm mt-1">برای مشاهده نشانگر قبر، دکمهی زیر را بزنید</p>
       </div>
     </div>
 
@@ -57,7 +57,7 @@ const { location } = config;
       <ul class="space-y-2 text-xs text-stone-600 leading-relaxed">
         <li class="flex items-start gap-2"><span class="text-amber-500 mt-0.5">•</span><span>در فضای باز و با دید آسمان باز استفاده کنید</span></li>
         <li class="flex items-start gap-2"><span class="text-amber-500 mt-0.5">•</span><span>گوشی را به آرامی بچرخانید تا نشانگر طلایی ظاهر شود</span></li>
-        <li class="flex items-start gap-2"><span class="text-amber-500 mt-0.5">•</span><span>فاصله و جهت در گوشه صفحه نمایش داده می‌شود</span></li>
+        <li class="flex items-start gap-2"><span class="text-amber-500 mt-0.5">•</span><span>فاصله و جهت در گوشه صفحه نمایش داده میشود</span></li>
         <li class="flex items-start gap-2"><span class="text-amber-500 mt-0.5">•</span><span>برای عملکرد صحیح به HTTPS نیاز است</span></li>
       </ul>
     </div>
@@ -126,7 +126,7 @@ const { location } = config;
   }
 
   // ============================================================
-  // بارگذاری کتابخانه‌های AR از vendor محلی
+  // بارگذاری کتابخانههای AR از vendor محلی
   // ============================================================
   async function loadARLibs(): Promise<boolean> {
     if (window.AFRAME && window.AFRAME.components['locar-camera']) {
@@ -147,11 +147,11 @@ const { location } = config;
     console.log('[AR] A-Frame ready:', aframeReady);
     if (!aframeReady) return false;
 
-    // ۳. locar-aframe (فقط بعد از آماده شدن A-Frame)
+    // ۳. locar-aframe (نسخه 0.1.2 — سازگار با A-Frame 1.3.0)
     const locarLoaded = await loadScript(`${vendorPath}/locar-aframe.js`, 'locar');
     if (!locarLoaded) return false;
 
-    // ۴. صبر تا locar-aframe کامپوننت‌ها را ثبت کند
+    // ۴. صبر تا locar-aframe کامپوننتها را ثبت کند
     await new Promise((r) => setTimeout(r, 500));
     const ok = !!(window.AFRAME && window.AFRAME.components['locar-camera']);
     console.log('[AR] all libs loaded, locar-camera registered:', ok);
@@ -162,7 +162,6 @@ const { location } = config;
   // ساخت داینامیک صحنه A-Frame
   // ============================================================
   function createARScene(container: HTMLElement, lat: number, lng: number) {
-    // پاک‌سازی قبلی (اگر وجود دارد)
     container.innerHTML = '';
 
     const scene = document.createElement('a-scene');
@@ -175,8 +174,6 @@ const { location } = config;
     );
     scene.setAttribute('style', 'width: 100%; height: 100%; display: block;');
 
-    // ---------- دوربین با locar-camera ----------
-    // نکته حیاتی: enablePermissionDialog: false برای جلوگیری از خطای Android
     const camera = document.createElement('a-camera');
     camera.setAttribute(
       'locar-camera',
@@ -185,7 +182,6 @@ const { location } = config;
     camera.setAttribute('data-ar-camera', '');
     scene.appendChild(camera);
 
-    // ---------- نشانگر قبر ----------
     const marker = document.createElement('a-entity');
     marker.setAttribute(
       'locar-entity-place',
@@ -194,7 +190,6 @@ const { location } = config;
     marker.setAttribute('visible', 'true');
     marker.setAttribute('data-ar-marker', '');
 
-    // حلقه طلایی روی زمین
     const ring = document.createElement('a-ring');
     ring.setAttribute('color', '#E8833A');
     ring.setAttribute('radius-inner', '0.8');
@@ -204,7 +199,6 @@ const { location } = config;
     ring.setAttribute('material', 'opacity: 0.9; transparent: true; side: double');
     marker.appendChild(ring);
 
-    // ستون نور
     const cylinder = document.createElement('a-cylinder');
     cylinder.setAttribute('color', '#F5A623');
     cylinder.setAttribute('radius', '0.15');
@@ -213,7 +207,6 @@ const { location } = config;
     cylinder.setAttribute('material', 'opacity: 0.6; transparent: true');
     marker.appendChild(cylinder);
 
-    // متن «اینجاست»
     const text = document.createElement('a-text');
     text.setAttribute('value', 'اینجاست');
     text.setAttribute('color', '#FFFFFF');
@@ -249,31 +242,29 @@ const { location } = config;
 
     if (!startBtn || !sceneWrap || !startPanel || !sceneContainer) return;
 
-    // ---------- بررسی پشتیبانی ----------
     function checkSupport(): { supported: boolean; reason?: string } {
       if (!window.isSecureContext) {
-        return { supported: false, reason: 'واقعیت افزوده فقط روی HTTPS کار می‌کند.' };
+        return { supported: false, reason: 'واقعیت افزوده فقط روی HTTPS کار میکند.' };
       }
       if (!('geolocation' in navigator)) {
-        return { supported: false, reason: 'مرورگر شما از GPS پشتیبانی نمی‌کند.' };
+        return { supported: false, reason: 'مرورگر شما از GPS پشتیبانی نمیکند.' };
       }
       if (!('DeviceOrientationEvent' in window)) {
-        return { supported: false, reason: 'مرورگر شما از سنسور جهت‌یابی پشتیبانی نمی‌کند.' };
+        return { supported: false, reason: 'مرورگر شما از سنسور جهتیابی پشتیبانی نمیکند.' };
       }
       if (!navigator.mediaDevices?.getUserMedia) {
-        return { supported: false, reason: 'مرورگر شما از دوربین پشتیبانی نمی‌کند.' };
+        return { supported: false, reason: 'مرورگر شما از دوربین پشتیبانی نمیکند.' };
       }
       const ua = navigator.userAgent.toLowerCase();
       if (ua.includes('firefox')) {
         return {
           supported: false,
-          reason: 'Firefox از AR مبتنی بر مکان پشتیبانی نمی‌کند. لطفاً Chrome یا Safari استفاده کنید.',
+          reason: 'Firefox از AR مبتنی بر مکان پشتیبانی نمیکند. لطفاً Chrome یا Safari استفاده کنید.',
         };
       }
       return { supported: true };
     }
 
-    // ---------- نمایش/مخفی خطا ----------
     function showError(msg: string) {
       if (errorBox && errorMsg) {
         errorMsg.textContent = msg;
@@ -284,7 +275,6 @@ const { location } = config;
       if (errorBox) errorBox.hidden = true;
     }
 
-    // ---------- محاسبه فاصله (Haversine) ----------
     function calcDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
       const R = 6371000;
       const toRad = (d: number) => (d * Math.PI) / 180;
@@ -296,7 +286,6 @@ const { location } = config;
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
-    // ---------- محاسبه جهت (Bearing) ----------
     function calcBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
       const toRad = (d: number) => (d * Math.PI) / 180;
       const toDeg = (r: number) => (r * 180) / Math.PI;
@@ -308,13 +297,11 @@ const { location } = config;
       return (toDeg(Math.atan2(y, x)) + 360) % 360;
     }
 
-    // ---------- فرمت فاصله ----------
     function formatDist(m: number): string {
       if (m < 1000) return `${Math.round(m)} متر`;
       return `${(m / 1000).toFixed(1)} کیلومتر`;
     }
 
-    // ---------- Watch موقعیت ----------
     let watchId: number | null = null;
     function startPositionWatch(lat: number, lng: number) {
       if (watchId !== null) navigator.geolocation.clearWatch(watchId);
@@ -326,13 +313,13 @@ const { location } = config;
           if (bearingEl) {
             const dirs = [
               'شمال',
-              'شمال‌شرق',
+              'شمالشرق',
               'شرق',
-              'جنوب‌شرق',
+              'جنوبشرق',
               'جنوب',
-              'جنوب‌غرب',
+              'جنوبغرب',
               'غرب',
-              'شمال‌غرب',
+              'شمالغرب',
             ];
             const idx = Math.round(bearing / 45) % 8;
             bearingEl.textContent = `جهت: ${dirs[idx]}`;
@@ -344,7 +331,6 @@ const { location } = config;
       );
     }
 
-    // ---------- بازنشانی دکمه شروع ----------
     function resetStartButton() {
       if (!startBtn) return;
       startBtn.disabled = false;
@@ -352,13 +338,9 @@ const { location } = config;
         '<span aria-hidden="true" class="text-xl">📸</span><span>شروع واقعیت افزوده</span>';
     }
 
-    // ============================================================
-    // کلیک روی دکمه شروع
-    // ============================================================
     startBtn.addEventListener('click', async () => {
       hideError();
 
-      // ۱. بررسی پشتیبانی
       const support = checkSupport();
       if (!support.supported) {
         if (unsupportedBox && unsupportedMsg) {
@@ -368,27 +350,23 @@ const { location } = config;
         return;
       }
 
-      // ۲. بارگذاری کتابخانه‌ها
       startBtn.disabled = true;
       startBtn.innerHTML = '<span>در حال بارگذاری…</span>';
 
       const loaded = await loadARLibs();
       if (!loaded) {
         showError(
-          'بارگذاری کتابخانه‌های AR با مشکل مواجه شد. لطفاً اتصال اینترنت را بررسی کنید و دوباره تلاش کنید.'
+          'بارگذاری کتابخانههای AR با مشکل مواجه شد. لطفاً اتصال اینترنت را بررسی کنید و دوباره تلاش کنید.'
         );
         resetStartButton();
         return;
       }
 
-      // ۳. ساخت صحنه A-Frame بعد از آماده شدن کتابخانه‌ها
       const lat = parseFloat(sceneWrap.dataset.lat ?? '') || 32.0498053;
       const lng = parseFloat(sceneWrap.dataset.lng ?? '') || 48.8765405;
       createARScene(sceneContainer, lat, lng);
 
-      // ۴. درخواست مجوزها
       try {
-        // ---------- تشخیص iOS ----------
         const isIOS =
           /iPad|iPhone|iPod/.test(navigator.userAgent) &&
           !(window as unknown as { MSStream?: unknown }).MSStream;
@@ -397,14 +375,13 @@ const { location } = config;
           requestPermission?: () => Promise<string>;
         };
 
-        // ---------- DeviceOrientation: فقط در iOS ----------
         if (isIOS && typeof DOE.requestPermission === 'function') {
           console.log('[AR] requesting DeviceOrientation permission (iOS)...');
           const perm = await DOE.requestPermission();
           console.log('[AR] DeviceOrientation permission:', perm);
           if (perm !== 'granted') {
             showError(
-              'دسترسی به سنسور جهت‌یابی رد شد. لطفاً در تنظیمات مرورگر مجوز بدهید.'
+              'دسترسی به سنسور جهتیابی رد شد. لطفاً در تنظیمات مرورگر مجوز بدهید.'
             );
             resetStartButton();
             return;
@@ -413,7 +390,6 @@ const { location } = config;
           console.log('[AR] DeviceOrientation permission not required on this platform');
         }
 
-        // ---------- دوربین ----------
         console.log('[AR] requesting camera...');
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: 'environment' } },
@@ -421,7 +397,6 @@ const { location } = config;
         stream.getTracks().forEach((t) => t.stop());
         console.log('[AR] camera permission granted');
 
-        // ---------- موقعیت اولیه ----------
         console.log('[AR] getting initial position...');
         await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
@@ -439,18 +414,13 @@ const { location } = config;
         return;
       }
 
-      // ۵. نمایش صحنه، مخفی کردن پنل شروع
       startPanel.hidden = true;
       sceneWrap.hidden = false;
       document.body.style.overflow = 'hidden';
 
-      // ۶. شروع watch موقعیت
       startPositionWatch(lat, lng);
     });
 
-    // ============================================================
-    // بستن AR
-    // ============================================================
     if (closeBtn) {
       closeBtn.addEventListener('click', () => {
         sceneWrap.hidden = true;
@@ -460,16 +430,12 @@ const { location } = config;
           navigator.geolocation.clearWatch(watchId);
           watchId = null;
         }
-        // پاک‌سازی صحنه برای آزادسازی حافظه
         if (sceneContainer) sceneContainer.innerHTML = '';
         resetStartButton();
         hideError();
       });
     }
 
-    // ============================================================
-    // تلاش مجدد
-    // ============================================================
     if (retryBtn) {
       retryBtn.addEventListener('click', () => {
         hideError();
@@ -478,7 +444,6 @@ const { location } = config;
     }
   }
 
-  // ---------- راه‌اندازی ----------
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAR);
   } else {
