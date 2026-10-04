@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /qr
 
-Sitemap: https://RamsinChaabian.github.io/yadbod/sitemap-index.xml
+Sitemap: https://najiye.ir/sitemap-index.xml
