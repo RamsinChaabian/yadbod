@@ -20,21 +20,34 @@ const { location } = config;
       </div>
     </div>
 
-    <button type="button" data-ar-start class="touch-target w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold px-6 py-4 transition-all duration-300 hover:from-amber-600 hover:to-orange-600 shadow-button active:scale-[0.98] text-base">
+    <button
+      type="button"
+      data-ar-start
+      class="touch-target w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold px-6 py-4 transition-all duration-300 hover:from-amber-600 hover:to-orange-600 shadow-button active:scale-[0.98] text-base"
+    >
       <span aria-hidden="true" class="text-xl">📸</span>
       <span>شروع واقعیت افزوده</span>
     </button>
 
     <div data-ar-unsupported hidden class="rounded-2xl bg-amber-50 border border-amber-200 p-4 text-sm" role="alert">
       <p data-ar-unsupported-msg class="text-stone-700"></p>
-      <a href={location.googleMapsUrl} target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex items-center gap-2 text-amber-700 hover:text-amber-800 underline underline-offset-4 font-medium">
+      <a
+        href={location.googleMapsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="mt-3 inline-flex items-center gap-2 text-amber-700 hover:text-amber-800 underline underline-offset-4 font-medium"
+      >
         📍 مسیریابی با Google Maps
       </a>
     </div>
 
     <div data-ar-error hidden class="rounded-2xl bg-red-50 border border-red-200 p-4 text-sm" role="alert">
       <p data-ar-error-msg class="text-red-700"></p>
-      <button type="button" data-ar-retry class="mt-3 text-amber-700 hover:text-amber-800 underline underline-offset-4 font-medium">
+      <button
+        type="button"
+        data-ar-retry
+        class="mt-3 text-amber-700 hover:text-amber-800 underline underline-offset-4 font-medium"
+      >
         تلاش مجدد
       </button>
     </div>
@@ -63,10 +76,13 @@ const { location } = config;
     }
   }
 
-  // ---------- Helper: load external script ----------
+  // ============================================================
+  // Helper: بارگذاری اسکریپت خارجی
+  // ============================================================
   function loadScript(src: string, name: string): Promise<boolean> {
     return new Promise((resolve) => {
       if (document.querySelector(`script[src="${src}"]`)) {
+        console.log(`[AR] ${name} already in DOM`);
         resolve(true);
         return;
       }
@@ -84,12 +100,18 @@ const { location } = config;
     });
   }
 
-  // ---------- Wait for AFRAME to be fully ready ----------
+  // ============================================================
+  // Helper: صبر تا A-Frame واقعاً آماده شود
+  // ============================================================
   function waitForAFrame(timeout = 8000): Promise<boolean> {
     return new Promise((resolve) => {
       const start = Date.now();
       const check = () => {
-        if (window.AFRAME && window.AFRAME.components && Object.keys(window.AFRAME.components).length > 0) {
+        if (
+          window.AFRAME &&
+          window.AFRAME.components &&
+          Object.keys(window.AFRAME.components).length > 0
+        ) {
           resolve(true);
           return;
         }
@@ -103,7 +125,9 @@ const { location } = config;
     });
   }
 
-  // ---------- Load AR libs from local vendor ----------
+  // ============================================================
+  // بارگذاری کتابخانه‌های AR از vendor محلی
+  // ============================================================
   async function loadARLibs(): Promise<boolean> {
     if (window.AFRAME && window.AFRAME.components['locar-camera']) {
       console.log('[AR] libs already loaded');
@@ -118,7 +142,7 @@ const { location } = config;
     const aframeLoaded = await loadScript(`${vendorPath}/aframe.min.js`, 'aframe');
     if (!aframeLoaded) return false;
 
-    // ۲. صبر تا A-Frame واقعاً آماده شود (نه فقط timeout)
+    // ۲. صبر تا A-Frame واقعاً آماده شود
     const aframeReady = await waitForAFrame();
     console.log('[AR] A-Frame ready:', aframeReady);
     if (!aframeReady) return false;
@@ -134,29 +158,43 @@ const { location } = config;
     return ok;
   }
 
-  // ---------- Create A-Frame scene dynamically ----------
+  // ============================================================
+  // ساخت داینامیک صحنه A-Frame
+  // ============================================================
   function createARScene(container: HTMLElement, lat: number, lng: number) {
-    // پاک‌سازی قبلی
+    // پاک‌سازی قبلی (اگر وجود دارد)
     container.innerHTML = '';
 
     const scene = document.createElement('a-scene');
     scene.setAttribute('embedded', '');
     scene.setAttribute('vr-mode-ui', 'enabled: false');
     scene.setAttribute('device-orientation-permission-ui', 'enabled: false');
-    scene.setAttribute('renderer', 'antialias: true; alpha: true; precision: medium; logarithmicDepthBuffer: true');
-    scene.setAttribute('style', 'width: 100%; height: 100%;');
+    scene.setAttribute(
+      'renderer',
+      'antialias: true; alpha: true; precision: medium; logarithmicDepthBuffer: true'
+    );
+    scene.setAttribute('style', 'width: 100%; height: 100%; display: block;');
 
-    // دوربین
+    // ---------- دوربین با locar-camera ----------
+    // نکته حیاتی: enablePermissionDialog: false برای جلوگیری از خطای Android
     const camera = document.createElement('a-camera');
-    camera.setAttribute('locar-camera', 'gpsMinDistance: 2; positionMinAccuracy: 20; smoothingFactor: 5');
+    camera.setAttribute(
+      'locar-camera',
+      'gpsMinDistance: 2; positionMinAccuracy: 20; smoothingFactor: 5; enablePermissionDialog: false'
+    );
+    camera.setAttribute('data-ar-camera', '');
     scene.appendChild(camera);
 
-    // نشانگر قبر
+    // ---------- نشانگر قبر ----------
     const marker = document.createElement('a-entity');
-    marker.setAttribute('locar-entity-place', `latitude: ${lat}; longitude: ${lng}`);
+    marker.setAttribute(
+      'locar-entity-place',
+      `latitude: ${lat}; longitude: ${lng}`
+    );
     marker.setAttribute('visible', 'true');
+    marker.setAttribute('data-ar-marker', '');
 
-    // حلقه طلایی
+    // حلقه طلایی روی زمین
     const ring = document.createElement('a-ring');
     ring.setAttribute('color', '#E8833A');
     ring.setAttribute('radius-inner', '0.8');
@@ -175,7 +213,7 @@ const { location } = config;
     cylinder.setAttribute('material', 'opacity: 0.6; transparent: true');
     marker.appendChild(cylinder);
 
-    // متن
+    // متن «اینجاست»
     const text = document.createElement('a-text');
     text.setAttribute('value', 'اینجاست');
     text.setAttribute('color', '#FFFFFF');
@@ -191,7 +229,9 @@ const { location } = config;
     return scene;
   }
 
-  // ---------- Init AR ----------
+  // ============================================================
+  // Init AR
+  // ============================================================
   function initAR() {
     const startPanel = document.querySelector<HTMLElement>('[data-ar-start-panel]');
     const startBtn = document.querySelector<HTMLButtonElement>('[data-ar-start]');
@@ -209,44 +249,72 @@ const { location } = config;
 
     if (!startBtn || !sceneWrap || !startPanel || !sceneContainer) return;
 
+    // ---------- بررسی پشتیبانی ----------
     function checkSupport(): { supported: boolean; reason?: string } {
-      if (!window.isSecureContext) return { supported: false, reason: 'واقعیت افزوده فقط روی HTTPS کار می‌کند.' };
-      if (!('geolocation' in navigator)) return { supported: false, reason: 'مرورگر شما از GPS پشتیبانی نمی‌کند.' };
-      if (!('DeviceOrientationEvent' in window)) return { supported: false, reason: 'مرورگر شما از سنسور جهت‌یابی پشتیبانی نمی‌کند.' };
-      if (!navigator.mediaDevices?.getUserMedia) return { supported: false, reason: 'مرورگر شما از دوربین پشتیبانی نمی‌کند.' };
+      if (!window.isSecureContext) {
+        return { supported: false, reason: 'واقعیت افزوده فقط روی HTTPS کار می‌کند.' };
+      }
+      if (!('geolocation' in navigator)) {
+        return { supported: false, reason: 'مرورگر شما از GPS پشتیبانی نمی‌کند.' };
+      }
+      if (!('DeviceOrientationEvent' in window)) {
+        return { supported: false, reason: 'مرورگر شما از سنسور جهت‌یابی پشتیبانی نمی‌کند.' };
+      }
+      if (!navigator.mediaDevices?.getUserMedia) {
+        return { supported: false, reason: 'مرورگر شما از دوربین پشتیبانی نمی‌کند.' };
+      }
       const ua = navigator.userAgent.toLowerCase();
-      if (ua.includes('firefox')) return { supported: false, reason: 'Firefox از AR مبتنی بر مکان پشتیبانی نمی‌کند. لطفاً Chrome یا Safari استفاده کنید.' };
+      if (ua.includes('firefox')) {
+        return {
+          supported: false,
+          reason: 'Firefox از AR مبتنی بر مکان پشتیبانی نمی‌کند. لطفاً Chrome یا Safari استفاده کنید.',
+        };
+      }
       return { supported: true };
     }
 
+    // ---------- نمایش/مخفی خطا ----------
     function showError(msg: string) {
-      if (errorBox && errorMsg) { errorMsg.textContent = msg; errorBox.hidden = false; }
+      if (errorBox && errorMsg) {
+        errorMsg.textContent = msg;
+        errorBox.hidden = false;
+      }
     }
-    function hideError() { if (errorBox) errorBox.hidden = true; }
+    function hideError() {
+      if (errorBox) errorBox.hidden = true;
+    }
 
+    // ---------- محاسبه فاصله (Haversine) ----------
     function calcDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
       const R = 6371000;
       const toRad = (d: number) => (d * Math.PI) / 180;
       const dLat = toRad(lat2 - lat1);
       const dLon = toRad(lon2 - lon1);
-      const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+      const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
+    // ---------- محاسبه جهت (Bearing) ----------
     function calcBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
       const toRad = (d: number) => (d * Math.PI) / 180;
       const toDeg = (r: number) => (r * 180) / Math.PI;
       const dLon = toRad(lon2 - lon1);
       const y = Math.sin(dLon) * Math.cos(toRad(lat2));
-      const x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) - Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
+      const x =
+        Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+        Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
       return (toDeg(Math.atan2(y, x)) + 360) % 360;
     }
 
+    // ---------- فرمت فاصله ----------
     function formatDist(m: number): string {
       if (m < 1000) return `${Math.round(m)} متر`;
       return `${(m / 1000).toFixed(1)} کیلومتر`;
     }
 
+    // ---------- Watch موقعیت ----------
     let watchId: number | null = null;
     function startPositionWatch(lat: number, lng: number) {
       if (watchId !== null) navigator.geolocation.clearWatch(watchId);
@@ -256,7 +324,16 @@ const { location } = config;
           const bearing = calcBearing(pos.coords.latitude, pos.coords.longitude, lat, lng);
           if (distanceEl) distanceEl.textContent = formatDist(dist);
           if (bearingEl) {
-            const dirs = ['شمال', 'شمال‌شرق', 'شرق', 'جنوب‌شرق', 'جنوب', 'جنوب‌غرب', 'غرب', 'شمال‌غرب'];
+            const dirs = [
+              'شمال',
+              'شمال‌شرق',
+              'شرق',
+              'جنوب‌شرق',
+              'جنوب',
+              'جنوب‌غرب',
+              'غرب',
+              'شمال‌غرب',
+            ];
             const idx = Math.round(bearing / 45) % 8;
             bearingEl.textContent = `جهت: ${dirs[idx]}`;
           }
@@ -267,15 +344,21 @@ const { location } = config;
       );
     }
 
+    // ---------- بازنشانی دکمه شروع ----------
     function resetStartButton() {
       if (!startBtn) return;
       startBtn.disabled = false;
-      startBtn.innerHTML = '<span aria-hidden="true" class="text-xl">📸</span><span>شروع واقعیت افزوده</span>';
+      startBtn.innerHTML =
+        '<span aria-hidden="true" class="text-xl">📸</span><span>شروع واقعیت افزوده</span>';
     }
 
+    // ============================================================
+    // کلیک روی دکمه شروع
+    // ============================================================
     startBtn.addEventListener('click', async () => {
       hideError();
 
+      // ۱. بررسی پشتیبانی
       const support = checkSupport();
       if (!support.supported) {
         if (unsupportedBox && unsupportedMsg) {
@@ -285,42 +368,67 @@ const { location } = config;
         return;
       }
 
+      // ۲. بارگذاری کتابخانه‌ها
       startBtn.disabled = true;
       startBtn.innerHTML = '<span>در حال بارگذاری…</span>';
 
       const loaded = await loadARLibs();
       if (!loaded) {
-        showError('بارگذاری کتابخانه‌های AR با مشکل مواجه شد. لطفاً اتصال اینترنت را بررسی کنید و دوباره تلاش کنید.');
+        showError(
+          'بارگذاری کتابخانه‌های AR با مشکل مواجه شد. لطفاً اتصال اینترنت را بررسی کنید و دوباره تلاش کنید.'
+        );
         resetStartButton();
         return;
       }
 
-      // ⚠️ مهم: صحنه را فقط بعد از بارگذاری موفق کتابخانه‌ها بساز
+      // ۳. ساخت صحنه A-Frame بعد از آماده شدن کتابخانه‌ها
       const lat = parseFloat(sceneWrap.dataset.lat ?? '') || 32.0498053;
       const lng = parseFloat(sceneWrap.dataset.lng ?? '') || 48.8765405;
       createARScene(sceneContainer, lat, lng);
 
+      // ۴. درخواست مجوزها
       try {
-        const DOE = DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> };
-        if (typeof DOE.requestPermission === 'function') {
-          console.log('[AR] requesting DeviceOrientation permission...');
+        // ---------- تشخیص iOS ----------
+        const isIOS =
+          /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+          !(window as unknown as { MSStream?: unknown }).MSStream;
+
+        const DOE = DeviceOrientationEvent as unknown as {
+          requestPermission?: () => Promise<string>;
+        };
+
+        // ---------- DeviceOrientation: فقط در iOS ----------
+        if (isIOS && typeof DOE.requestPermission === 'function') {
+          console.log('[AR] requesting DeviceOrientation permission (iOS)...');
           const perm = await DOE.requestPermission();
           console.log('[AR] DeviceOrientation permission:', perm);
           if (perm !== 'granted') {
-            showError('دسترسی به سنسور جهت‌یابی رد شد. لطفاً در تنظیمات مرورگر مجوز بدهید.');
+            showError(
+              'دسترسی به سنسور جهت‌یابی رد شد. لطفاً در تنظیمات مرورگر مجوز بدهید.'
+            );
             resetStartButton();
             return;
           }
+        } else {
+          console.log('[AR] DeviceOrientation permission not required on this platform');
         }
 
+        // ---------- دوربین ----------
         console.log('[AR] requesting camera...');
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } },
+        });
         stream.getTracks().forEach((t) => t.stop());
         console.log('[AR] camera permission granted');
 
+        // ---------- موقعیت اولیه ----------
         console.log('[AR] getting initial position...');
         await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 });
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 10000,
+          });
         });
         console.log('[AR] GPS position acquired');
       } catch (err) {
@@ -331,19 +439,27 @@ const { location } = config;
         return;
       }
 
+      // ۵. نمایش صحنه، مخفی کردن پنل شروع
       startPanel.hidden = true;
       sceneWrap.hidden = false;
       document.body.style.overflow = 'hidden';
 
+      // ۶. شروع watch موقعیت
       startPositionWatch(lat, lng);
     });
 
+    // ============================================================
+    // بستن AR
+    // ============================================================
     if (closeBtn) {
       closeBtn.addEventListener('click', () => {
         sceneWrap.hidden = true;
         startPanel.hidden = false;
         document.body.style.overflow = '';
-        if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+        if (watchId !== null) {
+          navigator.geolocation.clearWatch(watchId);
+          watchId = null;
+        }
         // پاک‌سازی صحنه برای آزادسازی حافظه
         if (sceneContainer) sceneContainer.innerHTML = '';
         resetStartButton();
@@ -351,11 +467,18 @@ const { location } = config;
       });
     }
 
+    // ============================================================
+    // تلاش مجدد
+    // ============================================================
     if (retryBtn) {
-      retryBtn.addEventListener('click', () => { hideError(); startBtn.click(); });
+      retryBtn.addEventListener('click', () => {
+        hideError();
+        startBtn.click();
+      });
     }
   }
 
+  // ---------- راه‌اندازی ----------
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAR);
   } else {
