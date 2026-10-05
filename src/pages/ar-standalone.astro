@@ -67,23 +67,60 @@
 
   log('Importing locar...');
   const LocAR = await import('locar');
-  log('locar loaded, keys: ' + Object.keys(LocAR).slice(0, 5).join(','));
+  log('locar loaded');
 
   log('Creating LocAR.App...');
   const app = new (LocAR as any).App({
     cameraOptions: { hFov: 80 },
   });
-  log('App created');
 
-  log('Starting AR (camera + GPS)...');
-  // ⚠️ نکته کلیدی: start() یک شیء از نوع LocAR برمی‌گرداند که متد add روی آن است
+  log('Starting AR (camera + orientation)...');
   const locar = await app.start();
   log('✓ AR started!');
 
-  // گروه نشانگر
+  // ⚠️ راه‌اندازی GPS — بدون این، موقعیت اولیه تعیین نمی‌شود
+  log('Starting GPS watch...');
+  await locar.startGps();
+  log('✓ GPS watch started');
+
+  // منتظر اولین موقعیت معتبر بمان (با timeout 20s)
+  log('Waiting for initial GPS fix...');
+  await new Promise<void>((resolve) => {
+    let done = false;
+
+    const onGps = (e: any) => {
+      if (done) return;
+      done = true;
+      const c = e.position.coords;
+      log('✓ GPS fix: ' + c.latitude.toFixed(6) + ', ' + c.longitude.toFixed(6));
+      log('  accuracy: ' + Math.round(c.accuracy) + 'm');
+      locar.off('gpsupdate', onGps);
+      resolve();
+    };
+
+    const onError = (e: any) => {
+      if (done) return;
+      log('GPS error: ' + (e.message || JSON.stringify(e)));
+      // به تلاش ادامه بده — شاید بعداً fix بشه
+    };
+
+    locar.on('gpsupdate', onGps);
+    locar.on('gpserror', onError);
+
+    // timeout بعد از ۲۰ ثانیه
+    setTimeout(() => {
+      if (!done) {
+        done = true;
+        log('⚠ GPS timeout — continuing without fix');
+        resolve();
+      }
+    }, 20000);
+  });
+
+  // ---------- حالا نشانگر را بساز و اضافه کن ----------
+  log('Building marker...');
   const group = new THREE.Group();
 
-  // حلقه طلایی روی زمین
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(0.8, 1.2, 32),
     new THREE.MeshBasicMaterial({
@@ -97,7 +134,6 @@
   ring.position.y = 0.05;
   group.add(ring);
 
-  // ستون نور
   const cyl = new THREE.Mesh(
     new THREE.CylinderGeometry(0.15, 0.15, 3, 16),
     new THREE.MeshBasicMaterial({
@@ -109,22 +145,24 @@
   cyl.position.y = 1.5;
   group.add(cyl);
 
-  // اضافه به موقعیت قبر (lon, lat, elevation)
-  locar.add(group, 48.8765405, 32.0498053, 0);
-  log('✓ Marker added');
+  // اضافه کردن به موقعیت قبر: (object, lng, lat, elevation)
+  try {
+    locar.add(group, 48.8765405, 32.0498053, 0);
+    log('✓ Marker added at grave coordinates');
+  } catch (e: any) {
+    log('❌ Marker add failed: ' + e.message);
+  }
 
-  // بررسی ویدیو و canvas بعد از ۲ ثانیه
+  // بررسی نهایی
   setTimeout(() => {
     const videos = document.querySelectorAll('video');
-    log('Videos in DOM: ' + videos.length);
+    log('Videos: ' + videos.length);
     if (videos.length > 0) {
       const v = videos[0] as HTMLVideoElement;
       log('Video dims: ' + v.videoWidth + 'x' + v.videoHeight);
-      log('Video readyState: ' + v.readyState);
       log('Video visible: ' + (v.offsetWidth > 0 && v.offsetHeight > 0));
     }
-    const canvases = document.querySelectorAll('canvas');
-    log('Canvases in DOM: ' + canvases.length);
+    log('Canvases: ' + document.querySelectorAll('canvas').length);
   }, 2000);
 } catch (err: any) {
   const msg = err?.message || String(err);
