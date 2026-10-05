@@ -105,6 +105,38 @@ canvas {
   const locar = await app.start();
   log('✓ AR started!');
 
+  // ⚠️ حیاتی: ویدیو را مجبور به پخش کن
+log('Configuring video element...');
+await new Promise(r => setTimeout(r, 500)); // صبر برای ساخته شدن video
+const videoEl = document.querySelector('video');
+if (videoEl) {
+  videoEl.muted = true;                    // بدون muted، autoplay بلاک می‌شود
+  videoEl.setAttribute('muted', '');
+  videoEl.setAttribute('playsinline', '');
+  videoEl.setAttribute('webkit-playsinline', '');
+  videoEl.style.setProperty('position', 'fixed', 'important');
+  videoEl.style.setProperty('top', '0', 'important');
+  videoEl.style.setProperty('left', '0', 'important');
+  videoEl.style.setProperty('width', '100vw', 'important');
+  videoEl.style.setProperty('height', '100vh', 'important');
+  videoEl.style.setProperty('object-fit', 'cover', 'important');
+  videoEl.style.setProperty('z-index', '1', 'important');
+
+  try {
+    await videoEl.play();
+    log('✓ Video play() succeeded');
+  } catch (e: any) {
+    log('⚠ play() failed: ' + e.message);
+  }
+
+  // دیاگنوستیک
+  log('Video.paused: ' + videoEl.paused);
+  log('Video.muted: ' + videoEl.muted);
+  log('Video.currentTime: ' + videoEl.currentTime.toFixed(2));
+} else {
+  log('❌ video not found yet');
+}
+
   // ⚠️ راه‌اندازی GPS — بدون این، موقعیت اولیه تعیین نمی‌شود
   log('Starting GPS watch...');
   await locar.startGps();
