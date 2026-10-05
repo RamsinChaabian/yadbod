@@ -36,6 +36,10 @@
     <script src="/vendor/ar/aframe.min.js"></script>
     <!-- ۲. LocAR (UMD global) — باید قبل از locar-aframe لود شود -->
     <script src="/vendor/ar/locar.js"></script>
+    <!-- Alias: locar UMD از حروف کوچک استفاده میکند، locar-aframe از حروف بزرگ -->
+    <script>
+    window.LocAR = window.locar;
+    </script>
     <!-- ۳. locar-aframe (کامپوننت‌های A-Frame) -->
     <script src="/vendor/ar/locar-aframe.js"></script>
 </head>
