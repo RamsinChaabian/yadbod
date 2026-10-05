@@ -1,0 +1,133 @@
+---
+// صفحه تست AR با locar مستقل
+---
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>AR Standalone Test</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #000; font-family: 'Vazirmatn', sans-serif; }
+    #ar-container { position: fixed; inset: 0; }
+    #ar-container canvas { display: block; width: 100% !important; height: 100% !important; }
+
+    .start-screen {
+      position: fixed; inset: 0; z-index: 10;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: #000; color: #fff; padding: 20px; text-align: center;
+    }
+    .start-screen.hidden { display: none; }
+    .btn {
+      background: #E8833A; color: #fff; border: none;
+      padding: 16px 40px; border-radius: 50px;
+      font-size: 16px; font-weight: bold; cursor: pointer;
+      margin-top: 20px; font-family: inherit;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .debug {
+      position: fixed; top: 10px; left: 10px; z-index: 100;
+      color: #0f0; font-size: 11px; background: rgba(0,0,0,0.7);
+      padding: 6px 8px; border-radius: 4px; font-family: monospace;
+      max-width: 220px; line-height: 1.4; direction: ltr; text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="debug" id="debug">Ready</div>
+
+  <div id="ar-container"></div>
+
+  <div class="start-screen" id="start-screen">
+    <div style="font-size: 60px;">📍</div>
+    <h1 style="margin: 10px 0;">تست AR</h1>
+    <p style="opacity: 0.7; max-width: 300px;">برای شروع، دکمه زیر را بزنید و به دوربین و موقعیت اجازه بدهید.</p>
+    <button class="btn" id="start-btn">شروع</button>
+  </div>
+
+  <script>
+    const debugEl = document.getElementById('debug');
+    const log = (msg: string) => {
+      console.log('[AR]', msg);
+      debugEl.innerHTML += '<br>' + msg;
+    };
+
+    document.getElementById('start-btn')!.addEventListener('click', async () => {
+      log('Start clicked');
+      document.getElementById('start-screen')!.classList.add('hidden');
+
+      try {
+        log('Importing three...');
+        const THREE = await import('three');
+        log('three loaded: ' + (THREE as any).REVISION);
+
+        log('Importing locar...');
+        const LocAR = await import('locar');
+        log('locar loaded, keys: ' + Object.keys(LocAR).slice(0, 5).join(','));
+
+        log('Creating LocAR.App...');
+        const locar = new (LocAR as any).App({
+          cameraOptions: { hFov: 80 },
+        });
+        log('App created');
+
+        log('Starting AR (camera + GPS)...');
+        await locar.start();
+        log('✓ AR started!');
+
+        // گروه نشانگر
+        const group = new THREE.Group();
+
+        // حلقه طلایی روی زمین
+        const ring = new THREE.Mesh(
+          new THREE.RingGeometry(0.8, 1.2, 32),
+          new THREE.MeshBasicMaterial({
+            color: 0xE8833A,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.9,
+          })
+        );
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.y = 0.05;
+        group.add(ring);
+
+        // ستون نور
+        const cyl = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.15, 0.15, 3, 16),
+          new THREE.MeshBasicMaterial({
+            color: 0xF5A623,
+            transparent: true,
+            opacity: 0.6,
+          })
+        );
+        cyl.position.y = 1.5;
+        group.add(cyl);
+
+        // اضافه به موقعیت قبر (lon, lat, elevation)
+        locar.add(group, 48.8765405, 32.0498053, 0);
+        log('✓ Marker added');
+
+        // بررسی ویدیو بعد از ۲ ثانیه
+        setTimeout(() => {
+          const videos = document.querySelectorAll('video');
+          log('Videos in DOM: ' + videos.length);
+          if (videos.length > 0) {
+            const v = videos[0] as HTMLVideoElement;
+            log('Video dims: ' + v.videoWidth + 'x' + v.videoHeight);
+            log('Video readyState: ' + v.readyState);
+          }
+        }, 2000);
+      } catch (err: any) {
+        const msg = err?.message || String(err);
+        log('❌ ERROR: ' + msg);
+        console.error('[AR] Full error:', err);
+      }
+    });
+  </script>
+</body>
+</html>
