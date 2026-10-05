@@ -61,72 +61,76 @@
       document.getElementById('start-screen')!.classList.add('hidden');
 
       try {
-        log('Importing three...');
-        const THREE = await import('three');
-        log('three loaded: ' + (THREE as any).REVISION);
+  log('Importing three...');
+  const THREE = await import('three');
+  log('three loaded: ' + (THREE as any).REVISION);
 
-        log('Importing locar...');
-        const LocAR = await import('locar');
-        log('locar loaded, keys: ' + Object.keys(LocAR).slice(0, 5).join(','));
+  log('Importing locar...');
+  const LocAR = await import('locar');
+  log('locar loaded, keys: ' + Object.keys(LocAR).slice(0, 5).join(','));
 
-        log('Creating LocAR.App...');
-        const locar = new (LocAR as any).App({
-          cameraOptions: { hFov: 80 },
-        });
-        log('App created');
+  log('Creating LocAR.App...');
+  const app = new (LocAR as any).App({
+    cameraOptions: { hFov: 80 },
+  });
+  log('App created');
 
-        log('Starting AR (camera + GPS)...');
-        await locar.start();
-        log('✓ AR started!');
+  log('Starting AR (camera + GPS)...');
+  // ⚠️ نکته کلیدی: start() یک شیء از نوع LocAR برمی‌گرداند که متد add روی آن است
+  const locar = await app.start();
+  log('✓ AR started!');
 
-        // گروه نشانگر
-        const group = new THREE.Group();
+  // گروه نشانگر
+  const group = new THREE.Group();
 
-        // حلقه طلایی روی زمین
-        const ring = new THREE.Mesh(
-          new THREE.RingGeometry(0.8, 1.2, 32),
-          new THREE.MeshBasicMaterial({
-            color: 0xE8833A,
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: 0.9,
-          })
-        );
-        ring.rotation.x = -Math.PI / 2;
-        ring.position.y = 0.05;
-        group.add(ring);
+  // حلقه طلایی روی زمین
+  const ring = new THREE.Mesh(
+    new THREE.RingGeometry(0.8, 1.2, 32),
+    new THREE.MeshBasicMaterial({
+      color: 0xE8833A,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.9,
+    })
+  );
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.y = 0.05;
+  group.add(ring);
 
-        // ستون نور
-        const cyl = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.15, 0.15, 3, 16),
-          new THREE.MeshBasicMaterial({
-            color: 0xF5A623,
-            transparent: true,
-            opacity: 0.6,
-          })
-        );
-        cyl.position.y = 1.5;
-        group.add(cyl);
+  // ستون نور
+  const cyl = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.15, 0.15, 3, 16),
+    new THREE.MeshBasicMaterial({
+      color: 0xF5A623,
+      transparent: true,
+      opacity: 0.6,
+    })
+  );
+  cyl.position.y = 1.5;
+  group.add(cyl);
 
-        // اضافه به موقعیت قبر (lon, lat, elevation)
-        locar.add(group, 48.8765405, 32.0498053, 0);
-        log('✓ Marker added');
+  // اضافه به موقعیت قبر (lon, lat, elevation)
+  locar.add(group, 48.8765405, 32.0498053, 0);
+  log('✓ Marker added');
 
-        // بررسی ویدیو بعد از ۲ ثانیه
-        setTimeout(() => {
-          const videos = document.querySelectorAll('video');
-          log('Videos in DOM: ' + videos.length);
-          if (videos.length > 0) {
-            const v = videos[0] as HTMLVideoElement;
-            log('Video dims: ' + v.videoWidth + 'x' + v.videoHeight);
-            log('Video readyState: ' + v.readyState);
-          }
-        }, 2000);
-      } catch (err: any) {
-        const msg = err?.message || String(err);
-        log('❌ ERROR: ' + msg);
-        console.error('[AR] Full error:', err);
-      }
+  // بررسی ویدیو و canvas بعد از ۲ ثانیه
+  setTimeout(() => {
+    const videos = document.querySelectorAll('video');
+    log('Videos in DOM: ' + videos.length);
+    if (videos.length > 0) {
+      const v = videos[0] as HTMLVideoElement;
+      log('Video dims: ' + v.videoWidth + 'x' + v.videoHeight);
+      log('Video readyState: ' + v.readyState);
+      log('Video visible: ' + (v.offsetWidth > 0 && v.offsetHeight > 0));
+    }
+    const canvases = document.querySelectorAll('canvas');
+    log('Canvases in DOM: ' + canvases.length);
+  }, 2000);
+} catch (err: any) {
+  const msg = err?.message || String(err);
+  log('❌ ERROR: ' + msg);
+  console.error('[AR] Full error:', err);
+}
     });
   </script>
 </body>
