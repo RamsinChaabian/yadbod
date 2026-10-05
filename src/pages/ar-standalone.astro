@@ -9,6 +9,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>AR Standalone Test</title>
   <style>
+  /* ⚠️ حیاتی: ویدیو زیر canvas، هر دو fullscreen */
+video {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  object-fit: cover !important;
+  z-index: 1 !important;
+  background: #000;
+}
+
+canvas {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 2 !important;
+  background: transparent !important;
+  pointer-events: none;
+}
+
+/* debug overlay و UI روی همه چیز */
+.debug {
+  z-index: 9999 !important;
+}
     * { box-sizing: border-box; }
     html, body { margin: 0; height: 100%; overflow: hidden; background: #000; font-family: 'Vazirmatn', sans-serif; }
     #ar-container { position: fixed; inset: 0; }
