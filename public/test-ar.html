@@ -3,22 +3,55 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AR Test — LocAR.js</title>
+    <title>AR Test — LocAR.js (Fixed)</title>
     <style>
-        html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+        html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
+        /* Overlay HTML برای متن نشانگر */
+        .ar-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+            pointer-events: none;
+            z-index: 10;
+        }
+        .ar-debug {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #0f0;
+            font-size: 12px;
+            background: rgba(0,0,0,0.6);
+            padding: 8px;
+            border-radius: 4px;
+            z-index: 100;
+            font-family: monospace;
+        }
     </style>
+    <!-- ۱. A-Frame -->
     <script src="/vendor/ar/aframe.min.js"></script>
+    <!-- ۲. LocAR (UMD global) — باید قبل از locar-aframe لود شود -->
+    <script src="/vendor/ar/locar.js"></script>
+    <!-- ۳. locar-aframe (کامپوننت‌های A-Frame) -->
     <script src="/vendor/ar/locar-aframe.js"></script>
 </head>
 <body>
+    <div class="ar-debug" id="debug">Loading...</div>
+    <div class="ar-label">اینجاست 📍</div>
+
     <a-scene
         embedded
         vr-mode-ui="enabled: false"
         device-orientation-permission-ui="enabled: false"
         renderer="antialias: true; alpha: true"
+        style="width: 100%; height: 100%;"
     >
         <a-camera
-            locar-camera="gpsMinDistance: 2; positionMinAccuracy: 20; smoothingFactor: 5; enablePermissionDialog: false"
+            locar-camera="positionMinAccuracy: 20; smoothingFactor: 5; enablePermissionDialog: false"
         ></a-camera>
 
         <a-entity
@@ -32,27 +65,29 @@
                         position="0 1.5 0"
                         material="opacity: 0.6; transparent: true">
             </a-cylinder>
-            <a-text value="Test" color="#FFF" align="center"
-                    position="0 3.5 0" scale="3 3 3">
-            </a-text>
         </a-entity>
     </a-scene>
 
     <script>
-        // لاگ کردن خطاها برای عیبیابی
+        const debugEl = document.getElementById('debug');
+        const log = (msg) => {
+            console.log(msg);
+            debugEl.innerHTML += '<br>' + msg;
+        };
+
         window.addEventListener('error', (e) => {
             console.error('[TEST-AR] Error:', e.error || e.message);
+            debugEl.innerHTML += '<br><span style="color:#f00">ERR: ' + (e.error?.message || e.message) + '</span>';
         });
 
-        // بررسی بارگذاری کتابخانهها
         window.addEventListener('load', () => {
+            debugEl.innerHTML = 'Checking libs...';
             setTimeout(() => {
-                console.log('[TEST-AR] AFRAME:', !!window.AFRAME);
-                console.log('[TEST-AR] locar-camera registered:', 
-                    !!(window.AFRAME && window.AFRAME.components['locar-camera']));
-                console.log('[TEST-AR] locar-entity-place registered:', 
-                    !!(window.AFRAME && window.AFRAME.components['locar-entity-place']));
-            }, 1500);
+                log('AFRAME: ' + !!window.AFRAME);
+                log('LocAR global: ' + !!window.LocAR);
+                log('locar-camera: ' + !!(window.AFRAME && window.AFRAME.components['locar-camera']));
+                log('locar-entity-place: ' + !!(window.AFRAME && window.AFRAME.components['locar-entity-place']));
+            }, 2000);
         });
     </script>
 </body>
