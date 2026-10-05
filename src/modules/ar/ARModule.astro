@@ -77,65 +77,72 @@ const { location } = config;
   // تشخیص دقیق وضعیت GPS
   // ============================================================
   async function checkGPS(): Promise<{
-    state: 'ready' | 'denied' | 'off' | 'timeout' | 'unsupported';
-    message?: string;
-  }> {
-    if (!('geolocation' in navigator)) {
-      return { state: 'unsupported', message: 'مرورگر شما از GPS پشتیبانی نمی‌کند.' };
-    }
-
-    // بررسی وضعیت مجوز از Permissions API
-    if ('permissions' in navigator) {
-      try {
-        const perm = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
-        if (perm.state === 'denied') {
-          return {
-            state: 'denied',
-            message: 'دسترسی به موقعیت مسدود شده است. لطفاً از تنظیمات مرورگر اجازه بدهید.',
-          };
-        }
-      } catch {
-        // نادیده بگیر — برخی مرورگرها پشتیبانی نمی‌کنند
-      }
-    }
-
-    // تلاش برای دریافت موقعیت
-    return new Promise((resolve) => {
-      const timeoutId = setTimeout(() => {
-        resolve({
-          state: 'off',
-          message: 'سرویس موقعیت (GPS) خاموش است یا سیگنال دریافت نمی‌شود.',
-        });
-      }, 8000);
-
-      navigator.geolocation.getCurrentPosition(
-        () => {
-          clearTimeout(timeoutId);
-          resolve({ state: 'ready' });
-        },
-        (err) => {
-          clearTimeout(timeoutId);
-          if (err.code === err.PERMISSION_DENIED) {
-            resolve({
-              state: 'denied',
-              message: 'دسترسی به موقعیت رد شد. لطفاً مجوز بدهید.',
-            });
-          } else if (err.code === err.POSITION_UNAVAILABLE) {
-            resolve({
-              state: 'off',
-              message: 'سرویس موقعیت (GPS) خاموش است.',
-            });
-          } else {
-            resolve({
-              state: 'timeout',
-              message: 'دریافت موقعیت طول کشید. به فضای باز بروید.',
-            });
-          }
-        },
-        { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 }
-      );
-    });
+  state: 'ready' | 'low-accuracy' | 'denied' | 'off' | 'unsupported';
+  message?: string;
+  accuracy?: number;
+}> {
+  if (!('geolocation' in navigator)) {
+    return { state: 'unsupported', message: 'مرورگر شما از GPS پشتیبانی نمی‌کند.' };
   }
+
+  return new Promise((resolve) => {
+    const timeoutId = setTimeout(() => {
+      resolve({
+        state: 'off',
+        message: 'سیگنال GPS دریافت نشد. مطمئن شوید GPS روشن است و به فضای باز بروید.',
+      });
+    }, 10000);
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        clearTimeout(timeoutId);
+        const acc = pos.coords.accuracy;
+        const age = Date.now() - pos.timestamp;
+
+        // اگر دقت خیلی پایین است یا داده خیلی قدیمی، GPS واقعی کار نمی‌کند
+        if (acc > 1000) {
+          resolve({
+            state: 'low-accuracy',
+            message: `GPS خاموش است یا سیگنال ضعیف است. دقت فعلی: ${Math.round(acc)} متر (باید کمتر از ۱۰۰ متر باشد)`,
+            accuracy: acc,
+          });
+          return;
+        }
+
+        if (age > 60000) {
+          resolve({
+            state: 'low-accuracy',
+            message: 'موقعیت قدیمی از حافظه است. لطفاً GPS را روشن کنید.',
+            accuracy: acc,
+          });
+          return;
+        }
+
+        resolve({ state: 'ready', accuracy: acc });
+      },
+      (err) => {
+        clearTimeout(timeoutId);
+        if (err.code === 1) {
+          resolve({
+            state: 'denied',
+            message: 'دسترسی به موقعیت رد شد. لطفاً مجوز بدهید.',
+          });
+        } else if (err.code === 2) {
+          resolve({
+            state: 'off',
+            message: 'سرویس موقعیت (GPS) خاموش است. لطفاً آن را روشن کنید.',
+          });
+        } else {
+          resolve({
+            state: 'off',
+            message: 'دریافت موقعیت طول کشید. به فضای باز بروید و دوباره تلاش کنید.',
+          });
+        }
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+    );
+  });
+}
 
   // ============================================================
   // ساخت نشانگر سه‌بعدی زنده
@@ -332,23 +339,41 @@ const { location } = config;
       hideGpsOff();
 
       // ---------- ۱. بررسی GPS ----------
-      startBtn.disabled = true;
-      startBtn.innerHTML = '<span>در حال بررسی GPS…</span>';
+startBtn.disabled = true;
+startBtn.innerHTML = '<span>در حال بررسی GPS…</span>';
 
-      const gpsCheck = await checkGPS();
-      if (gpsCheck.state !== 'ready') {
-        startBtn.disabled = false;
-        resetStartButton();
+const gpsCheck = await checkGPS();
 
-        if (gpsCheck.state === 'denied' || gpsCheck.state === 'off') {
-          showGpsOff();
-        } else {
-          showError(gpsCheck.message ?? 'خطا در دسترسی به موقعیت مکانی.');
-        }
-        return;
-      }
+// GPS کاملاً خاموش یا مجوز رد → نمایش کارت خطا
+if (gpsCheck.state === 'denied' || gpsCheck.state === 'off' || gpsCheck.state === 'unsupported') {
+  startBtn.disabled = false;
+  resetStartButton();
 
-      startBtn.innerHTML = '<span>در حال بارگذاری…</span>';
+  if (gpsCheck.state === 'unsupported') {
+    if (unsupportedBox && unsupportedMsg) {
+      unsupportedMsg.textContent = gpsCheck.message ?? '';
+      unsupportedBox.hidden = false;
+    }
+  } else {
+    showGpsOff();
+  }
+  return;
+}
+
+// GPS دقت پایین → نمایش هشدار ولی اجازه ادامه
+if (gpsCheck.state === 'low-accuracy') {
+  // نمایش یک banner کوچک ولی به کاربر اجازه ادامه بدهیم
+  const proceed = confirm(
+    (gpsCheck.message ?? '') + '\n\nآیا می‌خواهید به هر حال ادامه دهید؟'
+  );
+  if (!proceed) {
+    startBtn.disabled = false;
+    resetStartButton();
+    return;
+  }
+}
+
+startBtn.innerHTML = '<span>در حال بارگذاری…</span>';
 
       try {
         // ---------- ۲. import ----------
