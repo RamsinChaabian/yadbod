@@ -40,7 +40,7 @@ const { location } = config;
     data-ar-hud
     class="absolute top-4 start-4 z-30 rounded-3xl overflow-hidden shadow-2xl"
   >
-    <div class="relative bg-gradient-to-br from-stone-900/95 via-stone-800/95 to-stone-900/95 backdrop-blur-2xl border border-amber-400/40 px-5 py-4 min-w-[200px]">
+    <div class="relative bg-gradient-to-br from-stone-900/95 via-stone-800/95 to-stone-900/95 backdrop-blur-2xl border border-amber-400/40 px-5 py-4 min-w-[210px]">
       <!-- ذرات نورانی -->
       <div class="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
         <div class="absolute -top-8 -end-8 w-24 h-24 bg-amber-500/20 rounded-full blur-2xl"></div>
@@ -64,9 +64,25 @@ const { location } = config;
         <div class="my-3 h-px bg-gradient-to-r from-transparent via-amber-400/40 to-transparent"></div>
 
         <!-- جهت -->
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between mb-2">
           <p class="text-stone-400 text-[10px]">جهت</p>
           <p data-ar-bearing class="text-amber-200 text-xs font-bold">—</p>
+        </div>
+
+        <!-- دقت GPS -->
+        <div class="pt-2 border-t border-amber-400/20 flex items-center justify-between">
+          <p class="text-stone-400 text-[10px]">دقت GPS</p>
+          <div class="flex items-center gap-1.5">
+            <span data-ar-accuracy-dot class="w-2 h-2 rounded-full bg-stone-500"></span>
+            <p data-ar-accuracy class="text-xs font-bold tabular-nums text-stone-300">—</p>
+          </div>
+        </div>
+
+        <!-- هشدار دقت پایین -->
+        <div data-ar-accuracy-warn hidden class="mt-3 rounded-xl bg-red-500/15 border border-red-500/40 px-3 py-2">
+          <p class="text-red-200 text-[11px] leading-relaxed">
+            ⚠️ دقت موقعیت پایین است. برای نتایج بهتر، GPS گوشی را روشن کنید.
+          </p>
         </div>
       </div>
     </div>
@@ -85,7 +101,8 @@ const { location } = config;
   <!-- پیام راهنما با انیمیشن شناور -->
   <div
     data-ar-hint
-    class="absolute bottom-24 inset-x-4 z-30 rounded-3xl bg-gradient-to-r from-stone-900/90 via-stone-800/90 to-stone-900/90 backdrop-blur-2xl border border-amber-400/30 px-5 py-4 text-center shadow-2xl animate-[float_3s_ease-in-out_infinite]"
+    class="absolute bottom-24 inset-x-4 z-30 rounded-3xl bg-gradient-to-r from-stone-900/90 via-stone-800/90 to-stone-900/90 backdrop-blur-2xl border border-amber-400/30 px-5 py-4 text-center shadow-2xl"
+    style="animation: float 3s ease-in-out infinite;"
   >
     <div class="flex items-center justify-center gap-3">
       <div class="flex gap-1">
