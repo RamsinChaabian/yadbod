@@ -2,7 +2,7 @@
  * تنظیمات تب‌ها
  * افزودن/حذف/غیرفعال‌سازی هر تب فقط با ویرایش این فایل ممکن است.
  */
-export type TabId = 'biography' | 'gallery' | 'timeline' | 'navigate' | 'memories';
+export type TabId = 'biography' | 'gallery' | 'timeline' | 'navigate' | 'contacts';
 
 export interface TabConfig {
   id: TabId;
@@ -19,7 +19,7 @@ export const tabsConfig = {
     { id: 'gallery',   label: 'خاطرات',     icon: 'image',    enabled: true, order: 2, ariaLabel: 'گالری خاطرات' },
     { id: 'timeline',  label: 'تایم‌لاین',   icon: 'clock',    enabled: true, order: 3, ariaLabel: 'تایم‌لاین زندگی' },
     { id: 'navigate',  label: 'مسیر و قبر', icon: 'map-pin',  enabled: true, order: 4, ariaLabel: 'مسیریابی و یافتن قبر' },
-    { id: 'memories',  label: 'خاطره شما',  icon: 'heart',    enabled: true, order: 5, ariaLabel: 'اشتراک‌گذاری خاطره' },
+    { id: 'contacts',  label: 'تماس',       icon: 'phone',    enabled: true, order: 5, ariaLabel: 'تماس با اقوام' },
   ] as TabConfig[],
 } as const;
 

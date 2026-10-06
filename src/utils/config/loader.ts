@@ -1,8 +1,3 @@
-/**
- * لودر مرکزی کانفیگ‌ها
- * تمام کانفیگ‌ها از اینجا عبور می‌کنند تا Zod اعتبارسنجی کند.
- * کامپوننت‌ها هرگز نباید مستقیم به src/config/*.ts دست بزنند.
- */
 import { siteConfig } from '../../config/site.config';
 import { personConfig } from '../../config/person.config';
 import { locationConfig } from '../../config/location.config';
@@ -11,6 +6,7 @@ import { tabsConfig } from '../../config/tabs.config';
 import { featuresConfig } from '../../config/features.config';
 import { seoConfig } from '../../config/seo.config';
 import { analyticsConfig } from '../../config/analytics.config';
+import { contactsConfig } from '../../config/contacts.config';
 
 import {
   siteConfigSchema,
@@ -21,6 +17,7 @@ import {
   featuresConfigSchema,
   seoConfigSchema,
   analyticsConfigSchema,
+  contactsConfigSchema,
 } from './schemas';
 
 function validate<T>(name: string, schema: { parse: (v: unknown) => T }, data: unknown): T {
@@ -49,6 +46,7 @@ export const config = {
   features: validate('features', featuresConfigSchema, featuresConfig),
   seo: validate('seo', seoConfigSchema, seoConfig),
   analytics: validate('analytics', analyticsConfigSchema, analyticsConfig),
+  contacts: validate('contacts', contactsConfigSchema, contactsConfig),
 } as const;
 
 export type Config = typeof config;

@@ -5,7 +5,7 @@
 import { z } from 'zod';
 
 const hexColor = z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'رنگ باید hex 6 رقمی باشد');
-
+const shamsiDateRegex = /^[\d۰-۹]{4}\/[\d۰-۹]{2}\/[\d۰-۹]{2}$/;
 export const siteConfigSchema = z.object({
   title: z.string().min(1, 'عنوان سایت الزامی است'),
   description: z.string().min(1),
@@ -20,8 +20,8 @@ export const siteConfigSchema = z.object({
 
 export const personConfigSchema = z.object({
   fullName: z.string().min(1, 'نام کامل الزامی است'),
-  birthDateShamsi: z.string().regex(/^\d{4}\/\d{2}\/\d{2}$/, 'فرمت تاریخ شمسی: YYYY/MM/DD'),
-  deathDateShamsi: z.string().regex(/^\d{4}\/\d{2}\/\d{2}$/, 'فرمت تاریخ شمسی: YYYY/MM/DD'),
+  birthDateShamsi: z.string().regex(shamsiDateRegex, 'فرمت تاریخ شمسی: YYYY/MM/DD'),
+  deathDateShamsi: z.string().regex(shamsiDateRegex, 'فرمت تاریخ شمسی: YYYY/MM/DD'),
   birthDateGregorian: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'فرمت تاریخ میلادی: YYYY-MM-DD'),
   deathDateGregorian: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'فرمت تاریخ میلادی: YYYY-MM-DD'),
   shortBio: z.string().min(1),
@@ -82,7 +82,7 @@ export const themeConfigSchema = z.object({
 });
 
 export const tabConfigSchema = z.object({
-  id: z.enum(['biography', 'gallery', 'timeline', 'navigate', 'memories']),
+  id: z.enum(['biography', 'gallery', 'timeline', 'navigate', 'contacts']),
   label: z.string().min(1),
   icon: z.string().min(1),
   enabled: z.boolean(),
@@ -127,4 +127,27 @@ export const analyticsConfigSchema = z.object({
   siteId: z.string().nullable(),
   scriptUrl: z.string().url().nullable(),
   respectDnt: z.boolean(),
+});
+
+// ============================================================
+// Contacts
+// ============================================================
+
+const phoneRegex = /^\+\d{10,15}$/;
+
+export const contactSchema = z.object({
+  id: z.string().min(1, 'id الزامی است'),
+  name: z.string().min(1, 'نام الزامی است'),
+  relation: z.string().min(1, 'نسبت الزامی است'),
+  phone: z.string().regex(phoneRegex, 'شماره باید با + شروع شود (مثل +989120000000)'),
+  whatsapp: z.string().regex(phoneRegex, 'شماره واتساپ نامعتبر است').nullable(),
+  avatar: z.string().min(1, 'آواتار الزامی است'),
+  availableHours: z.string().nullable(),
+  note: z.string().nullable(),
+});
+
+export const contactsConfigSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().min(1),
+  contacts: z.array(contactSchema),
 });
