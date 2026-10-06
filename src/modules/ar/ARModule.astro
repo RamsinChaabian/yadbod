@@ -12,6 +12,23 @@ const { location } = config;
   </header>
 
   <div data-ar-start-panel class="space-y-5">
+    <!-- بنر هشدار آفلاین -->
+    <div
+      data-ar-offline-banner
+      hidden
+      class="rounded-2xl bg-amber-50 border-2 border-amber-300 p-4 flex items-start gap-3"
+      role="alert"
+    >
+      <span class="text-2xl shrink-0">📡</span>
+      <div class="flex-1 min-w-0">
+        <p class="text-amber-900 text-sm font-bold mb-1">شما آفلاین هستید</p>
+        <p class="text-amber-800 text-xs leading-relaxed">
+          برای دقت بالاتر GPS و تجربه بهتر واقعیت افزوده، اتصال اینترنت را روشن کنید.
+          با این حال می‌توانید ادامه دهید.
+        </p>
+      </div>
+    </div>
+
     <div class="aspect-video rounded-3xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 flex items-center justify-center relative overflow-hidden shadow-card">
       <div class="text-center px-4">
         <div class="text-6xl mb-3">📷</div>
@@ -118,7 +135,7 @@ const { location } = config;
   }
 
   // ============================================================
-  // ساخت نشانگر سه‌بعدی
+  // ساخت نشانگر سه‌بعدی زنده
   // ============================================================
   function buildBeacon(THREE: any) {
     const group = new THREE.Group();
@@ -218,11 +235,27 @@ const { location } = config;
     const loadingProgress = document.querySelector<HTMLElement>('[data-ar-loading-progress]');
     const loadingTimer = document.querySelector<HTMLElement>('[data-ar-loading-timer]');
 
+    // آفلاین
+    const offlineBanner = document.querySelector<HTMLElement>('[data-ar-offline-banner]');
+    const offlineIndicator = document.querySelector<HTMLElement>('[data-ar-offline-indicator]');
+
     if (!startBtn || !sceneWrap || !startPanel) return;
 
     const graveLat = parseFloat(sceneWrap.dataset.lat ?? '') || 32.0498053;
     const graveLng = parseFloat(sceneWrap.dataset.lng ?? '') || 48.8765405;
     const dirs = ['شمال', 'شمال‌شرق', 'شرق', 'جنوب‌شرق', 'جنوب', 'جنوب‌غرب', 'غرب', 'شمال‌غرب'];
+
+    // ============================================================
+    // وضعیت آفلاین/آنلاین
+    // ============================================================
+    function updateOfflineStatus() {
+      const isOnline = navigator.onLine;
+      if (offlineBanner) offlineBanner.hidden = isOnline;
+      if (offlineIndicator) offlineIndicator.hidden = isOnline;
+    }
+    updateOfflineStatus();
+    window.addEventListener('online', updateOfflineStatus);
+    window.addEventListener('offline', updateOfflineStatus);
 
     // ============================================================
     // Loading helpers
@@ -358,7 +391,6 @@ const { location } = config;
       startBtn.disabled = true;
       startBtn.innerHTML = '<span>در حال آماده‌سازی…</span>';
 
-      // نمایش loading بلافاصله
       sceneWrap.hidden = false;
       showLoading('📡', 'در حال بررسی موقعیت مکانی…', 'لطفاً صبر کنید', 10);
       startLoadingTimer();
@@ -374,7 +406,6 @@ const { location } = config;
         return;
       }
 
-      // اگر دقت متوسط بود، به کاربر هشدار بده ولی ادامه بده
       const initialAccuracy = gpsCheck.accuracy;
 
       try {
@@ -390,7 +421,6 @@ const { location } = config;
         const app = new (LocAR as any).App({ cameraOptions: { hFov: 80 } });
         const locar = await app.start();
 
-        // ثابت‌سازی ویدیو
         await new Promise((r) => setTimeout(r, 500));
         const videoEl = document.querySelector('video');
         if (videoEl) {
@@ -428,7 +458,6 @@ const { location } = config;
         // ---------- مرحله ۵: انتظار برای اولین fix GPS ----------
         updateLoading('📍', 'در حال دریافت موقعیت دقیق…', 'این ممکن است ۱۰ تا ۳۰ ثانیه طول بکشد. لطفاً صبر کنید و صفحه را نبندید', 75);
 
-        let firstFixReceived = false;
         let firstFixTimeout = false;
 
         await new Promise<void>((resolve) => {
@@ -439,7 +468,6 @@ const { location } = config;
             const c = e.position?.coords;
             if (!c) return;
             done = true;
-            firstFixReceived = true;
             console.log('[AR] first GPS fix:', c.latitude, c.longitude, 'accuracy:', c.accuracy);
             locar.off('gpsupdate', onFirstGps);
             resolve();
@@ -447,7 +475,6 @@ const { location } = config;
 
           locar.on('gpsupdate', onFirstGps);
 
-          // timeout ۲۰ ثانیه
           setTimeout(() => {
             if (!done) {
               done = true;
@@ -458,7 +485,6 @@ const { location } = config;
           }, 20000);
         });
 
-        // اگر تایم‌اوت خورد، به کاربر هشدار بده
         if (firstFixTimeout) {
           console.log('[AR] continuing without GPS fix');
         }
@@ -561,7 +587,7 @@ const { location } = config;
           document.querySelectorAll('canvas').forEach((c) => c.remove());
         };
 
-        // ---------- پایان: مخفی کردن loading ----------
+        // ---------- پایان ----------
         updateLoading('✅', 'آماده!', 'به اطراف نگاه کنید', 100);
 
         await new Promise((r) => setTimeout(r, 400));
@@ -583,11 +609,10 @@ const { location } = config;
       }
     });
 
-    // ---------- Retry GPS (بدون رفرش) ----------
+    // ---------- Retry GPS ----------
     if (gpsRetryBtn) {
       gpsRetryBtn.addEventListener('click', () => {
         hideGpsOff();
-        // ریست کامل و شروع مجدد
         resetStartButton();
         startBtn.click();
       });

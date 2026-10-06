@@ -9,7 +9,7 @@ export const siteConfig = {
   dir: 'rtl' as const,
   locales: ['fa'] as const,
   defaultLocale: 'fa' as const,
-  baseUrl: 'https://RamsinChaabian.github.io/yadbod',
+  baseUrl: 'https://najiye.ir',
   author: 'خانواده رویشدزاده',
   since: 1405,
 } as const;
