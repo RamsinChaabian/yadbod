@@ -20,7 +20,7 @@ const entries = await getBio();
           {entry.data.subtitle && (
             <p class="text-sm text-gold-light tracking-wide">{entry.data.subtitle}</p>
           )}
-          <div class="prose-custom text-ivory-soft leading-loose">
+          <div class="prose-custom text-ivory-soft leading-relaxed">
             <Content />
           </div>
         </article>
@@ -31,27 +31,40 @@ const entries = await getBio();
 
 <style>
   .prose-custom :global(p) {
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
+    text-align: justify;
+    text-justify: inter-word;
+    text-align-last: start;  /* خط آخر به راست (RTL) */
   }
+
   .prose-custom :global(blockquote) {
     border-right: 3px solid var(--color-gold);
-    padding-right: 1rem;
-    margin: 1.5rem 0;
+    padding-right: 1.25rem;
+    margin: 1.75rem 0;
     color: var(--color-gold-light);
     font-style: italic;
+    text-align: justify;
+    text-justify: inter-word;
+    text-align-last: start;
   }
+
   .prose-custom :global(h2),
   .prose-custom :global(h3) {
     color: var(--color-gold);
     margin: 1.5rem 0 0.75rem;
     font-weight: 700;
+    text-align: start;
   }
+
   .prose-custom :global(ul),
   .prose-custom :global(ol) {
     padding-right: 1.5rem;
     margin-bottom: 1rem;
   }
+
   .prose-custom :global(li) {
     margin-bottom: 0.5rem;
+    text-align: justify;
+    text-justify: inter-word;
   }
 </style>
