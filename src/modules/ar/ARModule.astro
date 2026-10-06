@@ -74,86 +74,70 @@ const { location } = config;
   }
 
   // ============================================================
-  // بررسی سریع GPS — با تشخیص دقت پایین
+  // بررسی GPS — با تشخیص دقت پایین
   // ============================================================
-  async function quickGpsCheck(): Promise<{ ok: boolean; message?: string }> {
+  async function quickGpsCheck(): Promise<{ ok: boolean; accuracy?: number; message?: string }> {
     if (!('geolocation' in navigator)) {
       return { ok: false, message: 'مرورگر شما از GPS پشتیبانی نمی‌کند.' };
     }
 
     return new Promise((resolve) => {
       const timeoutId = setTimeout(() => {
-        resolve({ ok: false, message: 'سیگنال GPS دریافت نشد. لطفاً به فضای باز بروید.' });
-      }, 10000);
+        resolve({ ok: false, message: 'سیگنال GPS دریافت نشد. لطفاً به فضای باز بروید و دوباره تلاش کنید.' });
+      }, 12000);
 
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           clearTimeout(timeoutId);
           const accuracy = pos.coords.accuracy;
 
-          // اگر دقت > ۲۰۰ متر است، GPS واقعی کار نمی‌کند (WiFi/cell location)
           if (accuracy > 200) {
             resolve({
               ok: false,
-              message: `دقت موقعیت فقط ${Math.round(accuracy)} متر است. برای دقت بهتر، GPS گوشی را روشن کنید.`,
+              accuracy,
+              message: `دقت موقعیت شما فقط ${Math.round(accuracy)} متر است، در حالی که GPS واقعی دقت زیر ۲۰ متر می‌دهد. لطفاً GPS گوشی را روشن کنید.`,
             });
             return;
           }
 
-          resolve({ ok: true });
+          resolve({ ok: true, accuracy });
         },
         (err) => {
           clearTimeout(timeoutId);
           if (err.code === 1) {
-            resolve({
-              ok: false,
-              message: 'دسترسی به موقعیت رد شد. لطفاً در تنظیمات مرورگر مجوز بدهید.',
-            });
+            resolve({ ok: false, message: 'دسترسی به موقعیت رد شده است. لطفاً در تنظیمات مرورگر مجوز بدهید.' });
           } else if (err.code === 2) {
-            resolve({
-              ok: false,
-              message: 'سرویس موقعیت (GPS) خاموش است. لطفاً آن را روشن کنید.',
-            });
+            resolve({ ok: false, message: 'سرویس موقعیت (GPS) خاموش است. لطفاً آن را روشن کنید.' });
           } else {
-            resolve({
-              ok: false,
-              message: 'دریافت موقعیت طول کشید. به فضای باز بروید و دوباره تلاش کنید.',
-            });
+            resolve({ ok: false, message: 'دریافت موقعیت طول کشید. به فضای باز بروید و دوباره تلاش کنید.' });
           }
         },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     });
   }
 
   // ============================================================
-  // ساخت نشانگر سه‌بعدی زنده
+  // ساخت نشانگر سه‌بعدی
   // ============================================================
   function buildBeacon(THREE: any) {
     const group = new THREE.Group();
 
-    // ستون نور عمودی با گرادیان
     const columnGeo = new THREE.CylinderGeometry(0.12, 0.35, 5, 24, 1, true);
     const columnMat = new THREE.MeshBasicMaterial({
-      color: 0xF5A623,
-      transparent: true,
-      opacity: 0.55,
-      blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
-      depthWrite: false,
+      color: 0xF5A623, transparent: true, opacity: 0.55,
+      blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false,
     });
     const column = new THREE.Mesh(columnGeo, columnMat);
     column.position.y = 2.5;
     group.add(column);
 
-    // الماس مرکزی (octahedron)
     const diamondGeo = new THREE.OctahedronGeometry(0.55, 0);
     const diamondMat = new THREE.MeshBasicMaterial({ color: 0xE8833A });
     const diamond = new THREE.Mesh(diamondGeo, diamondMat);
     diamond.position.y = 2.5;
     group.add(diamond);
 
-    // هاله درخشان مرکزی (sprite)
     const glowCanvas = document.createElement('canvas');
     glowCanvas.width = 128;
     glowCanvas.height = 128;
@@ -166,68 +150,37 @@ const { location } = config;
     ctx.fillRect(0, 0, 128, 128);
     const glowTex = new THREE.CanvasTexture(glowCanvas);
     const glowMat = new THREE.SpriteMaterial({
-      map: glowTex,
-      transparent: true,
-      opacity: 0.85,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
+      map: glowTex, transparent: true, opacity: 0.85,
+      blending: THREE.AdditiveBlending, depthWrite: false,
     });
     const glow = new THREE.Sprite(glowMat);
     glow.scale.set(4, 4, 1);
     glow.position.y = 2.5;
     group.add(glow);
 
-    // حلقه افقی روی زمین
     const ring1 = new THREE.Mesh(
       new THREE.TorusGeometry(1.5, 0.08, 12, 48),
-      new THREE.MeshBasicMaterial({
-        color: 0xE8833A,
-        transparent: true,
-        opacity: 0.9,
-        blending: THREE.AdditiveBlending,
-      })
+      new THREE.MeshBasicMaterial({ color: 0xE8833A, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending })
     );
     ring1.rotation.x = -Math.PI / 2;
     ring1.position.y = 0.05;
     group.add(ring1);
 
-    // حلقه عمودی چرخان
     const ring2 = new THREE.Mesh(
       new THREE.TorusGeometry(1.0, 0.06, 12, 48),
-      new THREE.MeshBasicMaterial({
-        color: 0xF5A623,
-        transparent: true,
-        opacity: 0.8,
-        blending: THREE.AdditiveBlending,
-      })
+      new THREE.MeshBasicMaterial({ color: 0xF5A623, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending })
     );
     ring2.position.y = 2.5;
     group.add(ring2);
 
-    // حلقه سوم کوچک‌تر
     const ring3 = new THREE.Mesh(
       new THREE.TorusGeometry(0.7, 0.04, 8, 32),
-      new THREE.MeshBasicMaterial({
-        color: 0xFFD08A,
-        transparent: true,
-        opacity: 0.7,
-        blending: THREE.AdditiveBlending,
-      })
+      new THREE.MeshBasicMaterial({ color: 0xFFD08A, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending })
     );
     ring3.position.y = 2.5;
     group.add(ring3);
 
-    return {
-      group,
-      column,
-      diamond,
-      glow,
-      ring1,
-      ring2,
-      ring3,
-      columnMat,
-      glowMat,
-    };
+    return { group, column, diamond, glow, ring1, ring2, ring3, columnMat, glowMat };
   }
 
   // ============================================================
@@ -257,12 +210,76 @@ const { location } = config;
     const accuracyDot = document.querySelector<HTMLElement>('[data-ar-accuracy-dot]');
     const accuracyWarn = document.querySelector<HTMLElement>('[data-ar-accuracy-warn]');
 
+    // Loading elements
+    const loadingEl = document.querySelector<HTMLElement>('[data-ar-loading]');
+    const loadingText = document.querySelector<HTMLElement>('[data-ar-loading-text]');
+    const loadingHint = document.querySelector<HTMLElement>('[data-ar-loading-hint]');
+    const loadingIcon = document.querySelector<HTMLElement>('[data-ar-loading-icon]');
+    const loadingProgress = document.querySelector<HTMLElement>('[data-ar-loading-progress]');
+    const loadingTimer = document.querySelector<HTMLElement>('[data-ar-loading-timer]');
+
     if (!startBtn || !sceneWrap || !startPanel) return;
 
     const graveLat = parseFloat(sceneWrap.dataset.lat ?? '') || 32.0498053;
     const graveLng = parseFloat(sceneWrap.dataset.lng ?? '') || 48.8765405;
     const dirs = ['شمال', 'شمال‌شرق', 'شرق', 'جنوب‌شرق', 'جنوب', 'جنوب‌غرب', 'غرب', 'شمال‌غرب'];
 
+    // ============================================================
+    // Loading helpers
+    // ============================================================
+    let loadingTimerId: number | null = null;
+    let loadingStartTime = 0;
+
+    function showLoading(icon: string, text: string, hint: string, progress: number) {
+      if (!loadingEl) return;
+      loadingEl.hidden = false;
+      if (loadingIcon) loadingIcon.textContent = icon;
+      if (loadingText) loadingText.textContent = text;
+      if (loadingHint) loadingHint.textContent = hint;
+      if (loadingProgress) loadingProgress.style.width = `${progress}%`;
+      if (loadingStartTime === 0) loadingStartTime = Date.now();
+    }
+
+    function updateLoading(icon: string, text: string, hint: string, progress: number) {
+      if (!loadingEl || loadingEl.hidden) {
+        showLoading(icon, text, hint, progress);
+        return;
+      }
+      if (loadingIcon) loadingIcon.textContent = icon;
+      if (loadingText) loadingText.textContent = text;
+      if (loadingHint) loadingHint.textContent = hint;
+      if (loadingProgress) loadingProgress.style.width = `${progress}%`;
+    }
+
+    function hideLoading() {
+      if (loadingEl) loadingEl.hidden = true;
+      if (loadingTimerId) {
+        clearInterval(loadingTimerId);
+        loadingTimerId = null;
+      }
+      loadingStartTime = 0;
+      if (loadingTimer) loadingTimer.textContent = '';
+    }
+
+    function startLoadingTimer() {
+      loadingStartTime = Date.now();
+      if (loadingTimerId) clearInterval(loadingTimerId);
+      loadingTimerId = window.setInterval(() => {
+        const sec = Math.floor((Date.now() - loadingStartTime) / 1000);
+        if (loadingTimer) loadingTimer.textContent = `${sec} ثانیه گذشته`;
+      }, 500);
+    }
+
+    function stopLoadingTimer() {
+      if (loadingTimerId) {
+        clearInterval(loadingTimerId);
+        loadingTimerId = null;
+      }
+    }
+
+    // ============================================================
+    // Helpers
+    // ============================================================
     function showError(msg: string) {
       if (errorBox && errorMsg) { errorMsg.textContent = msg; errorBox.hidden = false; }
     }
@@ -286,7 +303,6 @@ const { location } = config;
       const dist = calcDistance(lat, lng, graveLat, graveLng);
       const bearing = calcBearing(lat, lng, graveLat, graveLng);
 
-      // فاصله
       if (distanceEl && distanceUnitEl) {
         if (dist < 1000) {
           distanceEl.textContent = String(Math.round(dist));
@@ -297,16 +313,13 @@ const { location } = config;
         }
       }
 
-      // جهت
       if (bearingEl) bearingEl.textContent = dirs[Math.round(bearing / 45) % 8];
 
-      // فلش
       if (arrowEl && cameraHeading !== undefined) {
         const rel = ((bearing - cameraHeading) + 360) % 360;
         arrowEl.style.transform = `rotate(${rel}deg)`;
       }
 
-      // پیام راهنما
       if (hintText) {
         if (dist < 30) {
           hintText.textContent = 'به قبر بسیار نزدیک هستید — به اطراف نگاه کنید';
@@ -320,7 +333,6 @@ const { location } = config;
         }
       }
 
-      // دقت GPS
       if (accuracyEl && accuracyDot && accuracy !== undefined) {
         accuracyEl.textContent = `${Math.round(accuracy)} م`;
         let color = '#9ca3af';
@@ -342,29 +354,43 @@ const { location } = config;
       hideError();
       hideGpsOff();
 
-      // ---------- ۱. بررسی سریع GPS ----------
+      // ---------- مرحله ۱: بررسی GPS ----------
       startBtn.disabled = true;
-      startBtn.innerHTML = '<span>در حال بررسی GPS…</span>';
+      startBtn.innerHTML = '<span>در حال آماده‌سازی…</span>';
+
+      // نمایش loading بلافاصله
+      sceneWrap.hidden = false;
+      showLoading('📡', 'در حال بررسی موقعیت مکانی…', 'لطفاً صبر کنید', 10);
+      startLoadingTimer();
 
       const gpsCheck = await quickGpsCheck();
       if (!gpsCheck.ok) {
+        stopLoadingTimer();
+        hideLoading();
+        sceneWrap.hidden = true;
         startBtn.disabled = false;
         resetStartButton();
         showGpsOff(gpsCheck.message);
         return;
       }
 
-      startBtn.innerHTML = '<span>در حال بارگذاری…</span>';
+      // اگر دقت متوسط بود، به کاربر هشدار بده ولی ادامه بده
+      const initialAccuracy = gpsCheck.accuracy;
 
       try {
-        // ---------- ۲. import ----------
+        // ---------- مرحله ۲: بارگذاری three + locar ----------
+        updateLoading('⚙️', 'در حال بارگذاری موتور AR…', 'لطفاً صبر کنید', 25);
+
         const THREE = await import('three');
         const LocAR = await import('locar');
+
+        // ---------- مرحله ۳: راه‌اندازی دوربین ----------
+        updateLoading('📷', 'در حال راه‌اندازی دوربین…', 'اجازه دسترسی به دوربین را بدهید', 40);
 
         const app = new (LocAR as any).App({ cameraOptions: { hFov: 80 } });
         const locar = await app.start();
 
-        // ---------- ۳. ثابت‌سازی ویدیو ----------
+        // ثابت‌سازی ویدیو
         await new Promise((r) => setTimeout(r, 500));
         const videoEl = document.querySelector('video');
         if (videoEl) {
@@ -394,19 +420,61 @@ const { location } = config;
           el.style.setProperty('background', 'transparent');
         });
 
-        // ---------- ۴. GPS watch ----------
+        // ---------- مرحله ۴: اتصال GPS ----------
+        updateLoading('🛰️', 'در حال اتصال به GPS…', 'دریافت سیگنال از ماهواره‌ها', 60);
+
         await locar.startGps();
 
-        // ---------- ۵. ساخت beacon سه‌بعدی ----------
+        // ---------- مرحله ۵: انتظار برای اولین fix GPS ----------
+        updateLoading('📍', 'در حال دریافت موقعیت دقیق…', 'این ممکن است ۱۰ تا ۳۰ ثانیه طول بکشد. لطفاً صبر کنید و صفحه را نبندید', 75);
+
+        let firstFixReceived = false;
+        let firstFixTimeout = false;
+
+        await new Promise<void>((resolve) => {
+          let done = false;
+
+          const onFirstGps = (e: any) => {
+            if (done) return;
+            const c = e.position?.coords;
+            if (!c) return;
+            done = true;
+            firstFixReceived = true;
+            console.log('[AR] first GPS fix:', c.latitude, c.longitude, 'accuracy:', c.accuracy);
+            locar.off('gpsupdate', onFirstGps);
+            resolve();
+          };
+
+          locar.on('gpsupdate', onFirstGps);
+
+          // timeout ۲۰ ثانیه
+          setTimeout(() => {
+            if (!done) {
+              done = true;
+              firstFixTimeout = true;
+              console.log('[AR] GPS fix timeout — continuing anyway');
+              resolve();
+            }
+          }, 20000);
+        });
+
+        // اگر تایم‌اوت خورد، به کاربر هشدار بده
+        if (firstFixTimeout) {
+          console.log('[AR] continuing without GPS fix');
+        }
+
+        // ---------- مرحله ۶: ساخت نشانگر ----------
+        updateLoading('✨', 'در حال ساخت نشانگر سه‌بعدی…', 'چند لحظه دیگر آماده می‌شود', 90);
+
         const beacon = buildBeacon(THREE);
         locar.scene.add(beacon.group);
         beacon.group.visible = false;
 
-        // ---------- ۶. متغیرها ----------
+        // ---------- مرحله ۷: متغیرها و ردیابی ----------
         let cameraHeadingDeg = 0;
         let lastLat: number | null = null;
         let lastLng: number | null = null;
-        let lastAccuracy: number | undefined;
+        let lastAccuracy: number | undefined = initialAccuracy;
         let lastUpdateTime = 0;
 
         const onGps = (e: any) => {
@@ -419,7 +487,7 @@ const { location } = config;
         };
         locar.on('gpsupdate', onGps);
 
-        // ---------- ۷. حلقه انیمیشن ----------
+        // ---------- حلقه انیمیشن ----------
         const tmpVec = new THREE.Vector3();
         const upVec = new THREE.Vector3(0, 0, -1);
         let running = true;
@@ -431,7 +499,6 @@ const { location } = config;
 
           const t = clock.getElapsedTime();
 
-          // انیمیشن نشانگر
           beacon.ring1.rotation.z = t * 0.6;
           beacon.ring2.rotation.z = -t * 1.2;
           beacon.ring2.rotation.x = Math.sin(t * 0.5) * 0.4;
@@ -449,10 +516,8 @@ const { location } = config;
 
           beacon.columnMat.opacity = 0.4 + Math.sin(t * 1.5) * 0.2;
 
-          // موقعیت‌یابی beacon
           if (lastLat !== null && lastLng !== null) {
             const camera = locar.camera;
-
             const [gx, gz] = locar.lonLatToWorldCoords(graveLng, graveLat);
             tmpVec.set(gx, 0, gz);
 
@@ -467,15 +532,12 @@ const { location } = config;
             beacon.group.visible = inView;
 
             if (inView) {
-              // فاصله مجازی — حداکثر ۸ متر
               const VIRTUAL_DIST = Math.min(actualDist, 8);
               const targetPos = camera.position.clone().add(dir.clone().multiplyScalar(VIRTUAL_DIST));
               targetPos.y = 0;
-
               beacon.group.position.lerp(targetPos, 0.2);
             }
 
-            // heading دوربین
             upVec.set(0, 0, -1).applyQuaternion(camera.quaternion);
             const cameraHeadingRad = Math.atan2(upVec.x, -upVec.z);
             const headingDeg = ((cameraHeadingRad * 180 / Math.PI) + 360) % 360;
@@ -490,7 +552,7 @@ const { location } = config;
         }
         tick();
 
-        // ---------- ۸. cleanup ----------
+        // ---------- cleanup ----------
         window.__arCleanup = () => {
           running = false;
           try { locar.stopGps(); } catch { /* ignore */ }
@@ -499,23 +561,34 @@ const { location } = config;
           document.querySelectorAll('canvas').forEach((c) => c.remove());
         };
 
-        // ---------- ۹. نمایش ----------
+        // ---------- پایان: مخفی کردن loading ----------
+        updateLoading('✅', 'آماده!', 'به اطراف نگاه کنید', 100);
+
+        await new Promise((r) => setTimeout(r, 400));
+
+        stopLoadingTimer();
+        hideLoading();
+
         startPanel.hidden = true;
-        sceneWrap.hidden = false;
         document.body.style.overflow = 'hidden';
       } catch (err: any) {
+        stopLoadingTimer();
+        hideLoading();
         const msg = err?.message || String(err);
         console.error('[AR] error:', err);
         showError(`خطا: ${msg}`);
         resetStartButton();
+        sceneWrap.hidden = true;
         document.querySelectorAll('video, canvas').forEach((el) => el.remove());
       }
     });
 
-    // ---------- Retry GPS ----------
+    // ---------- Retry GPS (بدون رفرش) ----------
     if (gpsRetryBtn) {
       gpsRetryBtn.addEventListener('click', () => {
         hideGpsOff();
+        // ریست کامل و شروع مجدد
+        resetStartButton();
         startBtn.click();
       });
     }
@@ -536,10 +609,11 @@ const { location } = config;
         resetStartButton();
         hideError();
         hideGpsOff();
+        hideLoading();
       });
     }
 
-    // ---------- Retry ----------
+    // ---------- Retry عمومی ----------
     if (retryBtn) {
       retryBtn.addEventListener('click', () => {
         hideError();
