@@ -1,0 +1,84 @@
+---
+interface Props {
+  contact: {
+    id: string;
+    name: string;
+    relation: string;
+    phone: string;
+    whatsapp: string | null;
+    avatar: string;
+    availableHours: string | null;
+    note: string | null;
+  };
+}
+
+const { contact } = Astro.props;
+const telHref = `tel:${contact.phone}`;
+const whatsappHref = contact.whatsapp
+  ? `https://wa.me/${contact.whatsapp.replace(/\+/g, '')}`
+  : null;
+---
+
+<article class="group rounded-3xl bg-white border border-stone-200 hover:border-amber-300 transition-all duration-300 overflow-hidden shadow-card hover:shadow-card-hover">
+  <div class="p-5 sm:p-6">
+    <!-- سر: آواتار + نام -->
+    <div class="flex items-start gap-4">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center text-3xl shrink-0 ring-2 ring-amber-200/50 group-hover:scale-105 transition-transform duration-300">
+        {contact.avatar}
+      </div>
+      <div class="flex-1 min-w-0 pt-1">
+        <h3 class="text-lg font-bold text-stone-800 truncate">{contact.name}</h3>
+        <p class="text-sm text-amber-600 font-medium mt-0.5">{contact.relation}</p>
+      </div>
+    </div>
+
+    <!-- شماره -->
+    <div class="mt-5 space-y-2">
+      <div class="flex items-center gap-2 text-stone-700 bg-stone-50 rounded-xl px-3 py-2">
+        <span class="text-lg">📱</span>
+        <span dir="ltr" class="font-mono text-sm tabular-nums tracking-wide">{contact.phone}</span>
+      </div>
+      {contact.availableHours && (
+        <div class="flex items-center gap-2 text-stone-500 text-xs px-1">
+          <span>🕐</span>
+          <span>{contact.availableHours}</span>
+        </div>
+      )}
+      {contact.note && (
+        <p class="text-xs text-stone-500 italic px-1 leading-relaxed">{contact.note}</p>
+      )}
+    </div>
+
+    <!-- دکمه‌ها -->
+    <div class="mt-5 flex gap-2">
+      <a
+        href={telHref}
+        class="touch-target flex-1 inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold py-3 px-4 hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg active:scale-95"
+      >
+        <span aria-hidden="true">📞</span>
+        <span>تماس</span>
+      </a>
+
+      {whatsappHref ? (
+        <a
+          href={whatsappHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="touch-target flex-1 inline-flex items-center justify-center gap-2 rounded-2xl bg-[#25D366] text-white font-bold py-3 px-4 hover:bg-[#1ebe5b] transition-all shadow-lg active:scale-95"
+        >
+          <span aria-hidden="true">💬</span>
+          <span>واتساپ</span>
+        </a>
+      ) : (
+        <button
+          type="button"
+          disabled
+          class="touch-target flex-1 inline-flex items-center justify-center gap-2 rounded-2xl bg-stone-200 text-stone-400 font-bold py-3 px-4 cursor-not-allowed"
+        >
+          <span aria-hidden="true">💬</span>
+          <span>واتساپ</span>
+        </button>
+      )}
+    </div>
+  </div>
+</article>
