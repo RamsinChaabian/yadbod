@@ -1,0 +1,133 @@
+---
+// نشانگر وضعیت آنلاین/آفلاین + اطلاع‌رسانی به‌روزرسانی
+---
+
+<!-- نوار آفلاین -->
+<div
+  data-pwa-offline
+  hidden
+  class="fixed top-0 inset-x-0 z-[300] bg-gradient-to-r from-stone-900 via-stone-800 to-stone-900 border-b-2 border-amber-500/50 shadow-lg transition-transform duration-300"
+  style="transform: translateY(-100%);"
+>
+  <div class="max-w-2xl mx-auto px-4 py-2.5 flex items-center justify-center gap-2">
+    <span class="relative flex h-2.5 w-2.5">
+      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+      <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+    </span>
+    <p class="text-amber-100 text-xs font-medium">
+      شما آفلاین هستید — محتوای ذخیره‌شده در دسترس است
+    </p>
+  </div>
+</div>
+
+<!-- Toast به‌روزرسانی -->
+<div
+  data-pwa-update
+  hidden
+  class="fixed bottom-24 inset-x-4 z-[300] max-w-md mx-auto rounded-2xl bg-gradient-to-br from-stone-900 to-stone-800 border border-amber-500/50 shadow-2xl"
+  style="animation: slide-up 0.4s ease-out;"
+>
+  <div class="p-4 flex items-center gap-3">
+    <div class="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0">
+      <span class="text-xl">✨</span>
+    </div>
+    <div class="flex-1 min-w-0">
+      <p class="text-amber-200 text-sm font-bold">نسخه جدید آماده است</p>
+      <p class="text-stone-400 text-xs">برای مشاهده آخرین تغییرات، رفرش کنید</p>
+    </div>
+    <button
+      type="button"
+      data-pwa-update-btn
+      class="shrink-0 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold px-4 py-2 text-xs hover:from-amber-600 hover:to-orange-600 transition-all active:scale-95"
+    >
+      به‌روزرسانی
+    </button>
+  </div>
+</div>
+
+<style is:global>
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<script>
+  // ---------- وضعیت آنلاین/آفلاین ----------
+  function initOnlineStatus() {
+    const offlineBar = document.querySelector<HTMLElement>('[data-pwa-offline]');
+    if (!offlineBar) return;
+
+    function updateStatus() {
+      if (navigator.onLine) {
+        // آنلاین — مخفی کن با انیمیشن
+        offlineBar.style.transform = 'translateY(-100%)';
+        setTimeout(() => { offlineBar.hidden = true; }, 300);
+      } else {
+        // آفلاین — نمایش بده
+        offlineBar.hidden = false;
+        requestAnimationFrame(() => {
+          offlineBar.style.transform = 'translateY(0)';
+        });
+      }
+    }
+
+    window.addEventListener('online', updateStatus);
+    window.addEventListener('offline', updateStatus);
+    updateStatus();
+  }
+
+  // ---------- اطلاع‌رسانی به‌روزرسانی ----------
+  function initUpdateNotify() {
+    const updateToast = document.querySelector<HTMLElement>('[data-pwa-update]');
+    const updateBtn = document.querySelector<HTMLButtonElement>('[data-pwa-update-btn]');
+
+    if (!updateToast || !updateBtn) return;
+
+    // در حالت autoUpdate، SW خودکار به‌روزرسانی می‌شود
+    // اما اگر کاربر مدت طولانی باز است، به او اطلاع می‌دهیم
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then((registration) => {
+        // بررسی به‌روزرسانی هر ۳۰ دقیقه
+        setInterval(() => {
+          registration.update().catch(() => {});
+        }, 30 * 60 * 1000);
+
+        // وقتی SW جدید در انتظار است
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          if (!newWorker) return;
+
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // نسخه جدید آماده است
+              updateToast.hidden = false;
+            }
+          });
+        });
+      });
+
+      // دکمه به‌روزرسانی
+      updateBtn.addEventListener('click', () => {
+        // به SW جدید بگو skipWaiting کند
+        navigator.serviceWorker.ready.then((registration) => {
+          if (registration.waiting) {
+            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+          }
+          // رفرش صفحه
+          window.location.reload();
+        });
+      });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      initOnlineStatus();
+      initUpdateNotify();
+    });
+  } else {
+    initOnlineStatus();
+    initUpdateNotify();
+  }
+</script>
