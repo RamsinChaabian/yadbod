@@ -35,41 +35,32 @@ const { location } = config;
     </div>
   </div>
 
-  <!-- HUD زنده با انیمیشن نبض -->
-  <div
-    data-ar-hud
-    class="absolute top-4 start-4 z-30 rounded-3xl overflow-hidden shadow-2xl"
-  >
+  <!-- HUD -->
+  <div data-ar-hud class="absolute top-4 start-4 z-30 rounded-3xl overflow-hidden shadow-2xl">
     <div class="relative bg-gradient-to-br from-stone-900/95 via-stone-800/95 to-stone-900/95 backdrop-blur-2xl border border-amber-400/40 px-5 py-4 min-w-[210px]">
-      <!-- ذرات نورانی -->
       <div class="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
         <div class="absolute -top-8 -end-8 w-24 h-24 bg-amber-500/20 rounded-full blur-2xl"></div>
         <div class="absolute -bottom-8 -start-8 w-20 h-20 bg-orange-500/15 rounded-full blur-2xl"></div>
       </div>
 
       <div class="relative">
-        <!-- لیبل -->
         <div class="flex items-center gap-2 mb-2">
           <span data-ar-pulse-dot class="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(245,166,35,0.9)]"></span>
           <p class="text-amber-200/80 text-[10px] font-medium tracking-wider uppercase">فاصله تا قبر</p>
         </div>
 
-        <!-- فاصله -->
         <div class="flex items-baseline gap-1">
           <p data-ar-distance class="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 to-orange-400 font-black text-3xl tabular-nums leading-none">—</p>
           <span data-ar-distance-unit class="text-amber-200/60 text-xs font-medium"></span>
         </div>
 
-        <!-- جداکننده -->
         <div class="my-3 h-px bg-gradient-to-r from-transparent via-amber-400/40 to-transparent"></div>
 
-        <!-- جهت -->
         <div class="flex items-center justify-between mb-2">
           <p class="text-stone-400 text-[10px]">جهت</p>
           <p data-ar-bearing class="text-amber-200 text-xs font-bold">—</p>
         </div>
 
-        <!-- دقت GPS -->
         <div class="pt-2 border-t border-amber-400/20 flex items-center justify-between">
           <p class="text-stone-400 text-[10px]">دقت GPS</p>
           <div class="flex items-center gap-1.5">
@@ -78,17 +69,16 @@ const { location } = config;
           </div>
         </div>
 
-        <!-- هشدار دقت پایین -->
-        <div data-ar-accuracy-warn hidden class="mt-3 rounded-xl bg-red-500/15 border border-red-500/40 px-3 py-2">
-          <p class="text-red-200 text-[11px] leading-relaxed">
-            ⚠️ دقت موقعیت پایین است. برای نتایج بهتر، GPS گوشی را روشن کنید.
+        <div data-ar-accuracy-warn hidden class="mt-3 rounded-xl bg-amber-500/15 border border-amber-500/40 px-3 py-2">
+          <p class="text-amber-100 text-[11px] leading-relaxed">
+            ⚠️ برای دقت بیشتر، GPS گوشی را روشن کنید
           </p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- دکمه بستن با انیمیشن چرخش -->
+  <!-- دکمه بستن -->
   <button
     type="button"
     data-ar-close
@@ -98,7 +88,7 @@ const { location } = config;
     <span aria-hidden="true" class="text-lg font-bold">✕</span>
   </button>
 
-  <!-- پیام راهنما با انیمیشن شناور -->
+  <!-- پیام راهنما -->
   <div
     data-ar-hint
     class="absolute bottom-24 inset-x-4 z-30 rounded-3xl bg-gradient-to-r from-stone-900/90 via-stone-800/90 to-stone-900/90 backdrop-blur-2xl border border-amber-400/30 px-5 py-4 text-center shadow-2xl"
@@ -116,7 +106,52 @@ const { location } = config;
     </div>
   </div>
 
-  <!-- لایه خطای GPS -->
+  <!-- ============================================ -->
+  <!-- لایه Loading (نمایش مرحله‌ای) -->
+  <!-- ============================================ -->
+  <div
+    data-ar-loading
+    hidden
+    class="absolute inset-0 z-[60] flex items-center justify-center bg-gradient-to-br from-stone-950 via-stone-900 to-stone-950"
+  >
+    <div class="text-center px-8 max-w-sm">
+      <!-- Spinner حلقه‌ای -->
+      <div class="relative w-24 h-24 mx-auto mb-8">
+        <div class="absolute inset-0 rounded-full border-4 border-amber-500/15"></div>
+        <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-amber-500 animate-spin"></div>
+        <div class="absolute inset-0 rounded-full border-4 border-transparent border-b-orange-500 animate-spin" style="animation-direction: reverse; animation-duration: 1.5s;"></div>
+        <div class="absolute inset-3 rounded-full bg-stone-800/80 backdrop-blur flex items-center justify-center shadow-inner">
+          <span data-ar-loading-icon class="text-3xl">📡</span>
+        </div>
+      </div>
+
+      <!-- متن مرحله -->
+      <p data-ar-loading-text class="text-amber-200 text-base font-bold mb-3">
+        آماده‌سازی...
+      </p>
+
+      <!-- راهنما -->
+      <p data-ar-loading-hint class="text-stone-400 text-xs leading-relaxed mb-6">
+        لطفاً صبر کنید و این صفحه را نبندید
+      </p>
+
+      <!-- نوار پیشرفت -->
+      <div class="w-56 h-1.5 rounded-full bg-stone-700/50 mx-auto overflow-hidden">
+        <div
+          data-ar-loading-progress
+          class="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 rounded-full transition-all duration-700"
+          style="width: 0%"
+        ></div>
+      </div>
+
+      <!-- شمارنده ثانیه (اختیاری) -->
+      <p data-ar-loading-timer class="text-stone-500 text-[10px] mt-3 tabular-nums"></p>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- کارت GPS خاموش -->
+  <!-- ============================================ -->
   <div
     data-ar-gps-off
     hidden
@@ -128,28 +163,47 @@ const { location } = config;
       <p data-ar-gps-off-msg class="text-stone-300 text-sm leading-relaxed mb-5">
         برای یافتن قبر، نیاز به دسترسی به موقعیت مکانی دارید. لطفاً GPS و مجوز موقعیت را فعال کنید.
       </p>
+
       <div class="space-y-2 text-start bg-stone-950/50 rounded-2xl p-4 mb-5">
-        <p class="text-amber-200 text-xs font-bold mb-2">راهنما:</p>
-        <p class="text-stone-400 text-xs leading-relaxed">
-          ۱. تنظیمات گوشی → موقعیت مکانی → روشن
-        </p>
-        <p class="text-stone-400 text-xs leading-relaxed">
-          ۲. تنظیمات مرورگر → مجوزها → موقعیت → اجازه
-        </p>
-        <p class="text-stone-400 text-xs leading-relaxed">
-          ۳. اگر VPN فعال است، آن را خاموش کنید
-        </p>
-        <p class="text-stone-400 text-xs leading-relaxed">
-          ۴. در فضای باز و دور از سقف بتنی قرار بگیرید
-        </p>
+        <p class="text-amber-200 text-xs font-bold mb-3">چگونه GPS را روشن کنم؟</p>
+        <div class="flex items-start gap-2">
+          <span class="text-amber-400 text-xs font-bold mt-0.5">۱.</span>
+          <p class="text-stone-400 text-xs leading-relaxed flex-1">
+            از نوار اعلان گوشی، آیکون <strong class="text-amber-200">موقعیت مکانی</strong> را پیدا کنید و آن را روشن کنید
+          </p>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="text-amber-400 text-xs font-bold mt-0.5">۲.</span>
+          <p class="text-stone-400 text-xs leading-relaxed flex-1">
+            یا: <strong class="text-amber-200">تنظیمات</strong> → <strong class="text-amber-200">موقعیت مکانی</strong> → <strong class="text-amber-200">روشن</strong>
+          </p>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="text-amber-400 text-xs font-bold mt-0.5">۳.</span>
+          <p class="text-stone-400 text-xs leading-relaxed flex-1">
+            اگر VPN روشن است، آن را <strong class="text-amber-200">خاموش</strong> کنید
+          </p>
+        </div>
+        <div class="flex items-start gap-2">
+          <span class="text-amber-400 text-xs font-bold mt-0.5">۴.</span>
+          <p class="text-stone-400 text-xs leading-relaxed flex-1">
+            در <strong class="text-amber-200">فضای باز</strong> یا کنار پنجره بایستید
+          </p>
+        </div>
       </div>
+
+      <p class="text-amber-200/80 text-[11px] leading-relaxed mb-5 italic">
+        پس از روشن کردن GPS، روی «تلاش مجدد» بزنید — نیازی به رفرش صفحه نیست.
+      </p>
+
       <div class="flex gap-3">
         <button
           type="button"
           data-ar-gps-retry
-          class="flex-1 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold py-3 px-4 hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg active:scale-95"
+          class="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold py-3 px-4 hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg active:scale-95"
         >
-          تلاش مجدد
+          <span>🔄</span>
+          <span>تلاش مجدد</span>
         </button>
         <button
           type="button"
