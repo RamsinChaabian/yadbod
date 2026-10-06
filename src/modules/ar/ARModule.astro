@@ -74,28 +74,51 @@ const { location } = config;
   }
 
   // ============================================================
-  // بررسی سریع GPS
+  // بررسی سریع GPS — با تشخیص دقت پایین
   // ============================================================
   async function quickGpsCheck(): Promise<{ ok: boolean; message?: string }> {
     if (!('geolocation' in navigator)) {
       return { ok: false, message: 'مرورگر شما از GPS پشتیبانی نمی‌کند.' };
     }
+
     return new Promise((resolve) => {
       const timeoutId = setTimeout(() => {
-        resolve({ ok: false, message: 'دریافت موقعیت طول کشید. به فضای باز بروید.' });
+        resolve({ ok: false, message: 'سیگنال GPS دریافت نشد. لطفاً به فضای باز بروید.' });
       }, 10000);
 
       navigator.geolocation.getCurrentPosition(
-        () => {
+        (pos) => {
           clearTimeout(timeoutId);
+          const accuracy = pos.coords.accuracy;
+
+          // اگر دقت > ۲۰۰ متر است، GPS واقعی کار نمی‌کند (WiFi/cell location)
+          if (accuracy > 200) {
+            resolve({
+              ok: false,
+              message: `دقت موقعیت فقط ${Math.round(accuracy)} متر است. برای دقت بهتر، GPS گوشی را روشن کنید.`,
+            });
+            return;
+          }
+
           resolve({ ok: true });
         },
         (err) => {
           clearTimeout(timeoutId);
           if (err.code === 1) {
-            resolve({ ok: false, message: 'دسترسی به موقعیت رد شد. لطفاً مجوز بدهید.' });
+            resolve({
+              ok: false,
+              message: 'دسترسی به موقعیت رد شد. لطفاً در تنظیمات مرورگر مجوز بدهید.',
+            });
+          } else if (err.code === 2) {
+            resolve({
+              ok: false,
+              message: 'سرویس موقعیت (GPS) خاموش است. لطفاً آن را روشن کنید.',
+            });
           } else {
-            resolve({ ok: false, message: 'سرویس موقعیت در دسترس نیست. GPS را روشن کنید.' });
+            resolve({
+              ok: false,
+              message: 'دریافت موقعیت طول کشید. به فضای باز بروید و دوباره تلاش کنید.',
+            });
           }
         },
         { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
@@ -226,6 +249,7 @@ const { location } = config;
     const unsupportedBox = document.querySelector<HTMLElement>('[data-ar-unsupported]');
     const unsupportedMsg = document.querySelector<HTMLElement>('[data-ar-unsupported-msg]');
     const gpsOffBox = document.querySelector<HTMLElement>('[data-ar-gps-off]');
+    const gpsOffMsg = document.querySelector<HTMLElement>('[data-ar-gps-off-msg]');
     const gpsRetryBtn = document.querySelector<HTMLButtonElement>('[data-ar-gps-retry]');
     const gpsCloseBtn = document.querySelector<HTMLButtonElement>('[data-ar-gps-close]');
     const retryBtn = document.querySelector<HTMLButtonElement>('[data-ar-retry]');
@@ -243,7 +267,10 @@ const { location } = config;
       if (errorBox && errorMsg) { errorMsg.textContent = msg; errorBox.hidden = false; }
     }
     function hideError() { if (errorBox) errorBox.hidden = true; }
-    function showGpsOff() { if (gpsOffBox) gpsOffBox.hidden = false; }
+    function showGpsOff(message?: string) {
+      if (gpsOffMsg && message) gpsOffMsg.textContent = message;
+      if (gpsOffBox) gpsOffBox.hidden = false;
+    }
     function hideGpsOff() { if (gpsOffBox) gpsOffBox.hidden = true; }
 
     function resetStartButton() {
@@ -323,7 +350,7 @@ const { location } = config;
       if (!gpsCheck.ok) {
         startBtn.disabled = false;
         resetStartButton();
-        showGpsOff();
+        showGpsOff(gpsCheck.message);
         return;
       }
 
