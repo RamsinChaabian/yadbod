@@ -26,7 +26,7 @@ export default defineConfig({
 
       manifest: {
   name: 'یادبود نجیه رویشدزاده',
-  short_name: 'یادبود نجیه',
+  short_name: 'یادبود',
   description: 'سایت یادبود نجیه رویشدزاده — زندگی‌نامه، خاطرات، تایم‌لاین و مسیریابی به محل قبر.',
   lang: 'fa',
   dir: 'rtl',
