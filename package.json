@@ -8,7 +8,7 @@
   "build": "astro build",
   "preview": "astro preview",
   "astro": "astro",
-  "pwa:generate": "pwa-assets-generator --config pwa-assets.config.ts"
+  "pwa:generate": "pwa-assets-generator --config pwa-assets.config.ts && node scripts/move-pwa-icons.js"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",
