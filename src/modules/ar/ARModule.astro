@@ -201,6 +201,24 @@ const { location } = config;
   }
 
   // ============================================================
+  // محاسبه مقیاس Beacon بر اساس فاصله (سینمایی)
+  // ============================================================
+  function calcBeaconScale(actualDist: number): number {
+    const NEAR = 30;    // متر — نزدیک
+    const FAR = 800;    // متر — دور
+    const MAX_SCALE = 1.8;
+    const MIN_SCALE = 0.35;
+
+    if (actualDist <= NEAR) return MAX_SCALE;
+    if (actualDist >= FAR) return MIN_SCALE;
+
+    const t = (actualDist - NEAR) / (FAR - NEAR); // 0..1
+    // easeOutQuad — نزدیک‌تر سریع‌تر بزرگ می‌شود
+    const eased = 1 - (1 - t) * (1 - t);
+    return MAX_SCALE - eased * (MAX_SCALE - MIN_SCALE);
+  }
+
+  // ============================================================
   // Init AR
   // ============================================================
   function initAR() {
@@ -226,6 +244,7 @@ const { location } = config;
     const accuracyEl = document.querySelector<HTMLElement>('[data-ar-accuracy]');
     const accuracyDot = document.querySelector<HTMLElement>('[data-ar-accuracy-dot]');
     const accuracyWarn = document.querySelector<HTMLElement>('[data-ar-accuracy-warn]');
+    const groundIndicator = document.querySelector<HTMLElement>('[data-ar-ground-indicator]');
 
     // Loading elements
     const loadingEl = document.querySelector<HTMLElement>('[data-ar-loading]');
@@ -348,9 +367,17 @@ const { location } = config;
 
       if (bearingEl) bearingEl.textContent = dirs[Math.round(bearing / 45) % 8];
 
-      if (arrowEl && cameraHeading !== undefined) {
-        const rel = ((bearing - cameraHeading) + 360) % 360;
-        arrowEl.style.transform = `rotate(${rel}deg)`;
+      // فلش — چرخش و aligned (حتی اگر cameraHeading در دسترس نباشد، جهت قبر را نشان بده)
+      if (arrowEl) {
+        if (cameraHeading !== undefined) {
+          const rel = ((bearing - cameraHeading) + 360) % 360;
+          arrowEl.style.transform = `rotate(${rel}deg)`;
+          if (rel < 30 || rel > 330) {
+            arrowEl.classList.add('aligned');
+          } else {
+            arrowEl.classList.remove('aligned');
+          }
+        }
       }
 
       if (hintText) {
@@ -496,7 +523,7 @@ const { location } = config;
         locar.scene.add(beacon.group);
         beacon.group.visible = false;
 
-        // ---------- مرحله ۷: متغیرها و ردیابی ----------
+        // ---------- مرحله ۷: متغیرها ----------
         let cameraHeadingDeg = 0;
         let lastLat: number | null = null;
         let lastLng: number | null = null;
@@ -525,6 +552,7 @@ const { location } = config;
 
           const t = clock.getElapsedTime();
 
+          // ---------- انیمیشن‌های Beacon ----------
           beacon.ring1.rotation.z = t * 0.6;
           beacon.ring2.rotation.z = -t * 1.2;
           beacon.ring2.rotation.x = Math.sin(t * 0.5) * 0.4;
@@ -542,8 +570,10 @@ const { location } = config;
 
           beacon.columnMat.opacity = 0.4 + Math.sin(t * 1.5) * 0.2;
 
+          // ---------- موقعیت‌یابی + مقیاس‌بندی + فلش ----------
           if (lastLat !== null && lastLng !== null) {
             const camera = locar.camera;
+
             const [gx, gz] = locar.lonLatToWorldCoords(graveLng, graveLat);
             tmpVec.set(gx, 0, gz);
 
@@ -558,15 +588,42 @@ const { location } = config;
             beacon.group.visible = inView;
 
             if (inView) {
+              // فاصله مجازی — حداکثر ۸ متر
               const VIRTUAL_DIST = Math.min(actualDist, 8);
               const targetPos = camera.position.clone().add(dir.clone().multiplyScalar(VIRTUAL_DIST));
               targetPos.y = 0;
+
               beacon.group.position.lerp(targetPos, 0.2);
+
+              // ⭐ مقیاس‌بندی بر اساس فاصله واقعی — سینمایی
+              const targetScale = calcBeaconScale(actualDist);
+              const currentScale = beacon.group.scale.x;
+              const newScale = currentScale + (targetScale - currentScale) * 0.08;
+              beacon.group.scale.setScalar(newScale);
             }
 
+            // heading دوربین
             upVec.set(0, 0, -1).applyQuaternion(camera.quaternion);
             const cameraHeadingRad = Math.atan2(upVec.x, -upVec.z);
             const headingDeg = ((cameraHeadingRad * 180 / Math.PI) + 360) % 360;
+
+            // ⭐ فلش: چرخش + کلاس aligned
+            if (arrowEl) {
+              const bearing = calcBearing(lastLat, lastLng, graveLat, graveLng);
+              const rel = ((bearing - headingDeg) + 360) % 360;
+              arrowEl.style.transform = `rotate(${rel}deg)`;
+
+              if (rel < 30 || rel > 330) {
+                arrowEl.classList.add('aligned');
+              } else {
+                arrowEl.classList.remove('aligned');
+              }
+            }
+
+            // ⭐ نشانگر زمین — وقتی خیلی نزدیک شدیم
+            if (groundIndicator) {
+              groundIndicator.hidden = actualDist > 30;
+            }
 
             const now = performance.now();
             if (now - lastUpdateTime > 100) {
@@ -585,6 +642,7 @@ const { location } = config;
           try { locar.scene.remove(beacon.group); } catch { /* ignore */ }
           document.querySelectorAll('video').forEach((v) => v.remove());
           document.querySelectorAll('canvas').forEach((c) => c.remove());
+          if (groundIndicator) groundIndicator.hidden = true;
         };
 
         // ---------- پایان ----------
