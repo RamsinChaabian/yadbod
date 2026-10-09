@@ -79,26 +79,40 @@ export default defineConfig({
         ],
 
         runtimeCaching: [
-          // کاشی‌های OpenStreetMap — CacheFirst
-          {
-            urlPattern: /^https:\/\/[a-c]\.tile\.openstreetmap\.org\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'openstreetmap-tiles',
-              expiration: {
-                maxEntries: 500,
-                maxAgeSeconds: 30 * 24 * 60 * 60,
-              },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          // ORS API — NetworkOnly (مسیریابی زنده)
-          {
-            urlPattern: /^https:\/\/api\.openrouteservice\.org\/.*/i,
-            handler: 'NetworkOnly',
-            options: { cacheName: 'ors-api-no-cache' },
-          },
-        ],
+  // ⭐ robots.txt — CacheFirst برای سرعت فوری
+  {
+    urlPattern: /\/robots\.txt$/,
+    handler: 'CacheFirst',
+    options: {
+      cacheName: 'robots-txt',
+      expiration: {
+        maxEntries: 1,
+        maxAgeSeconds: 24 * 60 * 60,
+      },
+      cacheableResponse: {
+        statuses: [200],
+      },
+    },
+  },
+
+  // کاشی‌های OSM — CacheFirst
+  {
+    urlPattern: /^https:\/\/[a-c]\.tile\.openstreetmap\.org\/.*/i,
+    handler: 'CacheFirst',
+    options: {
+      cacheName: 'openstreetmap-tiles',
+      expiration: { maxEntries: 500, maxAgeSeconds: 30 * 24 * 60 * 60 },
+      cacheableResponse: { statuses: [0, 200] },
+    },
+  },
+
+  // ORS API — NetworkOnly
+  {
+    urlPattern: /^https:\/\/api\.openrouteservice\.org\/.*/i,
+    handler: 'NetworkOnly',
+    options: { cacheName: 'ors-api-no-cache' },
+  },
+],
       },
 
       devOptions: { enabled: false },
