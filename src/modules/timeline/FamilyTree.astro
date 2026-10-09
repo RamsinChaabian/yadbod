@@ -1,7 +1,7 @@
 ---
 import { config } from '../../utils/config';
 
-const { family } = config;
+const { family, person } = config;
 const { parents, siblings, spouse, children: kids } = family;
 
 // شمارش خواهران و برادران
@@ -39,7 +39,6 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
       ))}
     </div>
 
-    <!-- خط اتصال پایین -->
     <div class="family-connector-line family-connector-line--down"></div>
   </div>
 
@@ -64,20 +63,28 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
           ]}
         >
           {sib.isMain && <span class="family-card-star" aria-label="شخص اصلی">⭐</span>}
-          <div class:list={[
-            'family-card-avatar family-card-avatar--sibling',
-            sib.gender === 'female' ? 'family-card-avatar--female' : 'family-card-avatar--male',
-            sib.isMain && 'family-card-avatar--main',
-          ]}>
-            {sib.gender === 'female' ? '👩' : '👨'}
-          </div>
+          {sib.isMain ? (
+            <div class="family-card-avatar family-card-avatar--main">
+              <img
+                src={person.profileImage}
+                alt={person.imageAlt}
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          ) : (
+            <div class:list={[
+              'family-card-avatar family-card-avatar--sibling',
+              sib.gender === 'female' ? 'family-card-avatar--female' : 'family-card-avatar--male',
+            ]}>
+              {sib.gender === 'female' ? '👩' : '👨'}
+            </div>
+          )}
           <p class="family-card-name">{sib.name}</p>
-          {sib.isMain && <p class="family-card-role">صاحب یادبود</p>}
         </article>
       ))}
     </div>
 
-    <!-- خط اتصال به نسل بعد -->
     <div class="family-connector-line family-connector-line--down"></div>
   </div>
 
@@ -90,9 +97,15 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
     <div class="family-couple">
       <article class="family-card family-card--main-large">
         <span class="family-card-star" aria-label="شخص اصلی">⭐</span>
-        <div class="family-card-avatar family-card-avatar--main-large">👩</div>
+        <div class="family-card-avatar family-card-avatar--main-large">
+          <img
+            src={person.profileImage}
+            alt={person.imageAlt}
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
         <p class="family-card-name">نجیه</p>
-        <p class="family-card-role">صاحب یادبود</p>
       </article>
 
       <div class="family-heart" aria-hidden="true">
@@ -215,10 +228,19 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
     font-size: 1.75rem;
     flex-shrink: 0;
     transition: transform 0.3s;
+    overflow: hidden;
   }
 
   .family-card:hover .family-card-avatar {
     transform: scale(1.08);
+  }
+
+  .family-card-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
   }
 
   .family-card-name {
@@ -251,6 +273,7 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
     font-size: 0.75rem;
     box-shadow: 0 2px 8px rgba(232, 131, 58, 0.5);
     animation: star-pulse 2s ease-in-out infinite;
+    z-index: 2;
   }
 
   @keyframes star-pulse {
@@ -312,11 +335,14 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
 
   .family-card-avatar--main {
     background: linear-gradient(135deg, #F5A623, #E8833A);
-    color: white;
     width: 56px;
     height: 56px;
-    font-size: 2rem;
+    padding: 2px;
     box-shadow: 0 4px 12px rgba(232, 131, 58, 0.4);
+  }
+
+  .family-card-avatar--main img {
+    border: 2px solid #FFFFFF;
   }
 
   /* ============================================================ */
@@ -369,8 +395,12 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
     width: 64px;
     height: 64px;
     background: linear-gradient(135deg, #F5A623, #E8833A);
-    font-size: 2.25rem;
+    padding: 2px;
     box-shadow: 0 4px 12px rgba(232, 131, 58, 0.4);
+  }
+
+  .family-card-avatar--main-large img {
+    border: 2px solid #FFFFFF;
   }
 
   .family-card--spouse {
