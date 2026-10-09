@@ -142,7 +142,6 @@ const { location } = config;
 </style>
 
 <script>
-
   async function initMap() {
     const root = document.querySelector<HTMLElement>('[data-map-root]');
     if (!root) return;
@@ -209,10 +208,6 @@ const { location } = config;
     graveMarker.bindPopup(`<strong>قبرستان صاحب‌الزمان</strong><br/>شوشتر، خوزستان`);
 
     // ---------- Route Layers ----------
-    // سه لایه polyline روی هم برای ایجاد افکت نئون:
-    // - glow (بیرونی، ضخیم، blur)
-    // - core (وسط، ضخیم، پررنگ)
-    // - inner (نازک، روشن)
     let routeGlow: L.Polyline | null = null;
     let routeCore: L.Polyline | null = null;
     let routeInner: L.Polyline | null = null;
@@ -234,16 +229,13 @@ const { location } = config;
         }
 
         const elapsed = (performance.now() - pulseStartTime) / 1000;
-        // موج سینوسی بین 0 و 1
         const wave = (Math.sin(elapsed * 2.2) + 1) / 2;
 
-        // هاله بیرونی: opacity بین 0.35 و 0.85، ضخامت بین 10 و 16
         routeGlow.setStyle({
           opacity: 0.35 + wave * 0.5,
           weight: 10 + wave * 6,
         });
 
-        // لایه وسط: ضخامت بین 4.5 و 6
         routeCore.setStyle({
           weight: 4.5 + wave * 1.5,
         });
@@ -274,7 +266,6 @@ const { location } = config;
     function drawRoute(latlngs: [number, number][]) {
       clearRoute();
 
-      // ۱. هاله بیرونی — سبز روشن، بسیار ضخیم، محو
       routeGlow = L.polyline(latlngs, {
         color: '#4ADE80',
         weight: 14,
@@ -285,7 +276,6 @@ const { location } = config;
         interactive: false,
       }).addTo(map);
 
-      // ۲. لایه وسط — سبز پررنگ
       routeCore = L.polyline(latlngs, {
         color: '#22C55E',
         weight: 5,
@@ -295,7 +285,6 @@ const { location } = config;
         interactive: false,
       }).addTo(map);
 
-      // ۳. لایه داخلی — سبز بسیار روشن (تقریباً سفید-سبز) برای درخشش
       routeInner = L.polyline(latlngs, {
         color: '#BBF7D0',
         weight: 1.5,
@@ -305,7 +294,6 @@ const { location } = config;
         interactive: false,
       }).addTo(map);
 
-      // شروع انیمیشن پالس
       startRoutePulse();
     }
 
@@ -401,7 +389,7 @@ const { location } = config;
           const distance = feature.properties?.summary?.distance ?? 0;
           const duration = feature.properties?.summary?.duration ?? 0;
 
-          // ۴. ⭐ رسم مسیر سبز نئون پالس‌دار
+          // ۴. رسم مسیر سبز نئون پالس‌دار
           const latlngs = coords.map(([x, y]) => [y, x]) as [number, number][];
           drawRoute(latlngs);
 
@@ -435,15 +423,60 @@ const { location } = config;
       });
     }
 
-    // ---------- Cleanup on page hide ----------
+    // ---------- Cleanup ----------
     window.addEventListener('pagehide', () => {
       stopRoutePulse();
     });
   }
 
+  // ============================================================
+  // ⭐ Lazy init — فقط وقتی تب نقشه واقعاً نمایش داده شود
+  // ============================================================
+  let mapInitialized = false;
+
+  function bootWhenVisible() {
+    if (mapInitialized) return;
+
+    const root = document.querySelector<HTMLElement>('[data-map-root]');
+    if (!root) return;
+
+    const panel = root.closest<HTMLElement>('[data-tab-panel]');
+
+    // اگر تب نقشه از ابتدا visible است → بلافاصله init
+    if (panel && !panel.hasAttribute('hidden')) {
+      mapInitialized = true;
+      initMap();
+      return;
+    }
+
+    // وگرنه، نظارت بر تب فعال شدن
+    const checkAndInit = () => {
+      if (mapInitialized) return;
+      const currentPanel = root.closest<HTMLElement>('[data-tab-panel]');
+      if (currentPanel && !currentPanel.hasAttribute('hidden')) {
+        mapInitialized = true;
+        initMap();
+      }
+    };
+
+    // نظارت بر تغییر hash (کاربر روی تب کلیک می‌کند)
+    window.addEventListener('hashchange', checkAndInit);
+
+    // نظارت بر تب‌ها با MutationObserver (وقتی hidden حذف می‌شود)
+    if (panel) {
+      const observer = new MutationObserver(() => {
+        if (!panel.hasAttribute('hidden')) {
+          observer.disconnect();
+          checkAndInit();
+        }
+      });
+      observer.observe(panel, { attributes: true, attributeFilter: ['hidden'] });
+    }
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initMap);
+    document.addEventListener('DOMContentLoaded', bootWhenVisible);
   } else {
-    initMap();
+    bootWhenVisible();
   }
 </script>

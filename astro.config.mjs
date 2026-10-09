@@ -8,8 +8,11 @@ export default defineConfig({
   site: 'https://najiye.ir',
   trailingSlash: 'ignore',
   vite: {
-    plugins: [tailwindcss()],
+  plugins: [tailwindcss()],
+  build: {
+    chunkSizeWarningLimit: 1000,  // ← این خط اضافه شد
   },
+},
   integrations: [
     sitemap({
       filter: (page) => !page.includes('/qr'),
