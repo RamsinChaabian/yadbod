@@ -1,0 +1,37 @@
+---
+import BiographyModule from '../../modules/biography/BiographyModule.astro';
+import GalleryModule from '../../modules/gallery/GalleryModule.astro';
+import TimelineModule from '../../modules/timeline/TimelineModule.astro';
+import NavigateModule from '../../modules/navigate/NavigateModule.astro';
+import ContactsModule from '../../modules/contacts/ContactsModule.astro';
+
+interface Props {
+  id: string;
+  isActive: boolean;
+  ariaLabel: string;
+}
+
+const { id, isActive, ariaLabel } = Astro.props;
+
+// فقط ماژول تب فعال را رندر کن
+const moduleMap = {
+  biography: BiographyModule,
+  gallery: GalleryModule,
+  timeline: TimelineModule,
+  navigate: NavigateModule,
+  contacts: ContactsModule,
+} as const;
+
+const Module = isActive ? moduleMap[id as keyof typeof moduleMap] : null;
+---
+
+<section
+  role="tabpanel"
+  id={`panel-${id}`}
+  aria-label={ariaLabel}
+  data-tab-panel={id}
+  data-lazy-tab={id}
+  hidden={!isActive}
+>
+  {Module && <Module />}
+</section>
