@@ -118,6 +118,27 @@ const { location } = config;
     background: transparent !important;
     border: none !important;
   }
+
+  /* ⭐ انیمیشن خط مسیر سبز */
+  .route-line-glow {
+    filter: blur(4px);
+    animation: route-glow-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes route-glow-pulse {
+    0%, 100% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 0.95;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .route-line-glow {
+      animation: none !important;
+    }
+  }
 </style>
 
 <script>
@@ -147,7 +168,7 @@ const { location } = config;
     const lng = parseFloat(root.dataset.lng ?? '0');
     const zoom = parseFloat(root.dataset.zoom ?? '17');
 
-    // ---------- Lazy load Leaflet + ORS ----------
+    // ---------- Lazy load Leaflet ----------
     let L: typeof import('leaflet');
     try {
       L = await import('leaflet');
@@ -192,9 +213,106 @@ const { location } = config;
     const graveMarker = L.marker([lat, lng], { icon: graveIcon, title: 'محل قبر' }).addTo(map);
     graveMarker.bindPopup(`<strong>قبرستان صاحب‌الزمان</strong><br/>شوشتر، خوزستان`);
 
-    // ---------- Route Layer (empty for now) ----------
-    let routeLine: L.Polyline | null = null;
+    // ---------- Route Layers ----------
+    // سه لایه polyline روی هم برای ایجاد افکت نئون:
+    // - glow (بیرونی، ضخیم، blur)
+    // - core (وسط، ضخیم، پررنگ)
+    // - inner (نازک، روشن)
+    let routeGlow: L.Polyline | null = null;
+    let routeCore: L.Polyline | null = null;
+    let routeInner: L.Polyline | null = null;
     let userMarker: L.Marker | null = null;
+
+    // ⭐ متغیرهای انیمیشن
+    let pulseRafId: number | null = null;
+    let pulseStartTime = 0;
+
+    // ⭐ تابع شروع انیمیشن پالس
+    function startRoutePulse() {
+      if (pulseRafId !== null) return;
+      pulseStartTime = performance.now();
+
+      const pulse = () => {
+        if (!routeGlow || !routeCore) {
+          pulseRafId = null;
+          return;
+        }
+
+        const elapsed = (performance.now() - pulseStartTime) / 1000;
+        // موج سینوسی بین 0 و 1
+        const wave = (Math.sin(elapsed * 2.2) + 1) / 2;
+
+        // هاله بیرونی: opacity بین 0.35 و 0.85، ضخامت بین 10 و 16
+        routeGlow.setStyle({
+          opacity: 0.35 + wave * 0.5,
+          weight: 10 + wave * 6,
+        });
+
+        // لایه وسط: ضخامت بین 4.5 و 6
+        routeCore.setStyle({
+          weight: 4.5 + wave * 1.5,
+        });
+
+        pulseRafId = requestAnimationFrame(pulse);
+      };
+
+      pulseRafId = requestAnimationFrame(pulse);
+    }
+
+    // ⭐ تابع توقف انیمیشن
+    function stopRoutePulse() {
+      if (pulseRafId !== null) {
+        cancelAnimationFrame(pulseRafId);
+        pulseRafId = null;
+      }
+    }
+
+    // ⭐ تابع پاک‌سازی مسیر
+    function clearRoute() {
+      stopRoutePulse();
+      if (routeGlow) { routeGlow.remove(); routeGlow = null; }
+      if (routeCore) { routeCore.remove(); routeCore = null; }
+      if (routeInner) { routeInner.remove(); routeInner = null; }
+    }
+
+    // ⭐ تابع رسم مسیر سبز نئون
+    function drawRoute(latlngs: [number, number][]) {
+      clearRoute();
+
+      // ۱. هاله بیرونی — سبز روشن، بسیار ضخیم، محو
+      routeGlow = L.polyline(latlngs, {
+        color: '#4ADE80',
+        weight: 14,
+        opacity: 0.6,
+        lineJoin: 'round',
+        lineCap: 'round',
+        className: 'route-line-glow',
+        interactive: false,
+      }).addTo(map);
+
+      // ۲. لایه وسط — سبز پررنگ
+      routeCore = L.polyline(latlngs, {
+        color: '#22C55E',
+        weight: 5,
+        opacity: 0.95,
+        lineJoin: 'round',
+        lineCap: 'round',
+        interactive: false,
+      }).addTo(map);
+
+      // ۳. لایه داخلی — سبز بسیار روشن (تقریباً سفید-سبز) برای درخشش
+      routeInner = L.polyline(latlngs, {
+        color: '#BBF7D0',
+        weight: 1.5,
+        opacity: 0.9,
+        lineJoin: 'round',
+        lineCap: 'round',
+        interactive: false,
+      }).addTo(map);
+
+      // شروع انیمیشن پالس
+      startRoutePulse();
+    }
 
     // ---------- Helpers ----------
     function showError(msg: string) {
@@ -218,7 +336,7 @@ const { location } = config;
         setLoading(true);
 
         try {
-          // 1. موقعیت کاربر
+          // ۱. موقعیت کاربر
           const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
             if (!navigator.geolocation) {
               reject(new Error('مرورگر شما از GPS پشتیبانی نمی‌کند.'));
@@ -242,7 +360,7 @@ const { location } = config;
             googleLink.href = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${lat},${lng}&travelmode=driving`;
           }
 
-          // 2. رسم مارکر کاربر
+          // ۲. رسم مارکر کاربر
           if (userMarker) userMarker.remove();
           const userIcon = L.divIcon({
             className: 'user-marker',
@@ -256,7 +374,7 @@ const { location } = config;
           });
           userMarker = L.marker([userLat, userLng], { icon: userIcon, title: 'موقعیت شما' }).addTo(map);
 
-          // 3. درخواست ORS
+          // ۳. درخواست ORS
           const key = import.meta.env.PUBLIC_ORS_API_KEY;
           if (!key) throw new Error('کلید OpenRouteService تنظیم نشده است.');
 
@@ -288,20 +406,15 @@ const { location } = config;
           const distance = feature.properties?.summary?.distance ?? 0;
           const duration = feature.properties?.summary?.duration ?? 0;
 
-          // 4. رسم مسیر
-          if (routeLine) routeLine.remove();
+          // ۴. ⭐ رسم مسیر سبز نئون پالس‌دار
           const latlngs = coords.map(([x, y]) => [y, x]) as [number, number][];
-          routeLine = L.polyline(latlngs, {
-            color: '#B8915A',
-            weight: 4,
-            opacity: 0.9,
-            lineJoin: 'round',
-            lineCap: 'round',
-          }).addTo(map);
+          drawRoute(latlngs);
 
-          map.fitBounds(routeLine.getBounds(), { padding: [40, 40] });
+          // ۵. تنظیم view روی کل مسیر
+          const bounds = L.latLngBounds(latlngs);
+          map.fitBounds(bounds, { padding: [40, 40] });
 
-          // 5. نمایش اطلاعات مسیر
+          // ۶. نمایش اطلاعات مسیر
           if (routeInfo && distanceEl && durationEl) {
             const distText = distance < 1000
               ? `${Math.round(distance)} متر`
@@ -326,6 +439,11 @@ const { location } = config;
         }
       });
     }
+
+    // ---------- Cleanup on page hide ----------
+    window.addEventListener('pagehide', () => {
+      stopRoutePulse();
+    });
   }
 
   if (document.readyState === 'loading') {
