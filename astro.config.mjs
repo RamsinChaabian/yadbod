@@ -16,24 +16,30 @@ export default defineConfig({
   },
 
   integrations: [
-    // ⭐ Sitemap خودکار
+    // ============================================================
+    // Sitemap
+    // ============================================================
     sitemap({
       filter: (page) => !page.includes('/qr') && !page.includes('/offline'),
     }),
 
-    // ⭐ PWA
+    // ============================================================
+    // PWA
+    // ============================================================
     AstroPWA({
       registerType: 'autoUpdate',
+
       includeAssets: [
         'favicon.svg',
         'robots.txt',
+        'fonts/**/*.woff2',
         'images/**/*.svg',
         'images/**/*.webp',
       ],
 
       manifest: {
         name: 'یادبود نجیه رویشدزاده',
-        short_name: 'یادبود',
+        short_name: 'یادبود نجیه',
         description:
           'سایت یادبود نجیه رویشدزاده — زندگی‌نامه، خاطرات، تایم‌لاین و مسیریابی به محل قبر.',
         lang: 'fa',
@@ -59,12 +65,21 @@ export default defineConfig({
       },
 
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2,json}'],
+        // ⭐ 'txt' اضافه شد تا robots.txt هم precache شود
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2,json,txt}'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         globIgnores: ['**/qr/**'],
         navigateFallback: '/offline',
 
+        // ⭐ فایل‌های خاص از SW مستثنی شوند تا مستقیم از سرور بیایند
+        navigateFallbackDenylist: [
+          /^\/robots\.txt$/,
+          /^\/sitemap.*\.xml$/,
+          /^\/manifest\.webmanifest$/,
+        ],
+
         runtimeCaching: [
+          // کاشی‌های OpenStreetMap — CacheFirst
           {
             urlPattern: /^https:\/\/[a-c]\.tile\.openstreetmap\.org\/.*/i,
             handler: 'CacheFirst',
@@ -77,18 +92,7 @@ export default defineConfig({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
-          {
-            urlPattern: /^https:\/\/cdn\.jsdelivr\.net\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'jsdelivr-fonts',
-              expiration: {
-                maxEntries: 30,
-                maxAgeSeconds: 365 * 24 * 60 * 60,
-              },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
+          // ORS API — NetworkOnly (مسیریابی زنده)
           {
             urlPattern: /^https:\/\/api\.openrouteservice\.org\/.*/i,
             handler: 'NetworkOnly',

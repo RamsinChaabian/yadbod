@@ -28,8 +28,23 @@ const animationsEnabled = config.features.animations;
     <meta name="theme-color" content="#E8833A" />
     <title>{fullTitle}</title>
 
-    <!-- SEO + Open Graph + JSON-LD -->
     <Seo title={fullTitle} description={description} noindex={noindex} />
+
+    <!-- ⭐ Preload فونتهای اصلی (بدون مسدود کردن) -->
+    <link
+      rel="preload"
+      href="/fonts/Vazirmatn-Regular.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/Vazirmatn-Bold.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
 
     <!-- Icons -->
     <link rel="icon" type="image/png" sizes="64x64" href="/pwa-64x64.png" />
@@ -43,33 +58,13 @@ const animationsEnabled = config.features.animations;
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="یادبود نجیه" />
 
-    <!-- Font: Vazirmatn — non-blocking -->
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
-    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
-    <link
-      id="vazirmatn-font"
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css"
-      media="print"
-    />
-    <noscript>
-      <link
-        rel="stylesheet"
-        href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css"
-      />
-    </noscript>
-
     <slot name="head" />
   </head>
 
   <body class="bg-cream text-brown min-h-dvh antialiased">
-    <!-- محتوای اصلی -->
     <slot />
-
-    <!-- نشانگر آنلاین/آفلاین + toast به‌روزرسانی -->
     <PwaStatus />
 
-    <!-- GSAP Animations (اختیاری) -->
     {animationsEnabled && (
       <script>
         async function bootGSAP() {
@@ -87,24 +82,6 @@ const animationsEnabled = config.features.animations;
         }
       </script>
     )}
-
-    <!-- فونت Vazirmatn: فعال‌سازی بعد از لود (non-blocking) -->
-    <script>
-      const fontLink = document.querySelector<HTMLLinkElement>('#vazirmatn-font');
-      if (fontLink) {
-        if (fontLink.sheet) {
-          fontLink.media = 'all';
-        } else {
-          fontLink.addEventListener(
-            'load',
-            () => {
-              fontLink.media = 'all';
-            },
-            { once: true }
-          );
-        }
-      }
-    </script>
 
     <!-- Service Worker Registration -->
     <script>
