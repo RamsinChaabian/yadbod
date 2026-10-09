@@ -151,3 +151,41 @@ export const contactsConfigSchema = z.object({
   description: z.string().min(1),
   contacts: z.array(contactSchema),
 });
+
+// ============================================================
+// Family Tree
+// ============================================================
+
+const familyMemberBaseSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+});
+
+export const familyParentSchema = familyMemberBaseSchema.extend({
+  role: z.string().min(1),
+  avatar: z.string().min(1),
+  relation: z.enum(['father', 'mother']),
+});
+
+export const familySiblingSchema = familyMemberBaseSchema.extend({
+  gender: z.enum(['male', 'female']),
+  isMain: z.boolean().optional(),
+});
+
+export const familySpouseSchema = familyMemberBaseSchema.extend({
+  role: z.string().min(1),
+  avatar: z.string().min(1),
+});
+
+export const familyChildSchema = familyMemberBaseSchema.extend({
+  gender: z.enum(['male', 'female']),
+});
+
+export const familyConfigSchema = z.object({
+  title: z.string().min(1),
+  subtitle: z.string().min(1),
+  parents: z.array(familyParentSchema).length(2, 'باید دقیقاً دو والد باشد'),
+  siblings: z.array(familySiblingSchema).min(1, 'حداقل یک خواهر یا برادر لازم است'),
+  spouse: familySpouseSchema,
+  children: z.array(familyChildSchema).min(1),
+});

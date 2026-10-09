@@ -7,6 +7,7 @@ import { featuresConfig } from '../../config/features.config';
 import { seoConfig } from '../../config/seo.config';
 import { analyticsConfig } from '../../config/analytics.config';
 import { contactsConfig } from '../../config/contacts.config';
+import { familyConfig } from '../../config/family.config';
 
 import {
   siteConfigSchema,
@@ -18,6 +19,7 @@ import {
   seoConfigSchema,
   analyticsConfigSchema,
   contactsConfigSchema,
+  familyConfigSchema,
 } from './schemas';
 
 function validate<T>(name: string, schema: { parse: (v: unknown) => T }, data: unknown): T {
@@ -47,6 +49,7 @@ export const config = {
   seo: validate('seo', seoConfigSchema, seoConfig),
   analytics: validate('analytics', analyticsConfigSchema, analyticsConfig),
   contacts: validate('contacts', contactsConfigSchema, contactsConfig),
+  family: validate('family', familyConfigSchema, familyConfig),
 } as const;
 
 export type Config = typeof config;
