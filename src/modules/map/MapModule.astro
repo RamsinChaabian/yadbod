@@ -142,11 +142,6 @@ const { location } = config;
 </style>
 
 <script>
-  type RouteResult = {
-    distanceMeters: number;
-    durationSeconds: number;
-    coordinates: [number, number][];
-  };
 
   async function initMap() {
     const root = document.querySelector<HTMLElement>('[data-map-root]');

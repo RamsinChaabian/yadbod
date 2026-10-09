@@ -27,9 +27,7 @@ for (const path of Object.keys(videos)) {
 // نقشه‌ی thumbnail ویدیوها (basename → url)
 const thumbnails: Record<string, string> = {};
 
-// فیلتر کردن عکس‌ها:
-// - اگر basename عکس با یک ویدیو یکسان باشد → thumbnail آن ویدیو
-// - وگرنه → عکس مستقل
+// فیلتر کردن عکس‌ها
 const standalonePhotoUrls: [string, string][] = [];
 
 for (const [path, url] of Object.entries(photos)) {
@@ -475,6 +473,12 @@ const mediaData = items.map((item) => ({
 
     if (!dataEl || !masonry || !lightbox || !content) return;
 
+    // ⭐ Type-safe references (بعد از null check)
+    const dataElSafe: HTMLScriptElement = dataEl;
+    const masonrySafe: HTMLElement = masonry;
+    const lightboxSafe: HTMLElement = lightbox;
+    const contentSafe: HTMLElement = content;
+
     type MediaItem = {
       type: 'image' | 'video';
       src: string;
@@ -484,7 +488,7 @@ const mediaData = items.map((item) => ({
 
     let media: MediaItem[] = [];
     try {
-      media = JSON.parse(dataEl.textContent || '[]');
+      media = JSON.parse(dataElSafe.textContent || '[]');
     } catch {
       media = [];
     }
@@ -501,7 +505,7 @@ const mediaData = items.map((item) => ({
       currentIndex = index;
 
       const item = media[index];
-      content.innerHTML = '';
+      contentSafe.innerHTML = '';
 
       if (item.type === 'video') {
         const video = document.createElement('video');
@@ -510,13 +514,13 @@ const mediaData = items.map((item) => ({
         video.autoplay = true;
         video.playsInline = true;
         video.preload = 'metadata';
-        content.appendChild(video);
+        contentSafe.appendChild(video);
       } else {
         const img = document.createElement('img');
         img.src = item.src;
         img.alt = '';
         img.decoding = 'async';
-        content.appendChild(img);
+        contentSafe.appendChild(img);
       }
 
       // به‌روزرسانی دکمه دانلود
@@ -535,7 +539,7 @@ const mediaData = items.map((item) => ({
       }
 
       // نمایش
-      lightbox.hidden = false;
+      lightboxSafe.hidden = false;
       document.body.style.overflow = 'hidden';
 
       // فوکوس روی دکمه بستن
@@ -545,13 +549,13 @@ const mediaData = items.map((item) => ({
     // ---------- بستن Lightbox ----------
     function closeLightbox() {
       // توقف ویدیو در حال پخش
-      const video = content.querySelector('video');
+      const video = contentSafe.querySelector('video');
       if (video) {
         video.pause();
         video.src = '';
       }
-      content.innerHTML = '';
-      lightbox.hidden = true;
+      contentSafe.innerHTML = '';
+      lightboxSafe.hidden = true;
       document.body.style.overflow = '';
       currentIndex = -1;
     }
@@ -570,7 +574,7 @@ const mediaData = items.map((item) => ({
     }
 
     // ---------- Event: کلیک روی کارت ----------
-    masonry.querySelectorAll<HTMLButtonElement>('[data-gallery-index]').forEach((btn) => {
+    masonrySafe.querySelectorAll<HTMLButtonElement>('[data-gallery-index]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.galleryIndex ?? '-1', 10);
         if (idx >= 0) openLightbox(idx);
@@ -583,16 +587,16 @@ const mediaData = items.map((item) => ({
     prevBtn?.addEventListener('click', goPrev);
 
     // کلیک روی پس‌زمینه (خارج از محتوا) → بستن
-    lightbox.addEventListener('click', (e) => {
+    lightboxSafe.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
-      if (target === lightbox || target.dataset.lightboxContent !== undefined) {
+      if (target === lightboxSafe) {
         closeLightbox();
       }
     });
 
     // ---------- Event: کیبورد ----------
     document.addEventListener('keydown', (e) => {
-      if (lightbox.hidden) return;
+      if (lightboxSafe.hidden) return;
       if (e.key === 'Escape') {
         e.preventDefault();
         closeLightbox();
@@ -605,7 +609,7 @@ const mediaData = items.map((item) => ({
     });
 
     // ---------- Event: Swipe روی موبایل ----------
-    lightbox.addEventListener(
+    lightboxSafe.addEventListener(
       'touchstart',
       (e) => {
         if (e.touches.length !== 1) return;
@@ -615,7 +619,7 @@ const mediaData = items.map((item) => ({
       { passive: true }
     );
 
-    lightbox.addEventListener(
+    lightboxSafe.addEventListener(
       'touchend',
       (e) => {
         if (e.changedTouches.length !== 1) return;

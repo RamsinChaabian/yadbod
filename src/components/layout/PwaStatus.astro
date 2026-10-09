@@ -54,20 +54,20 @@
 
 <script>
   // ---------- وضعیت آنلاین/آفلاین ----------
-  function initOnlineStatus() {
+    function initOnlineStatus() {
     const offlineBar = document.querySelector<HTMLElement>('[data-pwa-offline]');
     if (!offlineBar) return;
 
+    const bar: HTMLElement = offlineBar;
+
     function updateStatus() {
       if (navigator.onLine) {
-        // آنلاین — مخفی کن با انیمیشن
-        offlineBar.style.transform = 'translateY(-100%)';
-        setTimeout(() => { offlineBar.hidden = true; }, 300);
+        bar.style.transform = 'translateY(-100%)';
+        setTimeout(() => { bar.hidden = true; }, 300);
       } else {
-        // آفلاین — نمایش بده
-        offlineBar.hidden = false;
+        bar.hidden = false;
         requestAnimationFrame(() => {
-          offlineBar.style.transform = 'translateY(0)';
+          bar.style.transform = 'translateY(0)';
         });
       }
     }

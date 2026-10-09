@@ -354,8 +354,6 @@ const { location } = config;
     const hintText = document.querySelector<HTMLElement>('[data-ar-hint-text]');
     const errorBox = document.querySelector<HTMLElement>('[data-ar-error]');
     const errorMsg = document.querySelector<HTMLElement>('[data-ar-error-msg]');
-    const unsupportedBox = document.querySelector<HTMLElement>('[data-ar-unsupported]');
-    const unsupportedMsg = document.querySelector<HTMLElement>('[data-ar-unsupported-msg]');
     const gpsOffBox = document.querySelector<HTMLElement>('[data-ar-gps-off]');
     const gpsOffMsg = document.querySelector<HTMLElement>('[data-ar-gps-off-msg]');
     const gpsRetryBtn = document.querySelector<HTMLButtonElement>('[data-ar-gps-retry]');
@@ -653,13 +651,13 @@ const { location } = config;
         const tmpVec = new THREE.Vector3();
         const upVec = new THREE.Vector3(0, 0, -1);
         let running = true;
-        const clock = new THREE.Clock();
+        const startTime = performance.now();
 
         function tick() {
           if (!running) return;
           requestAnimationFrame(tick);
 
-          const t = clock.getElapsedTime();
+          const t = (performance.now() - startTime) / 1000;
 
           // ---------- انیمیشن‌های Beacon ----------
           beacon.ring1.rotation.z = t * 0.6;
@@ -694,7 +692,6 @@ const { location } = config;
           beacon.arrowRing.rotation.z = t * 0.4;
 
           // پالس تیغه (بزرگ و کوچک شدن خیلی جزئی)
-          const conePulse = 1 + Math.sin(t * 2.2) * 0.05;
           beacon.coneMat.opacity = 0.85 + Math.sin(t * 2.2) * 0.15;
 
           // ---------- موقعیت‌یابی + مقیاس ----------

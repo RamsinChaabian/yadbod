@@ -13,7 +13,7 @@ export const siteConfigSchema = z.object({
   dir: z.enum(['rtl', 'ltr']),
   locales: z.array(z.enum(['fa', 'en', 'ar'])).min(1),
   defaultLocale: z.enum(['fa', 'en', 'ar']),
-  baseUrl: z.string().url('baseUrl باید URL معتبر باشد'),
+  baseUrl: z.url('baseUrl باید URL معتبر باشد'),
   author: z.string().min(1),
   since: z.number().int().positive(),
 });
@@ -40,7 +40,7 @@ export const locationConfigSchema = z.object({
   province: z.string().min(1),
   country: z.string().min(1),
   fullAddress: z.string().min(1),
-  googleMapsUrl: z.string().url(),
+  googleMapsUrl: z.url(),
   arRadiusMeters: z.number().positive(),
   arMinAccuracyMeters: z.number().positive(),
 });
@@ -125,7 +125,7 @@ export const analyticsConfigSchema = z.object({
   enabled: z.boolean(),
   provider: z.enum(['plausible', 'umami', 'google']).nullable(),
   siteId: z.string().nullable(),
-  scriptUrl: z.string().url().nullable(),
+  scriptUrl: z.url().nullable(),
   respectDnt: z.boolean(),
 });
 

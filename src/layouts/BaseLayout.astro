@@ -4,14 +4,17 @@ import { config } from '../utils/config';
 import Seo from '../components/Seo.astro';
 import PwaStatus from '../components/layout/PwaStatus.astro';
 
+
 interface Props {
   title?: string;
   description?: string;
+  noindex?: boolean;
 }
 
 const {
   title = config.site.title,
   description = config.site.description,
+  noindex = false,
 } = Astro.props;
 
 const fullTitle = title === config.site.title ? title : `${title} | ${config.site.title}`;
@@ -25,7 +28,7 @@ const animationsEnabled = config.features.animations;
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#E8833A" />
     <title>{fullTitle}</title>
-    <Seo />
+    <Seo title={fullTitle} description={description} noindex={noindex} />
     <link rel="icon" type="image/png" sizes="64x64" href="/pwa-64x64.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="/pwa-192x192.png" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
