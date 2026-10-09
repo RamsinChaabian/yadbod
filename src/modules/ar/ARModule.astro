@@ -1,6 +1,7 @@
 ---
 import { config } from '../../utils/config';
 import ARScene from './ARScene.astro';
+import IPhoneGuide from './IPhoneGuide.astro';
 
 const { location } = config;
 ---
@@ -28,6 +29,8 @@ const { location } = config;
         </p>
       </div>
     </div>
+
+    <IPhoneGuide />
 
     <div class="aspect-video rounded-3xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 flex items-center justify-center relative overflow-hidden shadow-card">
       <div class="text-center px-4">
