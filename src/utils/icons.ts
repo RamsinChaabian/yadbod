@@ -8,7 +8,8 @@ export const iconMap: Record<string, string> = {
   clock: '⏱️',
   'map-pin': '📍',
   camera: '📷',
-  phone: '📞', 
+  heart: '💛',
+  phone: '📞',
 };
 
 export function getIcon(name: string): string {
