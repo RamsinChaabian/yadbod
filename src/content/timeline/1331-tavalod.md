@@ -1,7 +1,6 @@
 ---
 title: تولد در شوشتر
 year: ۱۳۳۱
-yearGregorian: ۱۹۵۲
 dateShamsi: ۱۳۳۱/۰۵/۰۸
 category: birth
 icon: '🌟'

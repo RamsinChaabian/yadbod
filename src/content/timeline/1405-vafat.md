@@ -1,8 +1,7 @@
 ---
 title: وداع
 year: ۱۴۰۵
-yearGregorian: ۲۰۲۶
-dateShamsi: ۱۴۰۵/۰۵/۰۲
+dateShamsi: ۱۴۰۵/۰۷/۰۲
 category: death
 icon: '🕊️'
 order: 99

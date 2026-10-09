@@ -1,6 +1,6 @@
 ---
 title: ازدواج
-year: ۱۳۵۰
+year: ۱۳۴۷
 category: marriage
 icon: '💍'
 order: 2
