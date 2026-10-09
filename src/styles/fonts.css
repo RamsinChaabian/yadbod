@@ -1,7 +1,6 @@
 /* ============================================================
-   Vazirmatn — Self-hosted (بدون CDN خارجی)
-   font-display: swap → متن با فونت fallback نمایش داده میشود
-   تا فونت اصلی لود شود، بدون مسدود کردن render
+   Vazirmatn — Self-hosted
+   فقط دو وزن پرکاربرد: Regular (400) و Bold (700)
    ============================================================ */
 
 @font-face {
@@ -15,23 +14,7 @@
 @font-face {
   font-family: 'Vazirmatn';
   font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('/fonts/Vazirmatn-Medium.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Vazirmatn';
-  font-style: normal;
   font-weight: 700;
   font-display: swap;
   src: url('/fonts/Vazirmatn-Bold.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Vazirmatn';
-  font-style: normal;
-  font-weight: 900;
-  font-display: swap;
-  src: url('/fonts/Vazirmatn-Black.woff2') format('woff2');
 }
