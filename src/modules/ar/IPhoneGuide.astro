@@ -1,0 +1,187 @@
+---
+// راهنمای اختصاصی آیفون — فقط روی iOS نمایش داده می‌شود
+// کاربر مبتدی را قدم‌به‌قدم برای فعال‌سازی دسترسی‌ها راهنمایی می‌کند
+---
+
+<div
+  data-iphone-guide
+  hidden
+  class="rounded-3xl bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 overflow-hidden shadow-card"
+>
+  <!-- سربرگ قابل کلیک -->
+  <button
+    type="button"
+    data-iphone-guide-toggle
+    class="w-full flex items-center justify-between gap-3 p-4 text-start hover:bg-blue-100/50 transition-colors"
+    aria-expanded="false"
+  >
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white text-lg shrink-0 shadow-md">
+        
+      </div>
+      <div class="min-w-0">
+        <p class="text-sm font-bold text-stone-800">کاربر آیفون هستید؟</p>
+        <p class="text-xs text-stone-500 mt-0.5">برای کار کردن واقعیت افزوده، این راهنما را ببینید</p>
+      </div>
+    </div>
+    <svg
+      data-iphone-guide-chevron
+      width="20" height="20" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+      class="text-stone-400 shrink-0 transition-transform duration-300"
+    >
+      <polyline points="6 9 12 15 18 9"/>
+    </svg>
+  </button>
+
+  <!-- محتوای راهنما -->
+  <div data-iphone-guide-content hidden class="px-4 pb-5 pt-1 border-t border-blue-200/60">
+    <p class="text-xs text-stone-600 leading-relaxed mb-4 mt-3">
+      آیفون به دلایل امنیتی، دسترسی به دوربین و سنسورهای حرکتی را محدود می‌کند.
+      برای استفاده از واقعیت افزوده، لطفاً مراحل زیر را یک‌بار انجام دهید:
+    </p>
+
+    <!-- مرحله ۱ -->
+    <div class="flex items-start gap-3 mb-3">
+      <span class="shrink-0 w-7 h-7 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center mt-0.5">۱</span>
+      <div class="flex-1">
+        <p class="text-sm font-semibold text-stone-800 mb-1">سرویس موقعیت مکانی Safari را روشن کنید</p>
+        <p class="text-xs text-stone-600 leading-relaxed mb-2">
+          به <strong class="text-stone-800">تنظیمات</strong> بروید → <strong class="text-stone-800">حریم خصوصی و امنیت</strong> → <strong class="text-stone-800">سرویس موقعیت مکانی</strong> → <strong class="text-stone-800">Safari</strong> → گزینه <strong class="text-blue-700">"در هنگام استفاده"</strong> را انتخاب کنید.
+        </p>
+      </div>
+    </div>
+
+    <!-- مرحله ۲ -->
+    <div class="flex items-start gap-3 mb-3">
+      <span class="shrink-0 w-7 h-7 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center mt-0.5">۲</span>
+      <div class="flex-1">
+        <p class="text-sm font-semibold text-stone-800 mb-1">دسترسی به سنسورهای حرکتی را فعال کنید</p>
+        <p class="text-xs text-stone-600 leading-relaxed mb-2">
+          به <strong class="text-stone-800">تنظیمات</strong> بروید → <strong class="text-stone-800">Safari</strong> → پایین بروید → <strong class="text-stone-800">Motion & Orientation Access</strong> → <strong class="text-blue-700">روشن</strong> کنید.
+        </p>
+      </div>
+    </div>
+
+    <!-- مرحله ۳ -->
+    <div class="flex items-start gap-3 mb-3">
+      <span class="shrink-0 w-7 h-7 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center mt-0.5">۳</span>
+      <div class="flex-1">
+        <p class="text-sm font-semibold text-stone-800 mb-1">مجوزهای سایت را بررسی کنید</p>
+        <p class="text-xs text-stone-600 leading-relaxed mb-2">
+          در Safari روی آیکون <strong class="text-stone-800">Aa</strong> در نوار آدرس بزنید → <strong class="text-stone-800">Website Settings</strong> → در بخش <strong class="text-stone-800">Camera</strong> و <strong class="text-stone-800">Location</strong> گزینه <strong class="text-blue-700">Allow</strong> را انتخاب کنید.
+        </p>
+      </div>
+    </div>
+
+    <!-- مرحله ۴ -->
+    <div class="flex items-start gap-3 mb-4">
+      <span class="shrink-0 w-7 h-7 rounded-full bg-blue-500 text-white text-xs font-bold flex items-center justify-center mt-0.5">۴</span>
+      <div class="flex-1">
+        <p class="text-sm font-semibold text-stone-800 mb-1">پیام‌های تأیید را بپذیرید</p>
+        <p class="text-xs text-stone-600 leading-relaxed mb-2">
+          هنگام زدن دکمه <strong class="text-stone-800">"شروع واقعیت افزوده"</strong>، سه پیام از شما پرسیده می‌شود:
+        </p>
+        <ul class="text-xs text-stone-600 leading-relaxed space-y-1.5 ps-3">
+          <li class="flex items-start gap-2">
+            <span class="text-blue-500 mt-0.5">•</span>
+            <span><strong class="text-stone-800">دسترسی به موقعیت مکانی</strong> → روی <strong class="text-blue-700">Allow</strong> بزنید</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-blue-500 mt-0.5">•</span>
+            <span><strong class="text-stone-800">دسترسی به دوربین</strong> → روی <strong class="text-blue-700">Allow</strong> بزنید</span>
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-blue-500 mt-0.5">•</span>
+            <span><strong class="text-stone-800">"This immersive website requires access to your device motion sensors"</strong> → روی <strong class="text-blue-700">OK</strong> بزنید</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- نکته مهم -->
+    <div class="rounded-2xl bg-amber-50 border border-amber-200 p-3 flex items-start gap-2">
+      <span class="text-lg shrink-0">💡</span>
+      <p class="text-xs text-amber-900 leading-relaxed">
+        اگر بعد از این مراحل، AR کار نکرد، <strong>Safari را ببندید</strong> (از پایین صفحه به بالا swipe کنید و Safari را ببندید) و دوباره باز کنید.
+      </p>
+    </div>
+
+    <!-- دکمه بستن راهنما -->
+    <button
+      type="button"
+      data-iphone-guide-dismiss
+      class="mt-4 w-full text-center text-xs text-stone-500 hover:text-stone-700 py-2 font-medium transition-colors"
+    >
+      فهمیدم، بستن راهنما
+    </button>
+  </div>
+</div>
+
+<script>
+  function initIPhoneGuide() {
+    const guide = document.querySelector<HTMLElement>('[data-iphone-guide]');
+    const toggle = document.querySelector<HTMLButtonElement>('[data-iphone-guide-toggle]');
+    const content = document.querySelector<HTMLElement>('[data-iphone-guide-content]');
+    const chevron = document.querySelector<HTMLElement>('[data-iphone-guide-chevron]');
+    const dismiss = document.querySelector<HTMLButtonElement>('[data-iphone-guide-dismiss]');
+
+    if (!guide || !toggle || !content) return;
+
+    // تشخیص iOS
+    const isIOS =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    // اگر iOS نبود، راهنما را نشان نده
+    if (!isIOS) {
+      guide.remove();
+      return;
+    }
+
+    // بررسی اینکه کاربر قبلاً راهنما را ندیده یا نبسته باشد
+    const dismissedKey = 'najiye-iphone-guide-dismissed';
+    const wasDismissed = localStorage.getItem(dismissedKey) === '1';
+
+    // اگر کاربر قبلاً بسته و راهنما را دیده، به صورت باز شده نشان نده
+    // ولی همیشه امکان دسترسی به راهنما از طریق سربرگ باقی بماند
+    guide.hidden = false;
+
+    // اگر کاربر قبلاً نبسته، به صورت خودکار باز کن
+    if (!wasDismissed) {
+      content.hidden = false;
+      toggle.setAttribute('aria-expanded', 'true');
+      if (chevron) chevron.style.transform = 'rotate(180deg)';
+    }
+
+    // Toggle کردن
+    toggle.addEventListener('click', () => {
+      const isOpen = !content.hidden;
+      content.hidden = isOpen;
+      toggle.setAttribute('aria-expanded', String(!isOpen));
+      if (chevron) {
+        chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+      }
+    });
+
+    // بستن کامل (ذخیره در localStorage)
+    if (dismiss) {
+      dismiss.addEventListener('click', () => {
+        content.hidden = true;
+        toggle.setAttribute('aria-expanded', 'false');
+        if (chevron) chevron.style.transform = 'rotate(0deg)';
+        try {
+          localStorage.setItem(dismissedKey, '1');
+        } catch {
+          // localStorage ممکن است در حالت private کار نکند
+        }
+      });
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initIPhoneGuide);
+  } else {
+    initIPhoneGuide();
+  }
+</script>
