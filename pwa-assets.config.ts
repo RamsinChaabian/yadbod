@@ -22,8 +22,4 @@ export default defineConfig({
     },
   },
   images: ['public/images/profile.jpg'],
-  // فایل‌های خروجی در ریشه public تولید شوند
-  headLinkOptions: {
-    preset: 'minimal',
-  },
 });
