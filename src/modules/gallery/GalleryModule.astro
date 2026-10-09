@@ -1,182 +1,636 @@
 ---
-import { render } from 'astro:content';
-import { getMemories, extractAllTags } from '../../utils/content';
-import MemoryCard from './MemoryCard.astro';
-import MemoryModal from './MemoryModal.astro';
+// ============================================================
+// گالری هوشمند — تشخیص خودکار عکس‌ها و ویدیوها
+// ============================================================
 
-const memories = await getMemories();
-const tags = extractAllTags(memories);
+// عکس‌ها
+const photos = import.meta.glob<string>('/src/assets/gallery/*.{jpg,jpeg,png,webp,gif,avif}', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+});
 
-// رندر محتوای هر خاطره برای استفاده در modal
-const rendered = await Promise.all(
-  memories.map(async (memory) => {
-    const { Content } = await render(memory);
-    return { memory, Content };
-  })
+// ویدیوها
+const videos = import.meta.glob<string>('/src/assets/gallery/*.{mp4,webm,mov,m4v}', {
+  eager: true,
+  query: '?url',
+  import: 'default',
+});
+
+// استخراج basename هر ویدیو (بدون پسوند)
+const videoBasenames = new Set<string>();
+for (const path of Object.keys(videos)) {
+  const basename = path.split('/').pop()!.replace(/\.[^.]+$/, '');
+  videoBasenames.add(basename);
+}
+
+// نقشه‌ی thumbnail ویدیوها (basename → url)
+const thumbnails: Record<string, string> = {};
+
+// فیلتر کردن عکس‌ها:
+// - اگر basename عکس با یک ویدیو یکسان باشد → thumbnail آن ویدیو
+// - وگرنه → عکس مستقل
+const standalonePhotoUrls: [string, string][] = [];
+
+for (const [path, url] of Object.entries(photos)) {
+  const file = path.split('/').pop()!;
+  const basename = file.replace(/\.[^.]+$/, '');
+
+  if (videoBasenames.has(basename)) {
+    // این عکس، thumbnail یک ویدیو است
+    thumbnails[basename] = url;
+  } else {
+    // عکس مستقل
+    standalonePhotoUrls.push([path, url]);
+  }
+}
+
+// ساخت لیست نهایی مدیا
+type MediaItem = {
+  type: 'image' | 'video';
+  src: string;
+  thumb: string;
+  filename: string;
+  sortKey: string;
+};
+
+const items: MediaItem[] = [];
+
+// عکس‌های مستقل
+for (const [path, url] of standalonePhotoUrls) {
+  const file = path.split('/').pop()!;
+  const basename = file.replace(/\.[^.]+$/, '');
+  const ext = file.split('.').pop()!.toLowerCase();
+  items.push({
+    type: 'image',
+    src: url,
+    thumb: url,
+    filename: `${basename}.${ext}`,
+    sortKey: file,
+  });
+}
+
+// ویدیوها
+for (const [path, url] of Object.entries(videos)) {
+  const file = path.split('/').pop()!;
+  const basename = file.replace(/\.[^.]+$/, '');
+  const ext = file.split('.').pop()!.toLowerCase();
+  items.push({
+    type: 'video',
+    src: url,
+    thumb: thumbnails[basename] || '',
+    filename: `${basename}.${ext}`,
+    sortKey: file,
+  });
+}
+
+// مرتب‌سازی عددی-زمانی بر اساس نام فایل
+items.sort((a, b) =>
+  a.sortKey.localeCompare(b.sortKey, undefined, { numeric: true, sensitivity: 'base' })
 );
+
+const photoCount = items.filter((i) => i.type === 'image').length;
+const videoCount = items.filter((i) => i.type === 'video').length;
+
+// داده‌ی JSON برای استفاده در script
+const mediaData = items.map((item) => ({
+  type: item.type,
+  src: item.src,
+  thumb: item.thumb,
+  filename: item.filename,
+}));
 ---
 
-<div class="px-4 py-8 max-w-5xl mx-auto">
-  <header class="mb-6">
-    <h2 class="text-xl font-bold text-gold mb-2">گالری خاطرات</h2>
-    <p class="text-sm text-ivory-muted">
-      {memories.length} خاطره ثبت شده
-    </p>
+<div class="px-4 py-8 max-w-6xl mx-auto">
+  <header class="mb-6 text-center">
+    <h2 class="text-2xl font-bold text-stone-800 mb-2">گالری</h2>
+    {items.length > 0 && (
+      <p class="text-sm text-stone-500">
+        {photoCount > 0 && `${photoCount} تصویر`}
+        {photoCount > 0 && videoCount > 0 && ' • '}
+        {videoCount > 0 && `${videoCount} ویدیو`}
+      </p>
+    )}
   </header>
 
-  {memories.length === 0 && (
-    <p class="text-ivory-muted italic">هنوز خاطره‌ای اضافه نشده است.</p>
-  )}
-
-  {memories.length > 0 && (
-    <>
-      {tags.length > 0 && (
-        <div
-          class="flex gap-2 overflow-x-auto pb-3 mb-5 -mx-4 px-4 scrollbar-thin"
-          role="group"
-          aria-label="فیلتر بر اساس تگ"
-        >
-          <button
-            type="button"
-            data-tag-filter="*"
-            class="shrink-0 text-xs px-3 py-1.5 rounded-full border border-gold bg-gold text-obsidian font-medium transition-colors"
-          >
-            همه
-          </button>
-          {tags.map((tag) => (
-            <button
-              type="button"
-              data-tag-filter={tag}
-              class="shrink-0 text-xs px-3 py-1.5 rounded-full border border-gold/30 text-ivory-soft hover:border-gold hover:text-gold transition-colors"
-            >
-              #{tag}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <div
-        data-gallery-grid
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-      >
-        {rendered.map(({ memory }) => (
-          <MemoryCard memory={memory} />
-        ))}
-      </div>
-
-      {rendered.map(({ memory, Content }) => (
-        <MemoryModal memory={memory}>
-          <Content />
-        </MemoryModal>
-      ))}
-
-      <p
-        data-gallery-empty
-        hidden
-        class="text-center text-ivory-muted italic py-12"
-      >
-        خاطره‌ای با این تگ یافت نشد.
+  {items.length === 0 ? (
+    <div class="rounded-3xl bg-amber-50 border-2 border-dashed border-amber-300 p-12 text-center">
+      <div class="text-6xl mb-4">🖼️</div>
+      <p class="text-stone-600 text-sm font-medium mb-2">هنوز رسانه‌ای اضافه نشده است</p>
+      <p class="text-stone-400 text-xs">
+        عکس‌ها و ویدیوهای خود را در پوشه‌ی
+        <code dir="ltr" class="bg-stone-100 px-2 py-1 rounded text-[11px]">src/assets/gallery/</code>
+        قرار دهید
       </p>
-    </>
+    </div>
+  ) : (
+    <div data-gallery-masonry class="gallery-masonry">
+      {items.map((item, index) => (
+        <button
+          type="button"
+          class="gallery-item group"
+          data-gallery-index={index}
+          aria-label={item.type === 'video' ? 'پخش ویدیو' : 'مشاهده تصویر'}
+        >
+          {item.type === 'video' ? (
+            item.thumb ? (
+              <img
+                src={item.thumb}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                class="gallery-thumb"
+              />
+            ) : (
+              <div class="gallery-thumb gallery-thumb-placeholder">
+                <div class="gallery-thumb-gradient"></div>
+              </div>
+            )
+          ) : (
+            <img
+              src={item.thumb}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              class="gallery-thumb"
+            />
+          )}
+
+          {item.type === 'video' && (
+            <div class="gallery-play-overlay" aria-hidden="true">
+              <div class="gallery-play-btn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </div>
+            </div>
+          )}
+
+          <div class="gallery-hover-overlay" aria-hidden="true">
+            <div class="gallery-download-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </div>
+          </div>
+        </button>
+      ))}
+    </div>
   )}
 </div>
 
+<!-- ============================================================ -->
+<!-- Lightbox -->
+<!-- ============================================================ -->
+<div
+  data-lightbox
+  hidden
+  role="dialog"
+  aria-modal="true"
+  aria-label="نمایش رسانه"
+  class="fixed inset-0 z-[300] bg-black/95 backdrop-blur-sm"
+>
+  <!-- دکمه بستن -->
+  <button
+    type="button"
+    data-lightbox-close
+    aria-label="بستن"
+    class="absolute top-4 end-4 z-30 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 text-white flex items-center justify-center transition-all active:scale-95"
+  >
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  </button>
+
+  <!-- دکمه دانلود -->
+  <a
+    data-lightbox-download
+    href="#"
+    download
+    aria-label="دانلود کیفیت اصلی"
+    class="absolute top-4 end-20 z-30 h-11 px-4 rounded-full bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-2 font-bold text-xs transition-all active:scale-95 shadow-lg"
+  >
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+      <polyline points="7 10 12 15 17 10"/>
+      <line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+    <span>دانلود</span>
+  </a>
+
+  <!-- دکمه قبلی -->
+  <button
+    type="button"
+    data-lightbox-prev
+    aria-label="قبلی"
+    class="absolute start-2 sm:start-4 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 text-white flex items-center justify-center transition-all active:scale-95"
+  >
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+  </button>
+
+  <!-- دکمه بعدی -->
+  <button
+    type="button"
+    data-lightbox-next
+    aria-label="بعدی"
+    class="absolute end-2 sm:end-4 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 text-white flex items-center justify-center transition-all active:scale-95"
+  >
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="9 18 15 12 9 6"/>
+    </svg>
+  </button>
+
+  <!-- محتوای مدیا -->
+  <div
+    data-lightbox-content
+    class="absolute inset-0 flex items-center justify-center p-4 sm:p-16"
+  >
+    <!-- محتوا با JS پر می‌شود -->
+  </div>
+
+  <!-- شمارنده -->
+  <div
+    data-lightbox-counter
+    class="absolute bottom-6 inset-x-0 flex justify-center pointer-events-none"
+  >
+    <div class="rounded-full bg-white/10 backdrop-blur border border-white/20 px-4 py-1.5 text-xs font-medium text-white tabular-nums">
+      1 / 1
+    </div>
+  </div>
+</div>
+
+<!-- داده‌ی رسانه برای استفاده در JS -->
+<script type="application/json" data-gallery-data set:html={JSON.stringify(mediaData)} />
+
+<style is:global>
+  /* ============================================================ */
+  /* Masonry Layout */
+  /* ============================================================ */
+  .gallery-masonry {
+    column-count: 2;
+    column-gap: 0.625rem;
+  }
+  @media (min-width: 640px) {
+    .gallery-masonry {
+      column-count: 3;
+      column-gap: 0.75rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .gallery-masonry {
+      column-count: 4;
+    }
+  }
+
+  .gallery-item {
+    display: block;
+    position: relative;
+    width: 100%;
+    margin: 0 0 0.625rem 0;
+    break-inside: avoid;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: #F5EDE0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: none;
+    padding: 0;
+    text-align: inherit;
+  }
+  @media (min-width: 640px) {
+    .gallery-item {
+      margin-bottom: 0.75rem;
+    }
+  }
+
+  .gallery-item:active {
+    transform: scale(0.97);
+  }
+
+  @media (hover: hover) {
+    .gallery-item:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 12px 28px -8px rgba(74, 63, 53, 0.2),
+        0 4px 10px -4px rgba(74, 63, 53, 0.1);
+    }
+    .gallery-item:hover .gallery-hover-overlay {
+      opacity: 1;
+    }
+    .gallery-item:hover .gallery-thumb {
+      transform: scale(1.04);
+    }
+  }
+
+  .gallery-thumb {
+    display: block;
+    width: 100%;
+    height: auto;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+  }
+
+  .gallery-thumb-placeholder {
+    aspect-ratio: 16 / 9;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .gallery-thumb-gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #1E1E24 0%, #2C2C36 50%, #1E1E24 100%);
+  }
+  .gallery-thumb-gradient::after {
+    content: '🎬';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    opacity: 0.5;
+  }
+
+  /* ============================================================ */
+  /* Play overlay for videos */
+  /* ============================================================ */
+  .gallery-play-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .gallery-play-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #E8833A;
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.35),
+      0 0 0 0 rgba(255, 255, 255, 0.5);
+    animation: gallery-play-pulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes gallery-play-pulse {
+    0%, 100% { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), 0 0 0 0 rgba(255, 255, 255, 0.5); }
+    50% { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), 0 0 0 10px rgba(255, 255, 255, 0); }
+  }
+
+  /* ============================================================ */
+  /* Hover overlay (download button on desktop) */
+  /* ============================================================ */
+  .gallery-hover-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.4), transparent 40%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 0.75rem;
+  }
+
+  .gallery-download-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    color: #E8833A;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  }
+
+  /* ============================================================ */
+  /* Lightbox */
+  /* ============================================================ */
+  [data-lightbox] {
+    animation: lightbox-fade 0.25s ease-out;
+  }
+
+  @keyframes lightbox-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  [data-lightbox-content] img,
+  [data-lightbox-content] video {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 0.5rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    animation: lightbox-zoom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes lightbox-zoom {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gallery-item,
+    .gallery-thumb,
+    .gallery-play-btn,
+    [data-lightbox],
+    [data-lightbox-content] img,
+    [data-lightbox-content] video {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+</style>
+
 <script>
+  // ============================================================
+  // گالری — منطق Lightbox و دانلود
+  // ============================================================
   function initGallery() {
-    const grid = document.querySelector<HTMLElement>('[data-gallery-grid]');
-    if (!grid) return;
+    const dataEl = document.querySelector<HTMLScriptElement>('[data-gallery-data]');
+    const masonry = document.querySelector<HTMLElement>('[data-gallery-masonry]');
+    const lightbox = document.querySelector<HTMLElement>('[data-lightbox]');
+    const content = document.querySelector<HTMLElement>('[data-lightbox-content]');
+    const counter = document.querySelector<HTMLElement>('[data-lightbox-counter]');
+    const closeBtn = document.querySelector<HTMLButtonElement>('[data-lightbox-close]');
+    const prevBtn = document.querySelector<HTMLButtonElement>('[data-lightbox-prev]');
+    const nextBtn = document.querySelector<HTMLButtonElement>('[data-lightbox-next]');
+    const downloadBtn = document.querySelector<HTMLAnchorElement>('[data-lightbox-download]');
 
-    const cards = Array.from(grid.querySelectorAll<HTMLElement>('[data-memory-card]'));
-    const filterButtons = Array.from(
-      document.querySelectorAll<HTMLButtonElement>('[data-tag-filter]')
-    );
-    const emptyMsg = document.querySelector<HTMLElement>('[data-gallery-empty]');
+    if (!dataEl || !masonry || !lightbox || !content) return;
 
-    // ---------- Modal ----------
-    function openModal(id: string) {
-      const modal = document.querySelector<HTMLElement>(`[data-memory-modal="${id}"]`);
-      if (!modal) return;
+    type MediaItem = {
+      type: 'image' | 'video';
+      src: string;
+      thumb: string;
+      filename: string;
+    };
 
-      modal.classList.remove('hidden');
+    let media: MediaItem[] = [];
+    try {
+      media = JSON.parse(dataEl.textContent || '[]');
+    } catch {
+      media = [];
+    }
+
+    if (media.length === 0) return;
+
+    let currentIndex = -1;
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    // ---------- باز کردن Lightbox ----------
+    function openLightbox(index: number) {
+      if (index < 0 || index >= media.length) return;
+      currentIndex = index;
+
+      const item = media[index];
+      content.innerHTML = '';
+
+      if (item.type === 'video') {
+        const video = document.createElement('video');
+        video.src = item.src;
+        video.controls = true;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.preload = 'metadata';
+        content.appendChild(video);
+      } else {
+        const img = document.createElement('img');
+        img.src = item.src;
+        img.alt = '';
+        img.decoding = 'async';
+        content.appendChild(img);
+      }
+
+      // به‌روزرسانی دکمه دانلود
+      if (downloadBtn) {
+        downloadBtn.href = item.src;
+        downloadBtn.download = item.filename;
+      }
+
+      // به‌روزرسانی شمارنده
+      if (counter) {
+        counter.innerHTML = `
+          <div class="rounded-full bg-white/10 backdrop-blur border border-white/20 px-4 py-1.5 text-xs font-medium text-white tabular-nums">
+            ${index + 1} / ${media.length}
+          </div>
+        `;
+      }
+
+      // نمایش
+      lightbox.hidden = false;
       document.body.style.overflow = 'hidden';
 
-      const closeBtn = modal.querySelector<HTMLButtonElement>('[data-modal-close]');
+      // فوکوس روی دکمه بستن
       closeBtn?.focus();
-
-      // ESC key handler per modal
-      const onKey = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') closeModal(modal, onKey);
-      };
-      document.addEventListener('keydown', onKey);
-      modal.dataset.escHandler = '1';
-      (modal as HTMLElement & { _escHandler?: (e: KeyboardEvent) => void })._escHandler = onKey;
     }
 
-    function closeModal(modal: HTMLElement, onKey?: (e: KeyboardEvent) => void) {
-      modal.classList.add('hidden');
-      document.body.style.overflow = '';
-
-      const handler =
-        onKey ??
-        (modal as HTMLElement & { _escHandler?: (e: KeyboardEvent) => void })._escHandler;
-      if (handler) {
-        document.removeEventListener('keydown', handler);
-        delete (modal as HTMLElement & { _escHandler?: (e: KeyboardEvent) => void })._escHandler;
+    // ---------- بستن Lightbox ----------
+    function closeLightbox() {
+      // توقف ویدیو در حال پخش
+      const video = content.querySelector('video');
+      if (video) {
+        video.pause();
+        video.src = '';
       }
+      content.innerHTML = '';
+      lightbox.hidden = true;
+      document.body.style.overflow = '';
+      currentIndex = -1;
     }
 
-    document.querySelectorAll<HTMLElement>('[data-memory-open]').forEach((btn) => {
+    // ---------- ناوبری ----------
+    function goNext() {
+      if (media.length === 0) return;
+      const next = (currentIndex + 1) % media.length;
+      openLightbox(next);
+    }
+
+    function goPrev() {
+      if (media.length === 0) return;
+      const prev = (currentIndex - 1 + media.length) % media.length;
+      openLightbox(prev);
+    }
+
+    // ---------- Event: کلیک روی کارت ----------
+    masonry.querySelectorAll<HTMLButtonElement>('[data-gallery-index]').forEach((btn) => {
       btn.addEventListener('click', () => {
-        const id = btn.dataset.memoryOpen;
-        if (id) openModal(id);
+        const idx = parseInt(btn.dataset.galleryIndex ?? '-1', 10);
+        if (idx >= 0) openLightbox(idx);
       });
     });
 
-    document.querySelectorAll<HTMLElement>('[data-memory-modal]').forEach((modal) => {
-      modal.querySelector('[data-modal-close]')?.addEventListener('click', () => {
-        closeModal(modal);
-      });
-      modal.querySelector('[data-modal-backdrop]')?.addEventListener('click', () => {
-        closeModal(modal);
-      });
+    // ---------- Event: دکمه‌های Lightbox ----------
+    closeBtn?.addEventListener('click', closeLightbox);
+    nextBtn?.addEventListener('click', goNext);
+    prevBtn?.addEventListener('click', goPrev);
+
+    // کلیک روی پس‌زمینه (خارج از محتوا) → بستن
+    lightbox.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (target === lightbox || target.dataset.lightboxContent !== undefined) {
+        closeLightbox();
+      }
     });
 
-    // ---------- Tag Filter ----------
-    let activeTag = '*';
-
-    function updateFilterButtons() {
-      filterButtons.forEach((btn) => {
-        const isActive = btn.dataset.tagFilter === activeTag;
-        btn.classList.toggle('bg-gold', isActive);
-        btn.classList.toggle('text-obsidian', isActive);
-        btn.classList.toggle('font-medium', isActive);
-        btn.classList.toggle('border-gold', isActive);
-        btn.classList.toggle('text-ivory-soft', !isActive);
-        btn.classList.toggle('border-gold/30', !isActive);
-      });
-    }
-
-    function applyFilter(tag: string) {
-      activeTag = tag;
-      let visibleCount = 0;
-
-      cards.forEach((card) => {
-        const tags = (card.dataset.tags ?? '').split(',').filter(Boolean);
-        const matches = tag === '*' || tags.includes(tag);
-        card.hidden = !matches;
-        if (matches) visibleCount++;
-      });
-
-      if (emptyMsg) emptyMsg.hidden = visibleCount > 0;
-      updateFilterButtons();
-    }
-
-    filterButtons.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const tag = btn.dataset.tagFilter;
-        if (tag) applyFilter(tag);
-      });
+    // ---------- Event: کیبورد ----------
+    document.addEventListener('keydown', (e) => {
+      if (lightbox.hidden) return;
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeLightbox();
+      } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        // در RTL: چپ = بعدی، راست = قبلی
+        if (e.key === 'ArrowLeft') goNext();
+        else goPrev();
+      }
     });
+
+    // ---------- Event: Swipe روی موبایل ----------
+    lightbox.addEventListener(
+      'touchstart',
+      (e) => {
+        if (e.touches.length !== 1) return;
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      },
+      { passive: true }
+    );
+
+    lightbox.addEventListener(
+      'touchend',
+      (e) => {
+        if (e.changedTouches.length !== 1) return;
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        const dy = e.changedTouches[0].clientY - touchStartY;
+
+        // فقط اگر حرکت افقی بود (نه عمودی)
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 60) {
+          // در RTL: کشیدن به چپ = بعدی
+          if (dx < 0) goNext();
+          else goPrev();
+        }
+      },
+      { passive: true }
+    );
   }
 
   if (document.readyState === 'loading') {

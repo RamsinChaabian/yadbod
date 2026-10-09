@@ -10,27 +10,6 @@ const bio = defineCollection({
   }),
 });
 
-const memories = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/memories' }),
-  schema: z.object({
-    title: z.string().min(1, 'عنوان خاطره الزامی است'),
-    date: z.string().optional(),
-    dateShamsi: z.string().optional(),
-    location: z.string().optional(),
-    media: z
-      .object({
-        type: z.enum(['image', 'video']),
-        src: z.string(),
-        alt: z.string().optional(),
-        caption: z.string().optional(),
-      })
-      .optional(),
-    tags: z.array(z.string()).default([]),
-    featured: z.boolean().default(false),
-    order: z.number().int().default(0),
-  }),
-});
-
 const timeline = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/timeline' }),
   schema: z.object({
@@ -48,6 +27,5 @@ const timeline = defineCollection({
 
 export const collections = {
   bio,
-  memories,
   timeline,
 };
