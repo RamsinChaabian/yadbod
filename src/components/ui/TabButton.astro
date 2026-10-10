@@ -104,4 +104,14 @@ const emoji = getIcon(icon);
       animation: none !important;
     }
   }
+
+  @keyframes haptic-flash {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.tab-button[aria-selected="true"] .tab-icon {
+  animation: tab-icon-pulse 2s ease-in-out infinite, haptic-flash 0.3s ease-out;
+}
 </style>

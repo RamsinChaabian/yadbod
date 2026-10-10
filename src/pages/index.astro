@@ -16,57 +16,72 @@ import TabContent from '../components/layout/TabContent.astro';
   <TabBar />
 
   <script>
-    function initTabs() {
-      const tabButtons = document.querySelectorAll<HTMLButtonElement>('[data-tab-id]');
-      const tabPanels = document.querySelectorAll<HTMLElement>('[data-tab-panel]');
+  import { haptic } from '../utils/haptic';
 
-      if (tabButtons.length === 0) return;
+  function initTabs() {
+    const tabButtons = document.querySelectorAll<HTMLButtonElement>('[data-tab-id]');
+    const tabPanels = document.querySelectorAll<HTMLElement>('[data-tab-panel]');
 
-      const validIds = Array.from(tabButtons)
-        .map((b) => b.dataset.tabId)
-        .filter((id): id is string => Boolean(id));
+    if (tabButtons.length === 0) return;
 
-      function getActiveFromHash(): string {
-        const hash = window.location.hash.replace(/^#/, '');
-        return validIds.includes(hash) ? hash : validIds[0]!;
-      }
+    const validIds = Array.from(tabButtons)
+      .map((b) => b.dataset.tabId)
+      .filter((id): id is string => Boolean(id));
 
-      function setActive(id: string, updateHash = true) {
-        tabButtons.forEach((btn) => {
-          btn.setAttribute('aria-selected', String(btn.dataset.tabId === id));
-        });
+    function getActiveFromHash(): string {
+      const hash = window.location.hash.replace(/^#/, '');
+      return validIds.includes(hash) ? hash : validIds[0]!;
+    }
 
-        tabPanels.forEach((panel) => {
-          if (panel.dataset.tabPanel === id) {
-            panel.removeAttribute('hidden');
-          } else {
-            panel.setAttribute('hidden', '');
-          }
-        });
-
-        if (updateHash && window.location.hash !== `#${id}`) {
-          history.replaceState(null, '', `#${id}`);
-        }
-      }
-
+    function setActive(id: string, updateHash = true) {
       tabButtons.forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const id = btn.dataset.tabId;
-          if (id) setActive(id);
-        });
+        btn.setAttribute('aria-selected', String(btn.dataset.tabId === id));
       });
 
-      window.addEventListener('hashchange', () => {
-        setActive(getActiveFromHash(), false);
+      tabPanels.forEach((panel) => {
+        if (panel.dataset.tabPanel === id) {
+          panel.removeAttribute('hidden');
+        } else {
+          panel.setAttribute('hidden', '');
+        }
       });
 
-      setActive(getActiveFromHash(), false);
+      if (updateHash && window.location.hash !== `#${id}`) {
+        history.replaceState(null, '', `#${id}`);
+      }
     }
 
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initTabs);
-    } else {
-      initTabs();
-    }
-  </script>
+    // ⭐ گرفتن تب فعلی برای جلوگیری از لرزش تکراری
+    let currentActiveId = getActiveFromHash();
+
+    tabButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.tabId;
+        if (!id) return;
+
+        // ⭐ فقط وقتی تب تغییر می‌کند، لرزش بده
+        if (id !== currentActiveId) {
+          haptic.tap();
+          currentActiveId = id;
+        }
+
+        setActive(id);
+      });
+    });
+
+    window.addEventListener('hashchange', () => {
+      const newId = getActiveFromHash();
+      setActive(newId, false);
+      currentActiveId = newId;
+    });
+
+    setActive(currentActiveId, false);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTabs);
+  } else {
+    initTabs();
+  }
+</script>
 </BaseLayout>
