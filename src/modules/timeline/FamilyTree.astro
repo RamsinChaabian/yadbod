@@ -4,7 +4,6 @@ import { config } from '../../utils/config';
 const { family, person } = config;
 const { parents, siblings, spouse, children: kids } = family;
 
-// شمارش خواهران و برادران
 const sisterCount = siblings.filter((s) => s.gender === 'female').length;
 const brotherCount = siblings.filter((s) => s.gender === 'male').length;
 const daughterCount = kids.filter((c) => c.gender === 'female').length;
@@ -14,22 +13,20 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
 <section class="family-tree my-12">
   <!-- سربرگ -->
   <header class="text-center mb-8">
-    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 text-3xl mb-4 shadow-card">
+    <div class="lg-thin inline-flex items-center justify-center w-16 h-16 rounded-full text-3xl mb-4 shadow-glass">
       🌳
     </div>
     <h3 class="text-2xl font-bold text-stone-800 mb-2">{family.title}</h3>
     <p class="text-sm text-stone-500">{family.subtitle}</p>
   </header>
 
-  <!-- ============================================================ -->
-  <!-- نسل اول: پدر و مادر -->
-  <!-- ============================================================ -->
+  <!-- نسل اول -->
   <div class="family-generation" data-generation="1">
     <p class="family-generation-label">نسل اول</p>
 
     <div class="flex justify-center gap-4 sm:gap-8 flex-wrap">
       {parents.map((parent) => (
-        <article class="family-card family-card--parent">
+        <article class="family-card family-card--parent lg-card">
           <div class="family-card-avatar family-card-avatar--parent">
             {parent.avatar}
           </div>
@@ -42,9 +39,7 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
     <div class="family-connector-line family-connector-line--down"></div>
   </div>
 
-  <!-- ============================================================ -->
-  <!-- نسل دوم: خواهران و برادران -->
-  <!-- ============================================================ -->
+  <!-- نسل دوم -->
   <div class="family-generation" data-generation="2">
     <p class="family-generation-label">
       خواهران و برادران
@@ -57,7 +52,7 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
       {siblings.map((sib) => (
         <article
           class:list={[
-            'family-card family-card--sibling',
+            'family-card family-card--sibling lg-card',
             sib.gender === 'female' ? 'family-card--female' : 'family-card--male',
             sib.isMain && 'family-card--main',
           ]}
@@ -88,14 +83,12 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
     <div class="family-connector-line family-connector-line--down"></div>
   </div>
 
-  <!-- ============================================================ -->
-  <!-- نجیه + همسر -->
-  <!-- ============================================================ -->
+  <!-- پیوند -->
   <div class="family-generation" data-generation="2.5">
     <p class="family-generation-label">پیوند</p>
 
     <div class="family-couple">
-      <article class="family-card family-card--main-large">
+      <article class="family-card family-card--main-large lg-card">
         <span class="family-card-star" aria-label="شخص اصلی">⭐</span>
         <div class="family-card-avatar family-card-avatar--main-large">
           <img
@@ -113,7 +106,7 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
         <div class="family-heart-line"></div>
       </div>
 
-      <article class="family-card family-card--spouse">
+      <article class="family-card family-card--spouse lg-card">
         <div class="family-card-avatar family-card-avatar--spouse">{spouse.avatar}</div>
         <p class="family-card-name">{spouse.name}</p>
         <p class="family-card-role">{spouse.role}</p>
@@ -123,9 +116,7 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
     <div class="family-connector-line family-connector-line--down"></div>
   </div>
 
-  <!-- ============================================================ -->
-  <!-- نسل سوم: فرزندان -->
-  <!-- ============================================================ -->
+  <!-- نسل سوم -->
   <div class="family-generation" data-generation="3">
     <p class="family-generation-label">
       فرزندان
@@ -137,7 +128,7 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
     <div class="family-children-grid">
       {kids.map((child) => (
         <article class:list={[
-          'family-card family-card--child',
+          'family-card family-card--child lg-card',
           child.gender === 'female' ? 'family-card--female' : 'family-card--male',
         ]}>
           <div class:list={[
@@ -155,23 +146,23 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
 
 <style is:global>
   /* ============================================================ */
-  /* ساختار کلی درخت */
+  /* ساختار کلی */
   /* ============================================================ */
   .family-tree {
     position: relative;
-    padding: 2rem 0;
+    padding: 1rem 0;
   }
 
   .family-generation {
     position: relative;
-    margin-bottom: 3rem;
+    margin-bottom: 2rem;
   }
 
   .family-generation-label {
     text-align: center;
     font-size: 0.75rem;
     font-weight: 700;
-    color: #9A9488;
+    color: #8B7D6B;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     margin-bottom: 1.25rem;
@@ -188,7 +179,7 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
   }
 
   /* ============================================================ */
-  /* کارت‌ها */
+  /* کارت‌ها — با lg-card پایه */
   /* ============================================================ */
   .family-card {
     position: relative;
@@ -197,27 +188,83 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
     align-items: center;
     gap: 0.375rem;
     padding: 0.875rem 0.75rem;
-    border-radius: 1.25rem;
-    background: #FFFFFF;
-    border: 1.5px solid #F5EDE0;
-    box-shadow:
-      0 2px 8px -2px rgba(74, 63, 53, 0.06),
-      0 1px 3px -1px rgba(74, 63, 53, 0.04);
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     min-width: 72px;
+    /* lg-card از HTML اومده */
+  }
+
+  /* کارت والدین */
+  .family-card--parent {
+    min-width: 110px;
+    padding: 1.25rem 1rem;
+  }
+
+  .family-card--parent .family-card-avatar--parent {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #F5EDE0, #E8D5B8);
+    font-size: 2.25rem;
+  }
+
+  /* کارت خواهر و برادر */
+  .family-card--sibling {
+    min-width: 76px;
+  }
+
+  /* کارت فرزند */
+  .family-card--child {
+    min-width: 84px;
+  }
+
+  /* کارت اصلی (نجیه) — برجسته */
+  .family-card--main {
+    border-color: #E8833A !important;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 248, 240, 0.85) 0%,
+      rgba(255, 235, 214, 0.75) 100%
+    ) !important;
+    transform: scale(1.05);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.85),
+      0 8px 24px rgba(232, 131, 58, 0.3),
+      0 2px 8px rgba(232, 131, 58, 0.2) !important;
   }
 
   @media (hover: hover) {
-    .family-card:hover {
-      transform: translateY(-3px);
-      box-shadow:
-        0 8px 20px -4px rgba(74, 63, 53, 0.12),
-        0 3px 8px -2px rgba(74, 63, 53, 0.06);
-      border-color: #E8833A;
+    .family-card--main:hover {
+      transform: translateY(-3px) scale(1.08);
     }
   }
 
-  /* آواتار */
+  .family-card--main-large {
+    min-width: 110px;
+    padding: 1.25rem 1rem;
+    border-color: #E8833A !important;
+    background: linear-gradient(
+      135deg,
+      rgba(255, 248, 240, 0.85) 0%,
+      rgba(255, 235, 214, 0.75) 100%
+    ) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.85),
+      0 8px 24px rgba(232, 131, 58, 0.3),
+      0 2px 8px rgba(232, 131, 58, 0.2) !important;
+  }
+
+  /* کارت همسر */
+  .family-card--spouse {
+    min-width: 110px;
+    padding: 1.25rem 1rem;
+    background: linear-gradient(
+      135deg,
+      rgba(240, 245, 255, 0.75) 0%,
+      rgba(224, 233, 245, 0.65) 100%
+    ) !important;
+  }
+
+  /* ============================================================ */
+  /* آواتارها */
+  /* ============================================================ */
   .family-card-avatar {
     width: 48px;
     height: 48px;
@@ -243,6 +290,54 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
     display: block;
   }
 
+  .family-card-avatar--female {
+    background: linear-gradient(135deg, #FCE7E0, #F4C9B8);
+  }
+
+  .family-card-avatar--male {
+    background: linear-gradient(135deg, #E0EDF5, #C8DAE8);
+  }
+
+  .family-card-avatar--main {
+    width: 56px;
+    height: 56px;
+    padding: 2px;
+    background: linear-gradient(135deg, #F5A623, #E8833A);
+    box-shadow: 0 4px 12px rgba(232, 131, 58, 0.4);
+  }
+
+  .family-card-avatar--main img {
+    border: 2px solid #FFFFFF;
+  }
+
+  .family-card-avatar--main-large {
+    width: 64px;
+    height: 64px;
+    padding: 2px;
+    background: linear-gradient(135deg, #F5A623, #E8833A);
+    box-shadow: 0 4px 12px rgba(232, 131, 58, 0.4);
+  }
+
+  .family-card-avatar--main-large img {
+    border: 2px solid #FFFFFF;
+  }
+
+  .family-card-avatar--spouse {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #E0EDF5, #C8DAE8);
+    font-size: 2.25rem;
+  }
+
+  .family-card-avatar--child {
+    width: 52px;
+    height: 52px;
+    font-size: 1.75rem;
+  }
+
+  /* ============================================================ */
+  /* متن کارت */
+  /* ============================================================ */
   .family-card-name {
     font-size: 0.813rem;
     font-weight: 700;
@@ -253,12 +348,12 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
 
   .family-card-role {
     font-size: 0.688rem;
-    color: #9A9488;
+    color: #8B7D6B;
     font-weight: 500;
     text-align: center;
   }
 
-  /* ستاره‌ی نفر اصلی */
+  /* ستاره */
   .family-card-star {
     position: absolute;
     top: -8px;
@@ -282,77 +377,12 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
   }
 
   /* ============================================================ */
-  /* کارت والدین */
-  /* ============================================================ */
-  .family-card--parent {
-    background: linear-gradient(135deg, #FFF8F0 0%, #FBF2E5 100%);
-    border-color: #E8D5B8;
-    min-width: 110px;
-    padding: 1.25rem 1rem;
-  }
-
-  .family-card-avatar--parent {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, #F5EDE0, #E8D5B8);
-    font-size: 2.25rem;
-  }
-
-  /* ============================================================ */
-  /* کارت خواهر و برادر */
-  /* ============================================================ */
-  .family-card--sibling {
-    min-width: 76px;
-  }
-
-  .family-card-avatar--female {
-    background: linear-gradient(135deg, #FCE7E0, #F4C9B8);
-  }
-
-  .family-card-avatar--male {
-    background: linear-gradient(135deg, #E0EDF5, #C8DAE8);
-  }
-
-  /* کارت نجیه (برجسته) */
-  .family-card--main {
-    background: linear-gradient(135deg, #FFF8F0 0%, #FFEBD6 100%);
-    border-color: #E8833A;
-    border-width: 2px;
-    box-shadow:
-      0 4px 16px -2px rgba(232, 131, 58, 0.25),
-      0 2px 6px -1px rgba(232, 131, 58, 0.15);
-    transform: scale(1.05);
-  }
-
-  @media (hover: hover) {
-    .family-card--main:hover {
-      transform: translateY(-3px) scale(1.08);
-      box-shadow:
-        0 8px 24px -4px rgba(232, 131, 58, 0.35),
-        0 3px 10px -2px rgba(232, 131, 58, 0.2);
-    }
-  }
-
-  .family-card-avatar--main {
-    background: linear-gradient(135deg, #F5A623, #E8833A);
-    width: 56px;
-    height: 56px;
-    padding: 2px;
-    box-shadow: 0 4px 12px rgba(232, 131, 58, 0.4);
-  }
-
-  .family-card-avatar--main img {
-    border: 2px solid #FFFFFF;
-  }
-
-  /* ============================================================ */
-  /* Grid خواهران و برادران */
+  /* Grid ها */
   /* ============================================================ */
   .family-siblings-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(76px, 1fr));
     gap: 0.75rem;
-    max-width: 100%;
     padding: 0 0.25rem;
   }
 
@@ -363,9 +393,6 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
     }
   }
 
-  /* ============================================================ */
-  /* زوج (نجیه + همسر) */
-  /* ============================================================ */
   .family-couple {
     display: flex;
     align-items: center;
@@ -380,44 +407,25 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
     }
   }
 
-  .family-card--main-large {
-    background: linear-gradient(135deg, #FFF8F0 0%, #FFEBD6 100%);
-    border-color: #E8833A;
-    border-width: 2px;
-    padding: 1.25rem 1rem;
-    min-width: 110px;
-    box-shadow:
-      0 6px 20px -4px rgba(232, 131, 58, 0.3),
-      0 2px 8px -2px rgba(232, 131, 58, 0.15);
+  .family-children-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+    gap: 0.75rem;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 0.25rem;
   }
 
-  .family-card-avatar--main-large {
-    width: 64px;
-    height: 64px;
-    background: linear-gradient(135deg, #F5A623, #E8833A);
-    padding: 2px;
-    box-shadow: 0 4px 12px rgba(232, 131, 58, 0.4);
+  @media (min-width: 640px) {
+    .family-children-grid {
+      grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+      gap: 1rem;
+    }
   }
 
-  .family-card-avatar--main-large img {
-    border: 2px solid #FFFFFF;
-  }
-
-  .family-card--spouse {
-    background: linear-gradient(135deg, #F0F5FF 0%, #E0E9F5 100%);
-    border-color: #C8DAE8;
-    padding: 1.25rem 1rem;
-    min-width: 110px;
-  }
-
-  .family-card-avatar--spouse {
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, #E0EDF5, #C8DAE8);
-    font-size: 2.25rem;
-  }
-
+  /* ============================================================ */
   /* قلب وسط */
+  /* ============================================================ */
   .family-heart {
     position: relative;
     display: flex;
@@ -444,44 +452,15 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
   .family-heart-line {
     position: absolute;
     inset: -4px;
-    border: 2px dashed #E8A0A0;
+    border: 2px dashed rgba(232, 160, 160, 0.5);
     border-radius: 50%;
-    opacity: 0.4;
+    opacity: 0.6;
     animation: heart-ring 3s linear infinite;
   }
 
   @keyframes heart-ring {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
-  }
-
-  /* ============================================================ */
-  /* Grid فرزندان */
-  /* ============================================================ */
-  .family-children-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
-    gap: 0.75rem;
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 0 0.25rem;
-  }
-
-  @media (min-width: 640px) {
-    .family-children-grid {
-      grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
-      gap: 1rem;
-    }
-  }
-
-  .family-card--child {
-    min-width: 84px;
-  }
-
-  .family-card-avatar--child {
-    width: 52px;
-    height: 52px;
-    font-size: 1.75rem;
   }
 
   /* ============================================================ */
@@ -494,15 +473,15 @@ const sonCount = kids.filter((c) => c.gender === 'male').length;
     background: linear-gradient(
       to bottom,
       transparent 0%,
-      #E8D5B8 20%,
-      #E8D5B8 80%,
+      rgba(184, 145, 90, 0.4) 20%,
+      rgba(184, 145, 90, 0.4) 80%,
       transparent 100%
     );
   }
 
   .family-connector-line--down {
-    height: 32px;
-    margin-top: 1.5rem;
+    height: 28px;
+    margin-top: 1.25rem;
   }
 
   .family-connector-line--down::after {

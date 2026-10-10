@@ -6,18 +6,19 @@ import IPhoneGuide from './IPhoneGuide.astro';
 const { location } = config;
 ---
 
-<div class="px-4 py-6 max-w-3xl mx-auto">
-  <header class="mb-6">
-    <h2 class="text-2xl font-bold text-stone-800 mb-1">یافتن قبر با دوربین</h2>
+<div class="py-2">
+  <!-- سربرگ شیشه‌ای -->
+  <header class="lg-card p-6 mb-5">
+    <h2 class="text-xl font-bold text-stone-800 mb-1">یافتن قبر با دوربین</h2>
     <p class="text-sm text-stone-500">با دوربین گوشی، مسیر رسیدن به قبر را ببینید.</p>
   </header>
 
-  <div data-ar-start-panel class="space-y-5">
+  <div data-ar-start-panel class="space-y-4">
     <!-- بنر هشدار آفلاین -->
     <div
       data-ar-offline-banner
       hidden
-      class="rounded-2xl bg-amber-50 border-2 border-amber-300 p-4 flex items-start gap-3"
+      class="lg-card p-4 flex items-start gap-3 border-amber-300/60"
       role="alert"
     >
       <span class="text-2xl shrink-0">📡</span>
@@ -33,32 +34,56 @@ const { location } = config;
     <!-- راهنمای آیفون -->
     <IPhoneGuide />
 
-    <div class="aspect-video rounded-3xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 flex items-center justify-center relative overflow-hidden shadow-card">
-      <div class="text-center px-4">
-        <div class="text-6xl mb-3">📷</div>
-        <p class="text-stone-700 font-semibold text-base">دوربین گوشی شما فعال می‌شود</p>
-        <p class="text-stone-500 text-sm mt-1">برای مشاهده نشانگر قبر، دکمه‌ی زیر را بزنید</p>
+    <!-- پیش‌نمایش دوربین -->
+    <div class="lg-card p-2 overflow-hidden">
+      <div class="aspect-video rounded-[24px] bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center relative overflow-hidden">
+        <div class="text-center px-4">
+          <div class="text-6xl mb-3">📷</div>
+          <p class="text-stone-700 font-semibold text-base">دوربین گوشی شما فعال می‌شود</p>
+          <p class="text-stone-500 text-sm mt-1">برای مشاهده نشانگر قبر، دکمه‌ی زیر را بزنید</p>
+        </div>
       </div>
     </div>
 
-    <button type="button" data-ar-start class="touch-target w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold px-6 py-4 transition-all duration-300 hover:from-amber-600 hover:to-orange-600 shadow-button active:scale-[0.98] text-base">
+    <!-- دکمه شروع -->
+    <button
+      type="button"
+      data-ar-start
+      class="lg-button-primary touch-target w-full inline-flex items-center justify-center gap-2 px-6 py-4 font-bold text-base"
+    >
       <span aria-hidden="true" class="text-xl">📸</span>
       <span>شروع واقعیت افزوده</span>
     </button>
 
-    <div data-ar-unsupported hidden class="rounded-2xl bg-amber-50 border border-amber-200 p-4 text-sm" role="alert">
+    <!-- عدم پشتیبانی -->
+    <div data-ar-unsupported hidden class="lg-card p-4 text-sm border-amber-300/60" role="alert">
       <p data-ar-unsupported-msg class="text-stone-700"></p>
-      <a href={location.googleMapsUrl} target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex items-center gap-2 text-amber-700 hover:text-amber-800 underline underline-offset-4 font-medium">
+      <a
+        href={location.googleMapsUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="mt-3 inline-flex items-center gap-2 text-amber-700 hover:text-amber-800 underline underline-offset-4 font-medium"
+      >
         📍 مسیریابی با Google Maps
       </a>
     </div>
 
-    <div class="rounded-2xl bg-white border border-stone-200 p-5 shadow-card">
+    <!-- راهنما -->
+    <div class="lg-card p-5">
       <h3 class="text-sm font-bold text-stone-800 mb-3">راهنما</h3>
       <ul class="space-y-2 text-xs text-stone-600 leading-relaxed">
-        <li class="flex items-start gap-2"><span class="text-amber-500 mt-0.5">•</span><span>در فضای باز و با دید آسمان باز استفاده کنید</span></li>
-        <li class="flex items-start gap-2"><span class="text-amber-500 mt-0.5">•</span><span>گوشی را به آرامی بچرخانید تا نشانگر طلایی ظاهر شود</span></li>
-        <li class="flex items-start gap-2"><span class="text-amber-500 mt-0.5">•</span><span>فاصله و جهت در گوشه صفحه نمایش داده می‌شود</span></li>
+        <li class="flex items-start gap-2">
+          <span class="text-amber-500 mt-0.5">•</span>
+          <span>در فضای باز و با دید آسمان باز استفاده کنید</span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-amber-500 mt-0.5">•</span>
+          <span>گوشی را به آرامی بچرخانید تا نشانگر طلایی ظاهر شود</span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-amber-500 mt-0.5">•</span>
+          <span>فاصله و جهت در گوشه صفحه نمایش داده می‌شود</span>
+        </li>
       </ul>
     </div>
   </div>
@@ -217,7 +242,7 @@ const { location } = config;
 
     // بدنه‌ی فلش (شفت + تیغه) — با هم حرکت می‌کنند
     const arrowBody = new THREE.Group();
-    arrowBody.position.y = 0; // در tick به‌روزرسانی می‌شود
+    arrowBody.position.y = 0;
     arrowGroup.add(arrowBody);
 
     // شفت (بالای فلش)
@@ -235,7 +260,7 @@ const { location } = config;
       opacity: 1,
     });
     const cone = new THREE.Mesh(coneGeo, coneMat);
-    cone.rotation.z = Math.PI; // نوک رو به پایین
+    cone.rotation.z = Math.PI;
     cone.position.y = 1.75;
     arrowBody.add(cone);
 
@@ -263,7 +288,7 @@ const { location } = config;
     arrowGlow.position.y = 2.0;
     arrowGroup.add(arrowGlow);
 
-    // حلقه‌ی کوچک روی زمین (برای زمینه)
+    // حلقه‌ی کوچک روی زمین
     const arrowRing = new THREE.Mesh(
       new THREE.TorusGeometry(1.0, 0.06, 12, 48),
       new THREE.MeshBasicMaterial({
@@ -635,7 +660,7 @@ const { location } = config;
         let lastAccuracy: number | undefined = initialAccuracy;
         let lastUpdateTime = 0;
 
-        // ⭐ حالت فعلی — با hysteresis از فلشیدن جلوگیری می‌کند
+        // حالت فعلی — با hysteresis از فلش‌زدن جلوگیری می‌کند
         let isArrowMode = false;
 
         const onGps = (e: any) => {
@@ -678,20 +703,16 @@ const { location } = config;
           beacon.columnMat.opacity = 0.4 + Math.sin(t * 1.5) * 0.2;
 
           // ---------- انیمیشن فلش رو به پایین ----------
-          // موشن بالا-پایین ملایم
           const arrowBob = Math.sin(t * 2.2) * 0.35;
           beacon.arrowBody.position.y = arrowBob;
           beacon.arrowGlow.position.y = 2.0 + arrowBob;
 
-          // پالس هاله
           const arrowGlowPulse = 1 + Math.sin(t * 3.5) * 0.22;
           beacon.arrowGlow.scale.set(3.2 * arrowGlowPulse, 3.2 * arrowGlowPulse, 1);
           beacon.arrowGlowMat.opacity = 0.65 + Math.sin(t * 3.5) * 0.3;
 
-          // چرخش آرام حلقه‌ی زمین
           beacon.arrowRing.rotation.z = t * 0.4;
 
-          // پالس تیغه (بزرگ و کوچک شدن خیلی جزئی)
           beacon.coneMat.opacity = 0.85 + Math.sin(t * 2.2) * 0.15;
 
           // ---------- موقعیت‌یابی + مقیاس ----------
@@ -712,26 +733,21 @@ const { location } = config;
             beacon.group.visible = inView;
 
             if (inView) {
-              // فاصله مجازی — حداکثر ۸ متر
               const VIRTUAL_DIST = Math.min(actualDist, 8);
               const targetPos = camera.position.clone().add(dir.clone().multiplyScalar(VIRTUAL_DIST));
               targetPos.y = 0;
               beacon.group.position.lerp(targetPos, 0.2);
 
-              // ⭐ تعیین حالت (با hysteresis برای جلوگیری از فلش زدن)
-              // اگر فاصله < ۴۸۰m → arrow mode
-              // اگر فاصله > ۵۲۰m → beacon mode
+              // تعیین حالت (با hysteresis)
               if (!isArrowMode && actualDist < 480) {
                 isArrowMode = true;
               } else if (isArrowMode && actualDist > 520) {
                 isArrowMode = false;
               }
 
-              // نمایش گروه مناسب
               beacon.beaconGroup.visible = !isArrowMode;
               beacon.arrowGroup.visible = isArrowMode;
 
-              // مقیاس‌بندی بر اساس حالت
               const targetScale = isArrowMode
                 ? calcArrowScale(actualDist)
                 : calcBeaconScale(actualDist);
@@ -739,7 +755,6 @@ const { location } = config;
               const newScale = currentScale + (targetScale - currentScale) * 0.08;
               beacon.group.scale.setScalar(newScale);
             } else {
-              // خارج از دید — هر دو مخفی
               beacon.beaconGroup.visible = false;
               beacon.arrowGroup.visible = false;
             }
@@ -749,7 +764,6 @@ const { location } = config;
             const cameraHeadingRad = Math.atan2(upVec.x, -upVec.z);
             const headingDeg = ((cameraHeadingRad * 180 / Math.PI) + 360) % 360;
 
-            // فلش ۲بعدی HTML (بالای صفحه)
             if (arrowEl) {
               const bearing = calcBearing(lastLat, lastLng, graveLat, graveLng);
               const rel = ((bearing - headingDeg) + 360) % 360;
@@ -761,7 +775,6 @@ const { location } = config;
               }
             }
 
-            // نشانگر زمین — فقط وقتی خیلی نزدیک
             if (groundIndicator) {
               groundIndicator.hidden = actualDist > 30;
             }

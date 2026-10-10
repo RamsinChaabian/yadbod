@@ -6,8 +6,9 @@ const { contacts } = config;
 ---
 
 <div class="px-4 py-8 max-w-3xl mx-auto">
-  <header class="mb-8 text-center">
-    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 text-3xl mb-4 shadow-card">
+  <!-- سربرگ شیشه‌ای -->
+  <header class="lg-card p-6 sm:p-8 text-center mb-6">
+    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 text-3xl mb-4 shadow-glass">
       📞
     </div>
     <h2 class="text-2xl font-bold text-stone-800 mb-2">{contacts.title}</h2>
@@ -15,7 +16,7 @@ const { contacts } = config;
   </header>
 
   {contacts.contacts.length === 0 ? (
-    <div class="rounded-2xl bg-amber-50 border border-amber-200 p-6 text-center text-stone-500 text-sm">
+    <div class="lg-card p-6 text-center text-stone-500 text-sm">
       هنوز شماره‌ای اضافه نشده است.
     </div>
   ) : (
@@ -27,7 +28,7 @@ const { contacts } = config;
   )}
 
   <!-- توضیح پایانی -->
-  <div class="mt-10 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 p-5 text-center">
+  <div class="lg-card p-5 text-center mt-6">
     <p class="text-xs text-stone-600 leading-relaxed">
       🕊️ در صورت عدم پاسخ، لطفاً بعداً تماس بگیرید یا پیام بگذارید. از همراهی شما سپاسگزاریم.
     </p>

@@ -1,10 +1,14 @@
 @import "tailwindcss";
 @import "./fonts.css";
 
+/* ============================================================
+   Liquid Glass 2026 — Design Tokens
+   ============================================================ */
 @theme {
-  /* ─── پالت غروب گرم ─── */
+  /* ── پالت غروب گرم ── */
   --color-cream: #FFF8F0;
   --color-cream-dark: #F5EDE0;
+  --color-cream-deep: #EBE0D0;
   --color-white: #FFFFFF;
   --color-brown: #4A3F35;
   --color-brown-soft: #8B7D6B;
@@ -17,7 +21,24 @@
   --color-lavender: #B8A9D4;
   --color-gold: #96703A;
 
-  /* Shadows */
+  /* ── سایه‌های Liquid Glass ── */
+  --shadow-glass-sm:
+    0 2px 8px rgba(74, 63, 53, 0.04),
+    0 1px 2px rgba(74, 63, 53, 0.03);
+  --shadow-glass:
+    0 8px 32px rgba(74, 63, 53, 0.08),
+    0 2px 8px rgba(74, 63, 53, 0.04);
+  --shadow-glass-lg:
+    0 16px 48px rgba(74, 63, 53, 0.12),
+    0 4px 16px rgba(74, 63, 53, 0.06);
+  --shadow-glass-xl:
+    0 24px 64px rgba(74, 63, 53, 0.16),
+    0 8px 24px rgba(74, 63, 53, 0.08);
+  --shadow-glass-amber:
+    0 12px 40px rgba(232, 131, 58, 0.18),
+    0 4px 12px rgba(232, 131, 58, 0.1);
+
+  /* ── سایه‌های قدیمی (حفظ سازگاری) ── */
   --shadow-card: 0 4px 20px -4px rgba(74, 63, 53, 0.08), 0 2px 8px -2px rgba(74, 63, 53, 0.04);
   --shadow-card-hover: 0 12px 32px -8px rgba(74, 63, 53, 0.15), 0 4px 12px -4px rgba(74, 63, 53, 0.08);
   --shadow-button: 0 4px 14px -2px rgba(232, 131, 58, 0.35);
@@ -28,50 +49,277 @@
   --radius-2xl: 28px;
 }
 
+/* ============================================================
+   Utility: touch target
+   ============================================================ */
 @utility touch-target {
   min-width: 44px;
   min-height: 44px;
 }
 
+/* ============================================================
+   Base
+   ============================================================ */
 @layer base {
   html {
     font-family: var(--font-sans);
     font-size: 16px;
-    background-color: var(--color-cream);
+    /* پس‌زمینه‌ی گرادیان ملایم — برای اینکه شیشه رنگ بگیرد */
+    background: linear-gradient(
+      165deg,
+      #FFF8F0 0%,
+      #FBF2E8 35%,
+      #F9EDE2 65%,
+      #F5E8DD 100%
+    );
+    background-attachment: fixed;
     color: var(--color-brown);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
+    min-height: 100dvh;
   }
+
   body {
     margin: 0;
     min-height: 100dvh;
-    background-color: var(--color-cream);
+    background: transparent; /* گرادیان روی html است */
   }
+
   [hidden] {
     display: none !important;
   }
+
   *:focus-visible {
     outline: 2px solid var(--color-amber);
-    outline-offset: 2px;
-    border-radius: 8px;
+    outline-offset: 3px;
+    border-radius: 12px;
   }
+
   ::selection {
     background-color: color-mix(in srgb, var(--color-amber) 30%, transparent);
     color: var(--color-brown);
   }
 }
 
-/* انیمیشن ورود پنل تب */
+/* ============================================================
+   Liquid Glass — کلاس‌های اصلی
+   ============================================================ */
+
+/* ─── شیشه‌ی پایه (کارت‌ها، هدر، فوتر) ─── */
+.lg-surface {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.7) 0%,
+    rgba(255, 255, 255, 0.55) 50%,
+    rgba(250, 245, 235, 0.6) 100%
+  );
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset 0 -1px 0 rgba(184, 145, 90, 0.06),
+    0 8px 32px rgba(74, 63, 53, 0.08),
+    0 2px 8px rgba(74, 63, 53, 0.04);
+  border-radius: 36px;
+}
+
+/* ─── شیشه‌ی کارت (با blur کمتر) ─── */
+.lg-card {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.75) 0%,
+    rgba(255, 255, 255, 0.6) 100%
+  );
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -1px 0 rgba(184, 145, 90, 0.05),
+    0 8px 28px rgba(74, 63, 53, 0.07),
+    0 2px 8px rgba(74, 63, 53, 0.04);
+  border-radius: 32px;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (hover: hover) {
+  .lg-card:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.85),
+      inset 0 -1px 0 rgba(184, 145, 90, 0.08),
+      0 16px 48px rgba(74, 63, 53, 0.12),
+      0 4px 16px rgba(74, 63, 53, 0.06);
+  }
+}
+
+/* ─── شیشه‌ی قوی (مودال، Lightbox، کارت GPS خاموش) ─── */
+.lg-modal {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.82) 0%,
+    rgba(255, 255, 255, 0.7) 100%
+  );
+  backdrop-filter: blur(48px) saturate(190%);
+  -webkit-backdrop-filter: blur(48px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(184, 145, 90, 0.08),
+    0 24px 64px rgba(74, 63, 53, 0.16),
+    0 8px 24px rgba(74, 63, 53, 0.08);
+  border-radius: 40px;
+}
+
+/* ─── شیشه‌ی تیره (HUD AR، GPS dark cards) ─── */
+.lg-dark {
+  background: linear-gradient(
+    135deg,
+    rgba(30, 30, 36, 0.75) 0%,
+    rgba(20, 20, 25, 0.65) 100%
+  );
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(245, 166, 35, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(245, 166, 35, 0.18),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 12px 40px rgba(0, 0, 0, 0.4),
+    0 4px 12px rgba(0, 0, 0, 0.25);
+  border-radius: 32px;
+}
+
+/* ─── شیشه‌ی دکمه (کوچک‌تر با radius بزرگ) ─── */
+.lg-button {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.75) 0%,
+    rgba(255, 255, 255, 0.55) 100%
+  );
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 4px 16px rgba(74, 63, 53, 0.06);
+  border-radius: 24px;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (hover: hover) {
+  .lg-button:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 8px 24px rgba(232, 131, 58, 0.15);
+  }
+}
+
+.lg-button:active {
+  transform: translateY(0) scale(0.97);
+}
+
+/* ─── شیشه‌ی دکمه‌ی اصلی (طلایی) ─── */
+.lg-button-primary {
+  background: linear-gradient(
+    135deg,
+    rgba(245, 166, 35, 0.92) 0%,
+    rgba(232, 131, 58, 0.95) 100%
+  );
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(140, 109, 63, 0.2),
+    0 8px 24px rgba(232, 131, 58, 0.35),
+    0 2px 8px rgba(232, 131, 58, 0.2);
+  color: white;
+  border-radius: 24px;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@media (hover: hover) {
+  .lg-button-primary:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      0 12px 36px rgba(232, 131, 58, 0.5),
+      0 4px 12px rgba(232, 131, 58, 0.3);
+  }
+}
+
+.lg-button-primary:active {
+  transform: translateY(0) scale(0.97);
+}
+
+/* ─── شیشه‌ی overlay (پشت مودال‌ها) ─── */
+.lg-overlay {
+  background: rgba(74, 63, 53, 0.35);
+  backdrop-filter: blur(8px) saturate(150%);
+  -webkit-backdrop-filter: blur(8px) saturate(150%);
+}
+
+/* ─── شیشه‌ی خیلی نازک (روی تصاویر، badgeها) ─── */
+.lg-thin {
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+}
+
+/* ============================================================
+   Fallback برای مرورگرهای بدون backdrop-filter
+   ============================================================ */
+@supports not (backdrop-filter: blur(1px)) {
+  .lg-surface,
+  .lg-card,
+  .lg-modal,
+  .lg-thin {
+    background: rgba(255, 255, 255, 0.92);
+  }
+  .lg-dark {
+    background: rgba(20, 20, 25, 0.95);
+  }
+  .lg-overlay {
+    background: rgba(74, 63, 53, 0.7);
+  }
+}
+
+/* ============================================================
+   انیمیشن‌ها
+   ============================================================ */
 @keyframes fade-in-up {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+@keyframes glass-shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
 [data-tab-panel]:not([hidden]) {
   animation: fade-in-up 0.4s ease-out;
 }
 
+/* ============================================================
+   Reduced Motion
+   ============================================================ */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   [data-tab-panel]:not([hidden]) { animation: none; }
+  .lg-card, .lg-button, .lg-button-primary {
+    transition: none !important;
+    transform: none !important;
+  }
 }
+
+/* ============================================================
+   Safari fix — backdrop-filter در iOS فقط با -webkit- کار می‌کند
+   (بالا گذاشتیم، ولی به عنوان یادآوری)
+   ============================================================ */
