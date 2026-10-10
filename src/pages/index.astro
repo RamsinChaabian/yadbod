@@ -1,87 +1,84 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
-import PageTitle from '../components/layout/PageTitle.astro';
 import TabBar from '../components/layout/TabBar.astro';
 import TabContent from '../components/layout/TabContent.astro';
 ---
 
 <BaseLayout>
   <Header />
-  <PageTitle />
-  <main class="pb-40">
+
+  <main class="pb-28">
     <TabContent />
   </main>
 
   <TabBar />
 
   <script>
-  import { haptic } from '../utils/haptic';
+    import { haptic } from '../utils/haptic';
 
-  function initTabs() {
-    const tabButtons = document.querySelectorAll<HTMLButtonElement>('[data-tab-id]');
-    const tabPanels = document.querySelectorAll<HTMLElement>('[data-tab-panel]');
+    function initTabs() {
+      const tabButtons = document.querySelectorAll<HTMLButtonElement>('[data-tab-id]');
+      const tabPanels = document.querySelectorAll<HTMLElement>('[data-tab-panel]');
 
-    if (tabButtons.length === 0) return;
+      if (tabButtons.length === 0) return;
 
-    const validIds = Array.from(tabButtons)
-      .map((b) => b.dataset.tabId)
-      .filter((id): id is string => Boolean(id));
+      const validIds = Array.from(tabButtons)
+        .map((b) => b.dataset.tabId)
+        .filter((id): id is string => Boolean(id));
 
-    function getActiveFromHash(): string {
-      const hash = window.location.hash.replace(/^#/, '');
-      return validIds.includes(hash) ? hash : validIds[0]!;
-    }
-
-    function setActive(id: string, updateHash = true) {
-      tabButtons.forEach((btn) => {
-        btn.setAttribute('aria-selected', String(btn.dataset.tabId === id));
-      });
-
-      tabPanels.forEach((panel) => {
-        if (panel.dataset.tabPanel === id) {
-          panel.removeAttribute('hidden');
-        } else {
-          panel.setAttribute('hidden', '');
-        }
-      });
-
-      if (updateHash && window.location.hash !== `#${id}`) {
-        history.replaceState(null, '', `#${id}`);
+      function getActiveFromHash(): string {
+        const hash = window.location.hash.replace(/^#/, '');
+        return validIds.includes(hash) ? hash : validIds[0]!;
       }
+
+      function setActive(id: string, updateHash = true) {
+        tabButtons.forEach((btn) => {
+          btn.setAttribute('aria-selected', String(btn.dataset.tabId === id));
+        });
+
+        tabPanels.forEach((panel) => {
+          if (panel.dataset.tabPanel === id) {
+            panel.removeAttribute('hidden');
+          } else {
+            panel.setAttribute('hidden', '');
+          }
+        });
+
+        if (updateHash && window.location.hash !== `#${id}`) {
+          history.replaceState(null, '', `#${id}`);
+        }
+      }
+
+      let currentActiveId = getActiveFromHash();
+
+      tabButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const id = btn.dataset.tabId;
+          if (!id) return;
+
+          if (id !== currentActiveId) {
+            haptic.tap();
+            currentActiveId = id;
+          }
+
+          setActive(id);
+        });
+      });
+
+      window.addEventListener('hashchange', () => {
+        const newId = getActiveFromHash();
+        setActive(newId, false);
+        currentActiveId = newId;
+      });
+
+      setActive(currentActiveId, false);
     }
 
-    // ⭐ گرفتن تب فعلی برای جلوگیری از لرزش تکراری
-    let currentActiveId = getActiveFromHash();
-
-    tabButtons.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const id = btn.dataset.tabId;
-        if (!id) return;
-
-        // ⭐ فقط وقتی تب تغییر می‌کند، لرزش بده
-        if (id !== currentActiveId) {
-          haptic.tap();
-          currentActiveId = id;
-        }
-
-        setActive(id);
-      });
-    });
-
-    window.addEventListener('hashchange', () => {
-      const newId = getActiveFromHash();
-      setActive(newId, false);
-      currentActiveId = newId;
-    });
-
-    setActive(currentActiveId, false);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initTabs);
-  } else {
-    initTabs();
-  }
-</script>
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initTabs);
+    } else {
+      initTabs();
+    }
+  </script>
 </BaseLayout>
