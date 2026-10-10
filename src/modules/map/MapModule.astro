@@ -4,10 +4,11 @@ import { config } from '../../utils/config';
 const { location } = config;
 ---
 
-<div class="px-4 py-8 max-w-4xl mx-auto">
-  <header class="mb-5">
-    <h2 class="text-xl font-bold text-gold mb-1">مسیریابی به محل قبر</h2>
-    <p class="text-sm text-ivory-muted">
+<div class="py-2">
+  <!-- سربرگ شیشه‌ای -->
+  <header class="lg-card p-5 mb-4">
+    <h2 class="text-xl font-bold text-stone-800 mb-1">مسیریابی به محل قبر</h2>
+    <p class="text-sm text-stone-500">
       {location.cemeteryName} — {location.city}، {location.province}
     </p>
   </header>
@@ -19,21 +20,25 @@ const { location } = config;
     data-zoom={location.defaultZoom}
     class="relative"
   >
-    <div
-      data-map
-      class="w-full h-[60vh] min-h-[340px] sm:min-h-[420px] rounded-lg overflow-hidden border border-gold/20 bg-obsidian-elevated"
-      aria-label="نقشه محل قبر"
-    >
-      <div class="w-full h-full flex items-center justify-center text-ivory-muted text-sm" data-map-loading>
-        <span>در حال بارگذاری نقشه…</span>
+    <!-- نقشه در یک قاب شیشه‌ای -->
+    <div class="lg-card p-2 overflow-hidden">
+      <div
+        data-map
+        class="w-full h-[60vh] min-h-[340px] sm:min-h-[420px] rounded-[24px] overflow-hidden bg-stone-100"
+        aria-label="نقشه محل قبر"
+      >
+        <div class="w-full h-full flex items-center justify-center text-stone-400 text-sm" data-map-loading>
+          <span>در حال بارگذاری نقشه…</span>
+        </div>
       </div>
     </div>
 
+    <!-- دکمه‌ها -->
     <div class="mt-4 flex flex-wrap gap-3">
       <button
         type="button"
         data-action="navigate"
-        class="touch-target inline-flex items-center gap-2 rounded-lg bg-gold text-obsidian font-semibold px-5 py-3 transition-colors hover:bg-gold-light disabled:opacity-50 disabled:cursor-not-allowed"
+        class="lg-button-primary touch-target inline-flex items-center gap-2 px-5 py-3 font-bold disabled:opacity-50 disabled:cursor-not-allowed flex-1 sm:flex-none justify-center"
       >
         <span aria-hidden="true">🧭</span>
         <span data-navigate-label>مسیریابی از موقعیت من</span>
@@ -44,94 +49,131 @@ const { location } = config;
         href={location.googleMapsUrl}
         target="_blank"
         rel="noopener noreferrer"
-        class="touch-target inline-flex items-center gap-2 rounded-lg border border-gold/40 text-gold font-medium px-5 py-3 transition-colors hover:bg-gold/10"
+        class="lg-button touch-target inline-flex items-center gap-2 px-5 py-3 font-semibold text-amber-700 flex-1 sm:flex-none justify-center"
       >
         <span aria-hidden="true">📍</span>
         <span>باز کردن در Google Maps</span>
       </a>
     </div>
 
+    <!-- اطلاعات مسیر -->
     <div
       data-route-info
       hidden
-      class="mt-4 rounded-lg bg-obsidian-elevated border border-gold/20 p-4 text-sm"
+      class="lg-card p-5 mt-4"
     >
-      <p class="text-ivory-muted mb-1">مسیر پیشنهادی</p>
-      <div class="flex flex-wrap gap-x-6 gap-y-1 text-ivory">
-        <p>📏 فاصله: <span data-route-distance class="text-gold font-semibold">—</span></p>
-        <p>⏱️ زمان تقریبی: <span data-route-duration class="text-gold font-semibold">—</span></p>
+      <p class="text-stone-500 text-sm font-medium mb-3">مسیر پیشنهادی</p>
+      <div class="flex flex-wrap gap-x-6 gap-y-2 text-stone-700">
+        <p class="flex items-center gap-2">
+          <span>📏</span>
+          <span>فاصله:</span>
+          <span data-route-distance class="text-amber-700 font-bold">—</span>
+        </p>
+        <p class="flex items-center gap-2">
+          <span>⏱️</span>
+          <span>زمان تقریبی:</span>
+          <span data-route-duration class="text-amber-700 font-bold">—</span>
+        </p>
       </div>
-      <p class="mt-3 text-xs text-ivory-muted leading-relaxed">
+      <p class="mt-3 text-xs text-stone-400 leading-relaxed">
         این مسیر فقط جهت راهنمایی است. لطفاً قوانین رانندگی را رعایت کنید.
       </p>
     </div>
 
+    <!-- خطا -->
     <p
       data-map-error
       hidden
-      class="mt-4 rounded-lg bg-danger/10 border border-danger/40 p-4 text-sm text-ivory"
+      class="lg-card p-4 mt-4 text-sm text-red-700 border-red-300/50"
       role="alert"
     ></p>
   </div>
 </div>
 
 <style is:global>
-  /* استایل کاشی‌ها روی تم تیره */
+  /* استایل کاشی‌های نقشه — روشن و هماهنگ با Liquid Glass */
   .leaflet-container {
-    background: #16161A;
+    background: #F5EDE0;
     font-family: var(--font-sans);
+    border-radius: 24px;
   }
-  .leaflet-tile-pane {
-    filter: brightness(0.85) contrast(1.05) saturate(0.85);
-  }
+
   .leaflet-popup-content-wrapper,
   .leaflet-popup-tip {
-    background: #1E1E24;
-    color: #F5EFE0;
-    border: 1px solid rgba(184, 145, 90, 0.35);
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    color: #4A3F35;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 16px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 8px 32px rgba(74, 63, 53, 0.15);
   }
+
   .leaflet-popup-content {
-    margin: 10px 12px;
+    margin: 12px 16px;
     font-size: 13px;
     line-height: 1.6;
   }
-  .leaflet-control-attribution {
-    background: rgba(11, 11, 12, 0.8) !important;
-    color: #9A9488 !important;
-    font-size: 10px;
+
+  .leaflet-popup-tip {
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.7);
   }
+
+  .leaflet-control-attribution {
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #8B7D6B !important;
+    font-size: 10px;
+    border-radius: 8px 0 0 0;
+  }
+
   .leaflet-control-attribution a {
     color: #B8915A !important;
   }
+
   .leaflet-bar a,
   .leaflet-bar a:hover {
-    background: #1E1E24;
-    color: #F5EFE0;
-    border-bottom-color: rgba(184, 145, 90, 0.25);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #4A3F35;
+    border-bottom-color: rgba(184, 145, 90, 0.2);
+    transition: all 0.2s;
   }
+
   .leaflet-bar a:hover {
-    background: #B8915A;
-    color: #0B0B0C;
+    background: rgba(232, 131, 58, 0.9);
+    color: white;
   }
+
+  .leaflet-bar a:first-child {
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+  }
+
+  .leaflet-bar a:last-child {
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+  }
+
   .grave-marker, .user-marker {
     background: transparent !important;
     border: none !important;
   }
 
-  /* ⭐ انیمیشن خط مسیر سبز */
+  /* انیمیشن پالس مسیر سبز */
   .route-line-glow {
     filter: blur(4px);
     animation: route-glow-pulse 2s ease-in-out infinite;
   }
 
   @keyframes route-glow-pulse {
-    0%, 100% {
-      opacity: 0.5;
-    }
-    50% {
-      opacity: 0.95;
-    }
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 0.95; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -162,7 +204,6 @@ const { location } = config;
     const lng = parseFloat(root.dataset.lng ?? '0');
     const zoom = parseFloat(root.dataset.zoom ?? '17');
 
-    // ---------- Lazy load Leaflet ----------
     let L: typeof import('leaflet');
     try {
       L = await import('leaflet');
@@ -172,7 +213,6 @@ const { location } = config;
       return;
     }
 
-    // ---------- Initialize Map ----------
     loadingEl?.remove();
 
     const map = L.map(mapEl, {
@@ -188,15 +228,14 @@ const { location } = config;
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
 
-    // ---------- Grave Marker ----------
     const graveIcon = L.divIcon({
       className: 'grave-marker',
       html: `
-        <div style="position:relative;width:40px;height:52px;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.5));">
+        <div style="position:relative;width:40px;height:52px;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3));">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 52" style="width:100%;height:100%;">
-            <path d="M20 0 C9 0 0 9 0 20 C0 34 20 52 20 52 C20 52 40 34 40 20 C40 9 31 0 20 0 Z" fill="#B8915A" stroke="#8C6D3F" stroke-width="1.5"/>
-            <circle cx="20" cy="20" r="7" fill="#0B0B0C"/>
-            <circle cx="20" cy="20" r="3" fill="#F5EFE0"/>
+            <path d="M20 0 C9 0 0 9 0 20 C0 34 20 52 20 52 C20 52 40 34 40 20 C40 9 31 0 20 0 Z" fill="#E8833A" stroke="#FFFFFF" stroke-width="2"/>
+            <circle cx="20" cy="20" r="7" fill="#FFFFFF"/>
+            <circle cx="20" cy="20" r="3" fill="#E8833A"/>
           </svg>
         </div>`,
       iconSize: [40, 52],
@@ -207,17 +246,14 @@ const { location } = config;
     const graveMarker = L.marker([lat, lng], { icon: graveIcon, title: 'محل قبر' }).addTo(map);
     graveMarker.bindPopup(`<strong>قبرستان صاحب‌الزمان</strong><br/>شوشتر، خوزستان`);
 
-    // ---------- Route Layers ----------
     let routeGlow: L.Polyline | null = null;
     let routeCore: L.Polyline | null = null;
     let routeInner: L.Polyline | null = null;
     let userMarker: L.Marker | null = null;
 
-    // ⭐ متغیرهای انیمیشن
     let pulseRafId: number | null = null;
     let pulseStartTime = 0;
 
-    // ⭐ تابع شروع انیمیشن پالس
     function startRoutePulse() {
       if (pulseRafId !== null) return;
       pulseStartTime = performance.now();
@@ -246,7 +282,6 @@ const { location } = config;
       pulseRafId = requestAnimationFrame(pulse);
     }
 
-    // ⭐ تابع توقف انیمیشن
     function stopRoutePulse() {
       if (pulseRafId !== null) {
         cancelAnimationFrame(pulseRafId);
@@ -254,7 +289,6 @@ const { location } = config;
       }
     }
 
-    // ⭐ تابع پاک‌سازی مسیر
     function clearRoute() {
       stopRoutePulse();
       if (routeGlow) { routeGlow.remove(); routeGlow = null; }
@@ -262,7 +296,6 @@ const { location } = config;
       if (routeInner) { routeInner.remove(); routeInner = null; }
     }
 
-    // ⭐ تابع رسم مسیر سبز نئون
     function drawRoute(latlngs: [number, number][]) {
       clearRoute();
 
@@ -297,7 +330,6 @@ const { location } = config;
       startRoutePulse();
     }
 
-    // ---------- Helpers ----------
     function showError(msg: string) {
       if (!errorEl) return;
       errorEl.textContent = msg;
@@ -312,14 +344,12 @@ const { location } = config;
       navigateLabel.textContent = loading ? 'در حال محاسبه مسیر…' : 'مسیریابی از موقعیت من';
     }
 
-    // ---------- Navigate ----------
     if (navigateBtn) {
       navigateBtn.addEventListener('click', async () => {
         hideError();
         setLoading(true);
 
         try {
-          // ۱. موقعیت کاربر
           const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
             if (!navigator.geolocation) {
               reject(new Error('مرورگر شما از GPS پشتیبانی نمی‌کند.'));
@@ -338,12 +368,10 @@ const { location } = config;
           const userLat = pos.coords.latitude;
           const userLng = pos.coords.longitude;
 
-          // لینک گوگل با مبدأ
           if (googleLink) {
             googleLink.href = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${lat},${lng}&travelmode=driving`;
           }
 
-          // ۲. رسم مارکر کاربر
           if (userMarker) userMarker.remove();
           const userIcon = L.divIcon({
             className: 'user-marker',
@@ -357,7 +385,6 @@ const { location } = config;
           });
           userMarker = L.marker([userLat, userLng], { icon: userIcon, title: 'موقعیت شما' }).addTo(map);
 
-          // ۳. درخواست ORS
           const key = import.meta.env.PUBLIC_ORS_API_KEY;
           if (!key) throw new Error('کلید OpenRouteService تنظیم نشده است.');
 
@@ -389,15 +416,12 @@ const { location } = config;
           const distance = feature.properties?.summary?.distance ?? 0;
           const duration = feature.properties?.summary?.duration ?? 0;
 
-          // ۴. رسم مسیر سبز نئون پالس‌دار
           const latlngs = coords.map(([x, y]) => [y, x]) as [number, number][];
           drawRoute(latlngs);
 
-          // ۵. تنظیم view روی کل مسیر
           const bounds = L.latLngBounds(latlngs);
           map.fitBounds(bounds, { padding: [40, 40] });
 
-          // ۶. نمایش اطلاعات مسیر
           if (routeInfo && distanceEl && durationEl) {
             const distText = distance < 1000
               ? `${Math.round(distance)} متر`
@@ -423,15 +447,11 @@ const { location } = config;
       });
     }
 
-    // ---------- Cleanup ----------
     window.addEventListener('pagehide', () => {
       stopRoutePulse();
     });
   }
 
-  // ============================================================
-  // ⭐ Lazy init — فقط وقتی تب نقشه واقعاً نمایش داده شود
-  // ============================================================
   let mapInitialized = false;
 
   function bootWhenVisible() {
@@ -442,14 +462,12 @@ const { location } = config;
 
     const panel = root.closest<HTMLElement>('[data-tab-panel]');
 
-    // اگر تب نقشه از ابتدا visible است → بلافاصله init
     if (panel && !panel.hasAttribute('hidden')) {
       mapInitialized = true;
       initMap();
       return;
     }
 
-    // وگرنه، نظارت بر تب فعال شدن
     const checkAndInit = () => {
       if (mapInitialized) return;
       const currentPanel = root.closest<HTMLElement>('[data-tab-panel]');
@@ -459,10 +477,8 @@ const { location } = config;
       }
     };
 
-    // نظارت بر تغییر hash (کاربر روی تب کلیک می‌کند)
     window.addEventListener('hashchange', checkAndInit);
 
-    // نظارت بر تب‌ها با MutationObserver (وقتی hidden حذف می‌شود)
     if (panel) {
       const observer = new MutationObserver(() => {
         if (!panel.hasAttribute('hidden')) {

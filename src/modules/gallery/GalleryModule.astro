@@ -4,31 +4,26 @@
 // ============================================================
 import { Image, getImage } from 'astro:assets';
 
-// عکس‌ها — متادیتا برای بهینه‌سازی
 const photoMetadata = import.meta.glob<any>(
   '/src/assets/gallery/*.{jpg,jpeg,png,webp,avif}',
   { eager: true, import: 'default' }
 );
 
-// عکس‌ها — URL اصلی برای دانلود با کیفیت اصلی
 const photoOriginals = import.meta.glob<string>(
   '/src/assets/gallery/*.{jpg,jpeg,png,webp,avif}',
   { eager: true, query: '?url', import: 'default' }
 );
 
-// ویدیوها
 const videoUrls = import.meta.glob<string>(
   '/src/assets/gallery/*.{mp4,webm,mov,m4v}',
   { eager: true, query: '?url', import: 'default' }
 );
 
-// شناسایی thumbnail ویدیوها
 const videoBasenames = new Set<string>();
 for (const path of Object.keys(videoUrls)) {
   videoBasenames.add(path.split('/').pop()!.replace(/\.[^.]+$/, ''));
 }
 
-// جدا کردن thumbnail ویدیوها از عکس‌های مستقل
 const videoThumbs: Record<string, any> = {};
 const standalonePhotos: [string, any][] = [];
 
@@ -50,7 +45,6 @@ type MediaItem = {
   sortKey: string;
 };
 
-// عکس‌های مستقل — تولید نسخه‌ی بهینه برای lightbox
 const photoItems: MediaItem[] = await Promise.all(
   standalonePhotos.map(async ([path, metadata]) => {
     const file = path.split('/').pop()!;
@@ -58,7 +52,6 @@ const photoItems: MediaItem[] = await Promise.all(
     const ext = file.split('.').pop()!.toLowerCase();
     const originalSrc = photoOriginals[path] ?? metadata.src;
 
-    // نسخه‌ی بهینه‌ی سبک برای lightbox (نه کیفیت کامل)
     const optimized = await getImage({
       src: metadata,
       width: 1400,
@@ -77,7 +70,6 @@ const photoItems: MediaItem[] = await Promise.all(
   })
 );
 
-// ویدیوها
 const videoItems: MediaItem[] = Object.entries(videoUrls).map(([path, url]) => {
   const file = path.split('/').pop()!;
   const basename = file.replace(/\.[^.]+$/, '');
@@ -110,7 +102,11 @@ const mediaData = items.map((item) => ({
 ---
 
 <div class="px-4 py-8 max-w-6xl mx-auto">
-  <header class="mb-6 text-center">
+  <!-- سربرگ شیشه‌ای -->
+  <header class="lg-card p-6 sm:p-8 text-center mb-6">
+    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 text-3xl mb-4 shadow-glass">
+      🖼️
+    </div>
     <h2 class="text-2xl font-bold text-stone-800 mb-2">گالری</h2>
     {items.length > 0 && (
       <p class="text-sm text-stone-500">
@@ -122,12 +118,12 @@ const mediaData = items.map((item) => ({
   </header>
 
   {items.length === 0 ? (
-    <div class="rounded-3xl bg-amber-50 border-2 border-dashed border-amber-300 p-12 text-center">
+    <div class="lg-card p-12 text-center border-2 border-dashed border-amber-300/60">
       <div class="text-6xl mb-4">🖼️</div>
       <p class="text-stone-600 text-sm font-medium mb-2">هنوز رسانه‌ای اضافه نشده است</p>
       <p class="text-stone-400 text-xs">
         عکس‌ها و ویدیوهای خود را در پوشه‌ی
-        <code dir="ltr" class="bg-stone-100 px-2 py-1 rounded text-[11px]">src/assets/gallery/</code>
+        <code dir="ltr" class="bg-white/60 px-2 py-1 rounded text-[11px]">src/assets/gallery/</code>
         قرار دهید
       </p>
     </div>
@@ -198,7 +194,7 @@ const mediaData = items.map((item) => ({
 </div>
 
 <!-- ============================================================ -->
-<!-- Lightbox -->
+<!-- Lightbox با شیشه‌ی ضخیم -->
 <!-- ============================================================ -->
 <div
   data-lightbox
@@ -206,13 +202,14 @@ const mediaData = items.map((item) => ({
   role="dialog"
   aria-modal="true"
   aria-label="نمایش رسانه"
-  class="fixed inset-0 z-[300] bg-black/95 backdrop-blur-sm"
+  class="fixed inset-0 z-[300] lg-overlay"
 >
+  <!-- دکمه بستن — شیشه‌ای -->
   <button
     type="button"
     data-lightbox-close
     aria-label="بستن"
-    class="absolute top-4 end-4 z-30 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 text-white flex items-center justify-center transition-all active:scale-95"
+    class="lg-thin absolute top-4 end-4 z-30 w-12 h-12 rounded-full text-white flex items-center justify-center transition-all active:scale-95 hover:bg-white/35"
   >
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
       <line x1="18" y1="6" x2="6" y2="18"/>
@@ -220,12 +217,13 @@ const mediaData = items.map((item) => ({
     </svg>
   </button>
 
+  <!-- دکمه دانلود — شیشه‌ی طلایی -->
   <a
     data-lightbox-download
     href="#"
     download
     aria-label="دانلود کیفیت اصلی"
-    class="absolute top-4 end-20 z-30 h-11 px-4 rounded-full bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-2 font-bold text-xs transition-all active:scale-95 shadow-lg"
+    class="lg-button-primary absolute top-4 end-20 z-30 h-12 px-5 flex items-center gap-2 font-bold text-xs"
   >
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -235,38 +233,42 @@ const mediaData = items.map((item) => ({
     <span>دانلود</span>
   </a>
 
+  <!-- قبلی -->
   <button
     type="button"
     data-lightbox-prev
     aria-label="قبلی"
-    class="absolute start-2 sm:start-4 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 text-white flex items-center justify-center transition-all active:scale-95"
+    class="lg-thin absolute start-2 sm:start-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full text-white flex items-center justify-center transition-all active:scale-95 hover:bg-white/35"
   >
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="15 18 9 12 15 6"/>
     </svg>
   </button>
 
+  <!-- بعدی -->
   <button
     type="button"
     data-lightbox-next
     aria-label="بعدی"
-    class="absolute end-2 sm:end-4 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur border border-white/20 text-white flex items-center justify-center transition-all active:scale-95"
+    class="lg-thin absolute end-2 sm:end-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full text-white flex items-center justify-center transition-all active:scale-95 hover:bg-white/35"
   >
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="9 18 15 12 9 6"/>
     </svg>
   </button>
 
+  <!-- محتوا -->
   <div
     data-lightbox-content
     class="absolute inset-0 flex items-center justify-center p-4 sm:p-16"
   ></div>
 
+  <!-- شمارنده — شیشه‌ای -->
   <div
     data-lightbox-counter
     class="absolute bottom-6 inset-x-0 flex justify-center pointer-events-none"
   >
-    <div class="rounded-full bg-white/10 backdrop-blur border border-white/20 px-4 py-1.5 text-xs font-medium text-white tabular-nums">
+    <div class="lg-thin px-4 py-2 text-xs font-medium text-white tabular-nums">
       1 / 1
     </div>
   </div>
@@ -275,14 +277,16 @@ const mediaData = items.map((item) => ({
 <script type="application/json" data-gallery-data set:html={JSON.stringify(mediaData)} />
 
 <style is:global>
+  /* ============================================================
+     Masonry
+     ============================================================ */
   .gallery-masonry {
     column-count: 2;
-    column-gap: 0.625rem;
+    column-gap: 0.75rem;
   }
   @media (min-width: 640px) {
     .gallery-masonry {
       column-count: 3;
-      column-gap: 0.75rem;
     }
   }
   @media (min-width: 1024px) {
@@ -295,22 +299,23 @@ const mediaData = items.map((item) => ({
     display: block;
     position: relative;
     width: 100%;
-    margin: 0 0 0.625rem 0;
+    margin: 0 0 0.75rem 0;
     break-inside: avoid;
-    border-radius: 0.75rem;
+    border-radius: 24px;
     overflow: hidden;
-    background: #F5EDE0;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      0 4px 16px rgba(74, 63, 53, 0.06);
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    border: none;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.4s ease;
     padding: 0;
     text-align: inherit;
-  }
-  @media (min-width: 640px) {
-    .gallery-item {
-      margin-bottom: 0.75rem;
-    }
   }
 
   .gallery-item:active {
@@ -319,16 +324,17 @@ const mediaData = items.map((item) => ({
 
   @media (hover: hover) {
     .gallery-item:hover {
-      transform: translateY(-2px);
+      transform: translateY(-3px);
       box-shadow:
-        0 12px 28px -8px rgba(74, 63, 53, 0.2),
-        0 4px 10px -4px rgba(74, 63, 53, 0.1);
+        inset 0 1px 0 rgba(255, 255, 255, 0.85),
+        0 12px 32px rgba(74, 63, 53, 0.15),
+        0 4px 12px rgba(74, 63, 53, 0.08);
     }
     .gallery-item:hover .gallery-hover-overlay {
       opacity: 1;
     }
     .gallery-item:hover .gallery-thumb {
-      transform: scale(1.04);
+      transform: scale(1.05);
     }
   }
 
@@ -362,6 +368,9 @@ const mediaData = items.map((item) => ({
     opacity: 0.5;
   }
 
+  /* ============================================================
+     Play overlay
+     ============================================================ */
   .gallery-play-overlay {
     position: absolute;
     inset: 0;
@@ -372,30 +381,46 @@ const mediaData = items.map((item) => ({
   }
 
   .gallery-play-btn {
-    width: 52px;
-    height: 52px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 8px 24px rgba(0, 0, 0, 0.25),
+      0 0 0 0 rgba(255, 255, 255, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
     color: #E8833A;
-    box-shadow:
-      0 4px 16px rgba(0, 0, 0, 0.35),
-      0 0 0 0 rgba(255, 255, 255, 0.5);
     animation: gallery-play-pulse 2.5s ease-in-out infinite;
   }
 
   @keyframes gallery-play-pulse {
-    0%, 100% { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), 0 0 0 0 rgba(255, 255, 255, 0.5); }
-    50% { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), 0 0 0 10px rgba(255, 255, 255, 0); }
+    0%, 100% {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 8px 24px rgba(0, 0, 0, 0.25),
+        0 0 0 0 rgba(255, 255, 255, 0.4);
+    }
+    50% {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 1),
+        0 8px 24px rgba(0, 0, 0, 0.3),
+        0 0 0 12px rgba(255, 255, 255, 0);
+    }
   }
 
+  /* ============================================================
+     Hover overlay (download button)
+     ============================================================ */
   .gallery-hover-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.4), transparent 40%);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.35), transparent 40%);
     opacity: 0;
     transition: opacity 0.3s;
     pointer-events: none;
@@ -406,19 +431,27 @@ const mediaData = items.map((item) => ({
   }
 
   .gallery-download-btn {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.7);
     color: #E8833A;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 4px 12px rgba(0, 0, 0, 0.15);
   }
 
+  /* ============================================================
+     Lightbox
+     ============================================================ */
   [data-lightbox] {
-    animation: lightbox-fade 0.25s ease-out;
+    animation: lightbox-fade 0.3s ease-out;
   }
 
   @keyframes lightbox-fade {
@@ -430,9 +463,11 @@ const mediaData = items.map((item) => ({
   [data-lightbox-content] video {
     max-width: 100%;
     max-height: 100%;
-    border-radius: 0.5rem;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-    animation: lightbox-zoom 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border-radius: 24px;
+    box-shadow:
+      0 25px 60px -12px rgba(0, 0, 0, 0.5),
+      0 8px 24px -4px rgba(0, 0, 0, 0.3);
+    animation: lightbox-zoom 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
   @keyframes lightbox-zoom {
@@ -522,7 +557,7 @@ const mediaData = items.map((item) => ({
 
       if (counter) {
         counter.innerHTML = `
-          <div class="rounded-full bg-white/10 backdrop-blur border border-white/20 px-4 py-1.5 text-xs font-medium text-white tabular-nums">
+          <div class="lg-thin px-4 py-2 text-xs font-medium text-white tabular-nums">
             ${index + 1} / ${media.length}
           </div>
         `;

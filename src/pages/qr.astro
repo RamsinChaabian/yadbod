@@ -8,53 +8,68 @@ const personName = config.person.fullName;
 ---
 
 <BaseLayout title="QR کد سایت" description="QR کد برای چاپ روی سنگ قبر" noindex>
-  <div class="min-h-dvh flex flex-col items-center justify-center px-6 py-12">
-    <div class="max-w-md w-full text-center space-y-8">
+  <div class="min-h-dvh flex flex-col items-center justify-center px-4 sm:px-6 py-12">
+    <!-- کارت شیشه‌ای اصلی -->
+    <div class="lg-card max-w-md w-full p-6 sm:p-8 text-center space-y-6">
+      <!-- سربرگ -->
       <div>
-        <h1 class="text-2xl font-bold text-gold mb-2">QR کد سایت یادبود</h1>
-        <p class="text-sm text-ivory-muted">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 text-3xl mb-4 shadow-glass">
+          🔳
+        </div>
+        <h1 class="text-2xl font-bold text-stone-800 mb-2">QR کد سایت یادبود</h1>
+        <p class="text-sm text-stone-500 leading-relaxed">
           این QR کد را روی سنگ قبر چاپ کنید تا بازدیدکنندگان به سایت یادبود دسترسی داشته باشند.
         </p>
       </div>
 
       <!-- QR Code Container -->
-      <div class="bg-ivory rounded-2xl p-6 inline-block shadow-2xl">
-        <canvas id="qr-canvas" class="w-full max-w-[280px] mx-auto block"></canvas>
-        <p class="mt-3 text-xs text-obsidian text-center font-medium">
-          {personName} — {cemeteryName}
-        </p>
+      <div class="lg-thin rounded-[28px] p-6 inline-block">
+        <div class="bg-white/90 backdrop-blur-md rounded-[20px] p-4 shadow-glass">
+          <canvas id="qr-canvas" class="w-full max-w-[260px] mx-auto block rounded-[12px]"></canvas>
+          <p class="mt-3 text-xs text-stone-600 text-center font-medium">
+            {personName} — {cemeteryName}
+          </p>
+        </div>
       </div>
 
-      <p class="text-xs text-ivory-muted break-all" dir="ltr">{siteUrl}</p>
+      <!-- URL -->
+      <p class="text-xs text-stone-400 break-all" dir="ltr">{siteUrl}</p>
 
       <!-- Buttons -->
-      <div class="flex flex-wrap gap-3 justify-center">
+      <div class="flex flex-wrap gap-2 justify-center">
         <button
           type="button"
           id="download-png"
-          class="touch-target inline-flex items-center gap-2 rounded-lg bg-gold text-obsidian font-semibold px-5 py-3 transition-colors hover:bg-gold-light"
+          class="lg-button-primary touch-target inline-flex items-center gap-2 px-5 py-3 font-bold text-sm"
         >
-          ⬇️ دانلود PNG
+          <span aria-hidden="true">⬇️</span>
+          <span>دانلود PNG</span>
         </button>
         <button
           type="button"
           id="download-svg"
-          class="touch-target inline-flex items-center gap-2 rounded-lg border border-gold/40 text-gold font-medium px-5 py-3 transition-colors hover:bg-gold/10"
+          class="lg-button touch-target inline-flex items-center gap-2 px-5 py-3 font-semibold text-sm text-amber-700"
         >
-          ⬇️ دانلود SVG
+          <span aria-hidden="true">⬇️</span>
+          <span>دانلود SVG</span>
         </button>
         <button
           type="button"
           id="print-qr"
-          class="touch-target inline-flex items-center gap-2 rounded-lg border border-gold/40 text-gold font-medium px-5 py-3 transition-colors hover:bg-gold/10"
+          class="lg-button touch-target inline-flex items-center gap-2 px-5 py-3 font-semibold text-sm text-amber-700"
         >
-          🖨️ چاپ
+          <span aria-hidden="true">🖨️</span>
+          <span>چاپ</span>
         </button>
       </div>
 
-      <p class="text-xs text-ivory-muted leading-relaxed">
-        پیشنهاد: QR کد را با کیفیت بالا چاپ کنید (حداقل ۵×۵ سانتی‌متر) و در محلی قرار دهید که رطوبت و نور مستقیم خورشید به آن نرسد.
-      </p>
+      <!-- نکته -->
+      <div class="lg-thin rounded-[20px] p-4 text-start">
+        <p class="text-xs text-stone-600 leading-relaxed">
+          <strong class="text-stone-700">پیشنهاد:</strong> QR کد را با کیفیت بالا چاپ کنید (حداقل ۵×۵ سانتی‌متر)
+          و در محلی قرار دهید که رطوبت و نور مستقیم خورشید به آن نرسد.
+        </p>
+      </div>
     </div>
   </div>
 
@@ -69,7 +84,6 @@ const personName = config.person.fullName;
         const { generate } = await import('lean-qr');
         const qr = generate(SITE_URL);
 
-        // رسم روی canvas با رنگ‌های تم
         const size = 280;
         const scale = Math.max(1, Math.floor(size / qr.size));
         const realSize = qr.size * scale;
@@ -79,11 +93,9 @@ const personName = config.person.fullName;
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // پس‌زمینه عاجی
-        ctx.fillStyle = '#F5EFE0';
+        ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, realSize, realSize);
 
-        // نقاط مشکی
         ctx.fillStyle = '#0B0B0C';
         for (let y = 0; y < qr.size; y++) {
           for (let x = 0; x < qr.size; x++) {
@@ -116,9 +128,8 @@ const personName = config.person.fullName;
       const { generate } = await import('lean-qr');
       const qr = generate(SITE_URL);
 
-      // ساخت SVG دستی
       let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${qr.size} ${qr.size}">`;
-      svg += `<rect width="${qr.size}" height="${qr.size}" fill="#F5EFE0"/>`;
+      svg += `<rect width="${qr.size}" height="${qr.size}" fill="#FFFFFF"/>`;
       for (let y = 0; y < qr.size; y++) {
         for (let x = 0; x < qr.size; x++) {
           if (qr.get(x, y)) {
@@ -150,11 +161,35 @@ const personName = config.person.fullName;
 
   <style is:global>
     @media print {
-      nav[data-tabbar] { display: none !important; }
-      .touch-target { display: none !important; }
-      body { background: white !important; }
-      h1 { color: #0B0B0C !important; }
-      p { color: #333 !important; }
+      /* در چاپ: فقط QR را نشان بده */
+      body {
+        background: white !important;
+      }
+      nav[data-tabbar],
+      footer,
+      .lg-card > *:not(.lg-thin),
+      [data-pwa-offline],
+      [data-pwa-update] {
+        display: none !important;
+      }
+      .lg-card,
+      .lg-thin {
+        background: white !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+      }
+      #qr-canvas {
+        max-width: 100% !important;
+      }
+      h1, h2, h3 {
+        color: #0B0B0C !important;
+      }
+      p {
+        color: #333 !important;
+      }
     }
   </style>
 </BaseLayout>

@@ -5,66 +5,68 @@ import { withBase } from '../../utils/paths';
 const { person } = config;
 ---
 
-<header class="relative w-full" data-anim-header>
-  <!-- کاور — LCP image با fetchpriority=high برای سرعت بیشتر -->
-  <div class="relative w-full h-44 sm:h-56 md:h-64 overflow-hidden" data-anim-cover>
+<header class="relative w-full mb-6" data-anim-header>
+  <!-- کاور با شیشه‌ی ملایم -->
+  <div class="relative w-full h-52 sm:h-64 md:h-72 overflow-hidden mx-auto max-w-5xl sm:mt-6 sm:rounded-[44px]" data-anim-cover>
     <img
       src={withBase(person.coverImage)}
       alt=""
-      class="w-full h-full object-cover opacity-70"
+      class="w-full h-full object-cover"
       loading="eager"
       fetchpriority="high"
       decoding="async"
       width="1920"
       height="600"
     />
-    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-obsidian/30 to-obsidian"></div>
+    <!-- لایه‌ی گرادیان تیره برای خوانایی -->
+    <div class="absolute inset-0 bg-gradient-to-b from-black/10 via-black/20 to-black/60"></div>
+    <!-- شیشه‌ی روی کاور (glossy highlight) -->
+    <div class="absolute inset-0 bg-gradient-to-b from-white/15 via-transparent to-transparent pointer-events-none"></div>
   </div>
 
-  <!-- پروفایل و اطلاعات -->
-  <div class="relative -mt-14 sm:-mt-16 px-4 flex flex-col items-center text-center pb-6">
-    <!-- عکس پروفایل — LCP image دوم -->
-    <div
-      class="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden ring-4 ring-gold/40 shadow-2xl bg-obsidian-elevated"
-      data-anim-avatar
-    >
-      <img
-        src={withBase(person.profileImage)}
-        alt={person.imageAlt}
-        class="w-full h-full object-cover"
-        loading="eager"
-        fetchpriority="high"
-        decoding="async"
-        width="400"
-        height="400"
-      />
+  <!-- کارت شیشه‌ای شناور برای پروفایل -->
+  <div class="relative -mt-20 sm:-mt-24 px-4">
+    <div class="lg-surface max-w-2xl mx-auto p-6 sm:p-8 text-center">
+      <!-- عکس پروفایل شیشه‌ای -->
+      <div
+        class="lg-thin w-28 h-28 sm:w-32 sm:h-32 mx-auto -mt-20 sm:-mt-24 rounded-full overflow-hidden ring-4 ring-white/70 shadow-glass-lg"
+        data-anim-avatar
+      >
+        <img
+          src={withBase(person.profileImage)}
+          alt={person.imageAlt}
+          class="w-full h-full object-cover"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+          width="400"
+          height="400"
+        />
+      </div>
+
+      <!-- نام -->
+      <h1
+        class="mt-5 text-2xl sm:text-3xl font-bold text-stone-800 tracking-tight"
+        data-anim-name
+      >
+        {person.fullName}
+      </h1>
+
+      <!-- تاریخ‌ها -->
+      <p
+        class="mt-2 text-xs sm:text-sm text-amber-700/80 tracking-widest tabular-nums font-medium"
+        data-anim-dates
+      >
+        {person.birthDateShamsi} — {person.deathDateShamsi}
+      </p>
+
+      <!-- بیو کوتاه -->
+      <p
+        class="mt-4 max-w-xl mx-auto text-sm sm:text-base text-stone-600 leading-relaxed text-balance"
+        data-anim-bio
+      >
+        {person.shortBio}
+      </p>
     </div>
-
-    <!-- نام -->
-    <h1
-      class="mt-4 text-2xl sm:text-3xl font-bold text-ivory tracking-tight"
-      data-anim-name
-    >
-      {person.fullName}
-    </h1>
-
-    <!-- تاریخ‌ها -->
-    <p
-      class="mt-2 text-xs sm:text-sm text-ivory-muted tracking-widest tabular-nums"
-      data-anim-dates
-    >
-      {person.birthDateShamsi} — {person.deathDateShamsi}
-    </p>
-
-    <!-- بیو کوتاه -->
-    <p
-      class="mt-4 max-w-xl text-sm sm:text-base text-ivory-soft leading-relaxed text-balance"
-      data-anim-bio
-    >
-      {person.shortBio}
-    </p>
   </div>
-
-  <!-- جداکننده طلایی -->
-  <div class="mx-auto max-w-xs h-px bg-gradient-to-r from-transparent via-gold/40 to-transparent"></div>
 </header>

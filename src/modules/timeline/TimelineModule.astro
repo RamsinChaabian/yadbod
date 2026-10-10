@@ -7,11 +7,9 @@ const entries = await getTimeline();
 ---
 
 <div class="px-4 py-8 max-w-3xl mx-auto">
-  <!-- ============================================================ -->
-  <!-- بخش تایم‌لاین -->
-  <!-- ============================================================ -->
-  <header class="mb-8 text-center">
-    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 text-3xl mb-4 shadow-card">
+  <!-- سربرگ -->
+  <header class="lg-card p-6 sm:p-8 text-center mb-8">
+    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 text-3xl mb-4 shadow-glass">
       ⏱️
     </div>
     <h2 class="text-2xl font-bold text-stone-800 mb-2">تایم‌لاین زندگی</h2>
@@ -23,18 +21,20 @@ const entries = await getTimeline();
   )}
 
   {entries.length > 0 && (
-    <ol class="relative border-s-2 border-amber-300/40 ps-6 space-y-10">
+    <ol class="relative border-s-2 border-amber-400/40 ps-6 space-y-6">
       {await Promise.all(
         entries.map(async (entry) => {
           const { Content } = await render(entry);
           return (
             <li class="relative" data-timeline-item>
+              <!-- نقطه‌ی تایم‌لاین -->
               <span
-                class="absolute -start-[33px] top-1.5 w-4 h-4 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 ring-4 ring-cream shadow-md"
+                class="absolute -start-[33px] top-6 w-4 h-4 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 ring-4 ring-white/70 shadow-glass z-10"
                 aria-hidden="true"
               />
-              <div class="rounded-2xl bg-white border border-stone-200 p-5 shadow-card hover:shadow-card-hover transition-shadow">
-                <p class="text-amber-600 font-bold text-sm tabular-nums mb-1">
+              <!-- کارت شیشه‌ای -->
+              <div class="lg-card p-5 sm:p-6">
+                <p class="text-amber-700 font-bold text-sm tabular-nums mb-1.5">
                   {entry.data.icon && <span class="me-2 text-base">{entry.data.icon}</span>}
                   {entry.data.year}
                   {entry.data.yearGregorian && (
@@ -53,10 +53,8 @@ const entries = await getTimeline();
     </ol>
   )}
 
-  <!-- ============================================================ -->
-  <!-- شجره‌نامه خانوادگی -->
-  <!-- ============================================================ -->
-  <div class="mt-16 pt-12 border-t-2 border-dashed border-amber-200/60">
+  <!-- شجره‌نامه -->
+  <div class="mt-12 pt-8">
     <FamilyTree />
   </div>
 </div>
@@ -72,10 +70,10 @@ const entries = await getTimeline();
     margin-bottom: 0;
   }
   .prose-custom :global(blockquote) {
-    border-right: 3px solid var(--color-gold);
+    border-right: 3px solid #B8915A;
     padding-right: 1rem;
     margin: 1rem 0;
-    color: var(--color-gold-light);
+    color: #8C6D3F;
     font-style: italic;
   }
   .prose-custom :global(ul),

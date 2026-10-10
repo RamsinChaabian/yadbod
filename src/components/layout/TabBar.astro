@@ -12,18 +12,18 @@ const firstTabId = tabs[0]?.id ?? '';
   data-tabbar
   class="fixed bottom-0 inset-x-0 z-50 pointer-events-none"
 >
-  <div class="mx-auto max-w-2xl px-2 pb-[env(safe-area-inset-bottom)]">
+  <div class="mx-auto max-w-2xl px-3 pb-3 sm:pb-5" style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom));">
     <div class="relative pointer-events-auto">
-      <!-- نشانگر لغزان -->
+      <!-- ⭐ شیشه‌ی نشانگر (حباب لغزان) -->
       <div
         data-tab-indicator
-        class="absolute top-1 bottom-1 rounded-2xl bg-gradient-to-b from-amber-50 to-orange-50 border border-amber-200/60 shadow-sm transition-all duration-500 pointer-events-none"
-        style="left: 0; width: 0; opacity: 0;"
+        class="absolute top-1.5 bottom-1.5 rounded-[24px] bg-gradient-to-b from-white/70 to-white/40 border border-white/60 transition-all duration-500 pointer-events-none"
+        style="left: 0; width: 0; opacity: 0; box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 4px 16px rgba(232,131,58,0.12);"
         aria-hidden="true"
       ></div>
 
-      <!-- نوار تب‌ها -->
-      <div class="relative flex items-center justify-around gap-0.5 bg-white/95 backdrop-blur-md rounded-3xl border border-stone-200/60 shadow-[0_-4px_24px_-4px_rgba(74,63,53,0.15)] px-1.5 py-1.5">
+      <!-- ⭐ نوار تب‌ها با Liquid Glass -->
+      <div class="relative flex items-center justify-around gap-0.5 lg-surface px-2 py-2" style="border-radius: 32px;">
         {tabs.map((tab) => (
           <TabButton
             id={tab.id}
@@ -45,7 +45,6 @@ const firstTabId = tabs[0]?.id ?? '';
     if (!tabbar || !indicatorEl) return;
 
     const indicator: HTMLElement = indicatorEl;
-
     const tabs = tabbar.querySelectorAll<HTMLButtonElement>('[data-tab-id]');
 
     function moveIndicator(tab: HTMLButtonElement, instant = false) {
@@ -56,7 +55,7 @@ const firstTabId = tabs[0]?.id ?? '';
       if (instant) {
         indicator.style.transition = 'none';
       } else {
-        indicator.style.transition = 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        indicator.style.transition = 'all 0.55s cubic-bezier(0.34, 1.56, 0.64, 1)';
       }
 
       indicator.style.left = `${left}px`;
@@ -65,7 +64,7 @@ const firstTabId = tabs[0]?.id ?? '';
 
       if (instant) {
         requestAnimationFrame(() => {
-          indicator.style.transition = 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+          indicator.style.transition = 'all 0.55s cubic-bezier(0.34, 1.56, 0.64, 1)';
         });
       }
     }
