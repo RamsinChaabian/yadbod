@@ -1,13 +1,14 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
+import PageTitle from '../components/layout/PageTitle.astro';
 import TabBar from '../components/layout/TabBar.astro';
 import TabContent from '../components/layout/TabContent.astro';
 ---
 
 <BaseLayout>
   <Header />
-
+  <PageTitle />
   <main class="pb-40">
     <TabContent />
   </main>

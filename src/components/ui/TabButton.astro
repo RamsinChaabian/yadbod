@@ -1,37 +1,107 @@
 ---
 import { getIcon } from '../../utils/icons';
+
 interface Props {
-  id: string; label: string; icon: string; ariaLabel: string; isActive: boolean;
+  id: string;
+  label: string;
+  icon: string;
+  ariaLabel: string;
+  isActive: boolean;
 }
+
 const { id, label, icon, ariaLabel, isActive } = Astro.props;
 const emoji = getIcon(icon);
 ---
 
 <button
-  type="button" role="tab"
+  type="button"
+  role="tab"
   id={`tab-${id}`}
   aria-selected={isActive}
   aria-controls={`panel-${id}`}
   aria-label={ariaLabel}
   data-tab-id={id}
-  class="group relative flex flex-col items-center justify-center gap-1.5 rounded-2xl px-3 py-2.5 min-w-[56px] transition-all duration-300 text-stone-500 active:scale-95"
+  class="tab-button group relative flex flex-col items-center justify-center gap-1 rounded-2xl px-2 sm:px-3 py-2 min-w-[58px] sm:min-w-[72px] transition-all duration-300 active:scale-95"
 >
-  <!-- نشانگر فعال — نوار بالای دکمه -->
-  {isActive && (
-    <span class="absolute -top-1 inset-x-2 h-1 rounded-full bg-gradient-to-r from-amber-400 to-coral-400 shadow-[0_0_8px_rgba(245,166,35,0.6)]"></span>
-  )}
-
-  <!-- آیکون در یک دایره سهبعدی -->
-  <span class={`relative flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300 ${
-    isActive
-      ? 'bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-[0_4px_12px_rgba(232,131,58,0.4)]'
-      : 'bg-stone-100 text-stone-500 group-hover:bg-stone-200'
-  }`}>
-    <span class="text-lg leading-none" aria-hidden="true">{emoji}</span>
-    {isActive && <span class="absolute inset-0 rounded-xl bg-white/20 animate-pulse"></span>}
+  <!-- آیکون در دایره -->
+  <span
+    data-tab-icon
+    class="tab-icon relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl transition-all duration-300"
+  >
+    <span class="text-lg sm:text-xl leading-none relative z-10" aria-hidden="true">{emoji}</span>
   </span>
 
-  <span class={`text-[11px] leading-tight whitespace-nowrap font-medium transition-colors ${
-    isActive ? 'text-amber-700' : 'text-stone-500'
-  }`}>{label}</span>
+  <!-- نام تب -->
+  <span
+    data-tab-label
+    class="tab-label text-[10px] sm:text-xs leading-tight whitespace-nowrap font-medium transition-colors duration-300"
+  >
+    {label}
+  </span>
 </button>
+
+<style>
+  /* ---- حالت غیرفعال ---- */
+  .tab-button {
+    color: #9A9488;
+  }
+
+  .tab-icon {
+    background: transparent;
+  }
+
+  .tab-label {
+    color: #9A9488;
+  }
+
+  /* Hover (دسکتاپ) */
+  @media (hover: hover) {
+    .tab-button:not([aria-selected="true"]):hover {
+      color: #7A6E60;
+    }
+    .tab-button:not([aria-selected="true"]):hover .tab-icon {
+      background: #F5EDE0;
+    }
+  }
+
+  /* ---- حالت فعال ---- */
+  .tab-button[aria-selected="true"] {
+    color: #B8915A;
+  }
+
+  .tab-button[aria-selected="true"] .tab-icon {
+    background: linear-gradient(135deg, #F5A623, #E8833A);
+    color: #FFFFFF;
+    transform: scale(1.08) translateY(-2px);
+    box-shadow:
+      0 6px 16px rgba(232, 131, 58, 0.4),
+      0 2px 6px rgba(232, 131, 58, 0.25);
+    animation: tab-icon-pulse 2s ease-in-out infinite;
+  }
+
+  .tab-button[aria-selected="true"] .tab-label {
+    color: #B8915A;
+    font-weight: 700;
+  }
+
+  @keyframes tab-icon-pulse {
+    0%, 100% {
+      box-shadow:
+        0 6px 16px rgba(232, 131, 58, 0.4),
+        0 2px 6px rgba(232, 131, 58, 0.25),
+        0 0 0 0 rgba(232, 131, 58, 0.4);
+    }
+    50% {
+      box-shadow:
+        0 6px 16px rgba(232, 131, 58, 0.5),
+        0 2px 6px rgba(232, 131, 58, 0.3),
+        0 0 0 8px rgba(232, 131, 58, 0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tab-button[aria-selected="true"] .tab-icon {
+      animation: none !important;
+    }
+  }
+</style>

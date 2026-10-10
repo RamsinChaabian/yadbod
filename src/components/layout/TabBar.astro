@@ -1,16 +1,117 @@
 ---
 import { getEnabledTabs } from '../../utils/config';
 import TabButton from '../ui/TabButton.astro';
+
 const tabs = getEnabledTabs();
 const firstTabId = tabs[0]?.id ?? '';
 ---
 
-<nav role="tablist" aria-label="بخش‌های سایت" data-tabbar class="fixed bottom-0 inset-x-0 z-50 pointer-events-none">
-  <div class="mx-auto max-w-lg px-3 pb-4 pointer-events-auto">
-    <div class="flex items-center justify-around gap-1 bg-white/95 backdrop-blur-xl rounded-3xl border border-stone-200/50 shadow-[0_-4px_24px_-4px_rgba(74,63,53,0.15)] px-2 py-2">
-      {tabs.map((tab) => (
-        <TabButton id={tab.id} label={tab.label} icon={tab.icon} ariaLabel={tab.ariaLabel} isActive={tab.id === firstTabId} />
-      ))}
+<nav
+  role="tablist"
+  aria-label="بخش‌های سایت"
+  data-tabbar
+  class="fixed bottom-0 inset-x-0 z-50 pointer-events-none"
+>
+  <div class="mx-auto max-w-2xl px-2 pb-[env(safe-area-inset-bottom)]">
+    <!-- ⭐ حباب شناور — موقعیت با JS به‌روزرسانی می‌شود -->
+    <div class="relative">
+      <!-- نشانگر لغزان (حباب پشت تب فعال) -->
+      <div
+        data-tab-indicator
+        class="absolute top-1 bottom-1 rounded-2xl bg-gradient-to-b from-amber-50 to-orange-50 border border-amber-200/60 shadow-sm transition-all duration-500 pointer-events-none"
+        style="left: 0; width: 0; opacity: 0;"
+        aria-hidden="true"
+      ></div>
+
+      <!-- نوار تب‌ها -->
+      <div class="relative flex items-center justify-around gap-0.5 bg-white/95 backdrop-blur-md rounded-3xl border border-stone-200/60 shadow-[0_-4px_24px_-4px_rgba(74,63,53,0.15)] px-1.5 py-1.5">
+        {tabs.map((tab) => (
+          <TabButton
+            id={tab.id}
+            label={tab.label}
+            icon={tab.icon}
+            ariaLabel={tab.ariaLabel}
+            isActive={tab.id === firstTabId}
+          />
+        ))}
+      </div>
     </div>
   </div>
 </nav>
+
+<script>
+  function initTabIndicator() {
+    const tabbar = document.querySelector<HTMLElement>('[data-tabbar]');
+    const indicatorEl = document.querySelector<HTMLElement>('[data-tab-indicator]');
+    if (!tabbar || !indicatorEl) return;
+
+    // ⭐ Type-safe reference بعد از null check
+    const indicator: HTMLElement = indicatorEl;
+
+    const tabs = tabbar.querySelectorAll<HTMLButtonElement>('[data-tab-id]');
+
+    // حرکت نشانگر به زیر تب فعال
+    function moveIndicator(tab: HTMLButtonElement, instant = false) {
+      const rect = tab.getBoundingClientRect();
+      const parentRect = tab.parentElement!.getBoundingClientRect();
+
+      const left = rect.left - parentRect.left;
+
+      if (instant) {
+        indicator.style.transition = 'none';
+      } else {
+        indicator.style.transition = 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      }
+
+      indicator.style.left = `${left}px`;
+      indicator.style.width = `${rect.width}px`;
+      indicator.style.opacity = '1';
+
+      if (instant) {
+        requestAnimationFrame(() => {
+          indicator.style.transition = 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        });
+      }
+    }
+
+    // پیدا کردن تب فعال
+    function findActiveTab(): HTMLButtonElement | null {
+      for (const tab of tabs) {
+        if (tab.getAttribute('aria-selected') === 'true') return tab;
+      }
+      return null;
+    }
+
+    // مقایسه‌ی تب‌ها با MutationObserver
+    tabs.forEach((tab) => {
+      const observer = new MutationObserver(() => {
+        if (tab.getAttribute('aria-selected') === 'true') {
+          moveIndicator(tab);
+        }
+      });
+      observer.observe(tab, { attributes: true, attributeFilter: ['aria-selected'] });
+    });
+
+    // مقدار اولیه
+    const active = findActiveTab();
+    if (active) {
+      moveIndicator(active, true);
+    }
+
+    // Resize
+    let resizeTimeout: number;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = window.setTimeout(() => {
+        const current = findActiveTab();
+        if (current) moveIndicator(current, true);
+      }, 150);
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTabIndicator);
+  } else {
+    initTabIndicator();
+  }
+</script>

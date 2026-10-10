@@ -1,0 +1,80 @@
+---
+import { getEnabledTabs } from '../../utils/config';
+const tabs = getEnabledTabs();
+const firstTabId = tabs[0]?.id ?? '';
+---
+
+<div
+  data-page-title
+  class="sticky top-0 z-40 bg-cream/85 backdrop-blur-md border-b border-stone-200/50 transition-all duration-300"
+>
+  <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+    <h1
+      data-page-title-text
+      class="text-base sm:text-lg font-bold text-amber-700 tracking-tight transition-opacity duration-300"
+    >
+      {tabs.find((t) => t.id === firstTabId)?.label ?? ''}
+    </h1>
+    <span
+      data-page-title-hint
+      class="text-[10px] sm:text-xs text-stone-400 tabular-nums"
+    >
+      {/* نمونه: بخش ۱ از ۵ */}
+    </span>
+  </div>
+</div>
+
+<script>
+  function initPageTitle() {
+    const titleEl = document.querySelector<HTMLElement>('[data-page-title-text]');
+    const hintEl = document.querySelector<HTMLElement>('[data-page-title-hint]');
+    const tabbar = document.querySelector<HTMLElement>('[data-tabbar]');
+    if (!titleEl || !tabbar) return;
+
+    const tabs = Array.from(tabbar.querySelectorAll<HTMLButtonElement>('[data-tab-id]'));
+
+    function getTabLabel(tab: HTMLButtonElement): string {
+      const labelEl = tab.querySelector<HTMLElement>('[data-tab-label]');
+      return labelEl?.textContent?.trim() ?? '';
+    }
+
+    function updateTitle(activeTab: HTMLButtonElement) {
+      const label = getTabLabel(activeTab);
+      const index = tabs.indexOf(activeTab);
+
+      // انیمیشن fade
+      titleEl!.style.opacity = '0';
+      setTimeout(() => {
+        titleEl!.textContent = label;
+        titleEl!.style.opacity = '1';
+      }, 100);
+
+      if (hintEl && index >= 0) {
+        hintEl.textContent = `${index + 1} از ${tabs.length}`;
+      }
+    }
+
+    // MutationObserver برای تشخیص تغییر تب
+    tabs.forEach((tab) => {
+      const observer = new MutationObserver(() => {
+        if (tab.getAttribute('aria-selected') === 'true') {
+          updateTitle(tab);
+        }
+      });
+      observer.observe(tab, { attributes: true, attributeFilter: ['aria-selected'] });
+    });
+
+    // مقدار اولیه
+    const activeTab = tabs.find((t) => t.getAttribute('aria-selected') === 'true');
+    if (activeTab && hintEl) {
+      const index = tabs.indexOf(activeTab);
+      hintEl.textContent = `${index + 1} از ${tabs.length}`;
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPageTitle);
+  } else {
+    initPageTitle();
+  }
+</script>
