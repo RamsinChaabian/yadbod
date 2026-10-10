@@ -1,21 +1,17 @@
 ---
 // فوتر سایت — طراحی و توسعه
-import { config } from '../../utils/config';
 
 const developer = {
-  name: ' رامسین چعبیان ',
+  name: 'رامسین چعبیان',
   linkedin: 'https://www.linkedin.com/in/ramsinchaabian/',
 };
-
-const currentYear = new Date().getFullYear();
-const shamsiYear = 1405;
 ---
 
 <footer class="mt-16 border-t border-stone-200/60 bg-cream-dark/30">
   <div class="max-w-3xl mx-auto px-4 py-8 sm:py-10 pb-32 sm:pb-36">
-    <!-- خط اول: طراحی و توسعه -->
+    <!-- طراحی و توسعه -->
     <p class="text-center text-xs sm:text-sm text-stone-500 leading-relaxed">
-      طراحی و توسعه توسط
+      طراحی و توسعه توسط{' '}
       <a
         href={developer.linkedin}
         target="_blank"
@@ -24,7 +20,7 @@ const shamsiYear = 1405;
         aria-label={`لینکدین ${developer.name}`}
       >
         <span class="border-b-2 border-transparent group-hover:border-amber-700 transition-colors">
-        &nbsp; {developer.name}
+          {developer.name}
         </span>
         <svg
           width="14"
@@ -39,12 +35,8 @@ const shamsiYear = 1405;
       </a>
     </p>
 
-    <!-- خط دوم: نسخه و سال -->
-    <div class="mt-6 pt-6 border-t border-stone-200/60 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-[11px] text-stone-400">
-      <p class="tabular-nums">
-        © {shamsiYear} — {currentYear} · یادبود نجیه رویشدزاده
-      </p>
-      <span class="hidden sm:inline text-stone-300">·</span>
+    <!-- ساخته‌شده با ❤️ -->
+    <div class="mt-6 pt-6 border-t border-stone-200/60 flex justify-center text-[11px] text-stone-400">
       <p class="flex items-center gap-1.5">
         <span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-500"></span>
         <span>ساخته‌شده با ❤️ برای یادگار</span>
