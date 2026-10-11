@@ -66,7 +66,7 @@ export default defineConfig({
 
       workbox: {
         // ⭐ 'txt' اضافه شد تا robots.txt هم precache شود
-        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2,json,txt}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2,json,txt,mp3,m4a,ogg}'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         globIgnores: ['**/qr/**'],
         navigateFallback: '/offline',
