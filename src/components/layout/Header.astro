@@ -1,6 +1,8 @@
 ---
 import { config } from '../../utils/config';
 import { withBase } from '../../utils/paths';
+import MusicPlayer from './MusicPlayer.astro';
+
 
 const { person } = config;
 ---
@@ -26,6 +28,8 @@ const { person } = config;
         <div class="absolute inset-0 bg-gradient-to-b from-white/15 via-transparent to-transparent pointer-events-none"></div>
       </div>
 
+       <MusicPlayer />
+       
       <!-- ⭐ آواتار — absolute و بیرون از لایه‌ی overflow -->
       <div class="absolute inset-x-0 -bottom-16 sm:-bottom-20 flex justify-center pointer-events-none">
         <div class="pointer-events-auto" data-anim-avatar>
