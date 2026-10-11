@@ -334,24 +334,40 @@ const initialVolume = defaultVolume;
       updatePlayIcon();
     });
 
-    // ---------- نوار پیشرفت ----------
+        // ---------- نوار پیشرفت ----------
     if (progressBar) {
       progressBar.addEventListener('click', (e) => {
         if (!audio.duration || !isFinite(audio.duration)) return;
+
         const rect = progressBar.getBoundingClientRect();
         const x = e.clientX - rect.left;
-        const percent = x / rect.width;
-        audio.currentTime = percent * audio.duration;
+
+        // ⭐ تشخیص جهت صفحه — در RTL، محاسبه برعکس می‌شود
+        const isRTL = getComputedStyle(progressBar).direction === 'rtl';
+        const percent = isRTL ? 1 - x / rect.width : x / rect.width;
+
+        audio.currentTime = Math.max(0, Math.min(1, percent)) * audio.duration;
       });
 
       progressBar.addEventListener('keydown', (e) => {
         if (!audio.duration) return;
+        const isRTL = getComputedStyle(progressBar).direction === 'rtl';
+
         if (e.key === 'ArrowRight') {
           e.preventDefault();
-          audio.currentTime = Math.min(audio.duration, audio.currentTime + 5);
+          // در RTL، فلش راست = عقب‌تر (چون پروگرس از راست شروع می‌شود)
+          if (isRTL) {
+            audio.currentTime = Math.max(0, audio.currentTime - 5);
+          } else {
+            audio.currentTime = Math.min(audio.duration, audio.currentTime + 5);
+          }
         } else if (e.key === 'ArrowLeft') {
           e.preventDefault();
-          audio.currentTime = Math.max(0, audio.currentTime - 5);
+          if (isRTL) {
+            audio.currentTime = Math.min(audio.duration, audio.currentTime + 5);
+          } else {
+            audio.currentTime = Math.max(0, audio.currentTime - 5);
+          }
         } else if (e.key === ' ') {
           e.preventDefault();
           togglePlay();
@@ -601,16 +617,17 @@ const initialVolume = defaultVolume;
   }
 
   .music-progress {
-    width: 100%;
-    height: 6px;
-    background: rgba(255, 255, 255, 0.12);
-    border-radius: 3px;
-    overflow: hidden;
-    cursor: pointer;
-    position: relative;
-    margin-bottom: 0.5rem;
-    outline: none;
-  }
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  margin-bottom: 0.5rem;
+  outline: none;
+  direction: ltr;  
+}
 
   .music-progress:focus-visible {
     box-shadow: 0 0 0 2px rgba(245, 166, 35, 0.6);
