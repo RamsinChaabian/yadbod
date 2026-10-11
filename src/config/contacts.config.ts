@@ -13,7 +13,7 @@ export const contactsConfig = {
     {
       id: 'hadiyeh-chaabian',
       name: 'هدیه چعبیان',
-      relation: 'دختر',
+      relation: 'فرزند دختر',
       phone: '+989166023824',
       whatsapp: '+989166023824',
       avatar: '👩',
