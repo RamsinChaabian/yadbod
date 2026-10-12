@@ -2,6 +2,7 @@
 import { config } from '../../utils/config';
 import { withBase } from '../../utils/paths';
 import MusicPlayer from './MusicPlayer.astro';
+import ShareButton from './ShareButton.astro';
 
 
 const { person } = config;
@@ -27,7 +28,7 @@ const { person } = config;
         <div class="absolute inset-0 bg-gradient-to-b from-black/10 via-black/20 to-black/55"></div>
         <div class="absolute inset-0 bg-gradient-to-b from-white/15 via-transparent to-transparent pointer-events-none"></div>
       </div>
-
+       <ShareButton />
        <MusicPlayer />
        
       <!-- ⭐ آواتار — absolute و بیرون از لایه‌ی overflow -->

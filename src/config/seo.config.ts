@@ -5,7 +5,7 @@ export const seoConfig = {
   metaTitle: 'یادبود نجیه رویشدزاده',
   metaDescription: 'سایت یادبود نجیه رویشدزاده — زنی که زندگی را آموخت، برای حقیقت و عدالت ایستاد و امید را از دل بیرون نکرد.',
   keywords: ['یادبود', 'نجیه رویشدزاده', 'شوشتر', 'خاطرات', 'آزادی', 'عدالت'],
-  ogImage: '/images/og-default.webp',
+  ogImage: '/images/og-default.jpg', 
   ogType: 'website' as const,
   twitterCard: 'summary_large_image' as const,
   twitterSite: null as string | null,
