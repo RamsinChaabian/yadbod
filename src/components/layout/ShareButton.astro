@@ -1,0 +1,266 @@
+---
+// دکمه اشتراک‌گذاری — Web Share API با fallback به clipboard
+// در همه‌ی صفحات/تب‌ها دیده می‌شود چون در Header قرار دارد
+---
+
+<div data-share-button class="share-button">
+  <!-- دکمه اشتراک‌گذاری -->
+  <button
+    type="button"
+    data-share-trigger
+    aria-label="اشتراک‌گذاری سایت"
+    class="share-trigger lg-thin"
+  >
+    <!-- آیکون اشتراک‌گذاری -->
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="18" cy="5" r="3"/>
+      <circle cx="6" cy="12" r="3"/>
+      <circle cx="18" cy="19" r="3"/>
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+      <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+    </svg>
+  </button>
+
+  <!-- Toast موفقیت -->
+  <div data-share-toast hidden class="share-toast lg-dark" role="status" aria-live="polite">
+    <span data-share-toast-icon class="share-toast-icon" aria-hidden="true">✓</span>
+    <span data-share-toast-text class="share-toast-text">لینک کپی شد</span>
+  </div>
+</div>
+
+<script>
+  function initShare() {
+    const button = document.querySelector<HTMLElement>('[data-share-button]');
+    if (!button) return;
+
+    const triggerEl = button.querySelector<HTMLButtonElement>('[data-share-trigger]');
+    const toastEl = button.querySelector<HTMLElement>('[data-share-toast]');
+    const toastIcon = button.querySelector<HTMLElement>('[data-share-toast-icon]');
+    const toastText = button.querySelector<HTMLElement>('[data-share-toast-text]');
+
+    if (!triggerEl || !toastEl) return;
+
+    const trigger: HTMLButtonElement = triggerEl;
+    const toast: HTMLElement = toastEl;
+
+    // URL تمیز (بدون hash) — چون در اشتراک‌گذاری، تب فعلی معنایی ندارد
+    const SITE_URL = window.location.origin + '/';
+    const SHARE_TITLE = 'یادبود نجیه رویشدزاده';
+    const SHARE_TEXT = 'با احترام به یاد نجیه جان، سایتی برای گرامیداشت خاطرات او آماده کرده‌ایم:';
+
+    let toastTimer: number | null = null;
+
+    function showToast(icon: string, text: string, variant: 'success' | 'error' = 'success') {
+      if (toastIcon) toastIcon.textContent = icon;
+      if (toastText) toastText.textContent = text;
+
+      toast.classList.toggle('share-toast--error', variant === 'error');
+      toast.hidden = false;
+
+      // انیمیشن ورود
+      requestAnimationFrame(() => {
+        toast.classList.add('is-visible');
+      });
+
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => {
+        toast.classList.remove('is-visible');
+        window.setTimeout(() => { toast.hidden = true; }, 300);
+      }, 2400);
+    }
+
+    // ---------- لرزش haptic (Android) ----------
+    function hapticTap() {
+      if ('vibrate' in navigator) {
+        try { navigator.vibrate(10); } catch { /* ignore */ }
+      }
+    }
+
+        // ---------- کپی در clipboard ----------
+    async function copyLink(): Promise<boolean> {
+      try {
+        await navigator.clipboard.writeText(SITE_URL);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    // ---------- اشتراک‌گذاری ----------
+    async function handleShare() {
+      hapticTap();
+
+      const shareData = {
+        title: SHARE_TITLE,
+        text: SHARE_TEXT,
+        url: SITE_URL,
+      };
+
+      // تلاش برای Web Share API (موبایل + Chrome desktop)
+      if (typeof navigator.share === 'function') {
+        try {
+          await navigator.share(shareData);
+          showToast('✓', 'ممنون که به اشتراک گذاشتید', 'success');
+          return;
+        } catch (err: unknown) {
+          // اگر کاربر کنسل کرد، خطا نیست
+          if (err instanceof Error && err.name === 'AbortError') return;
+          // در غیر این صورت، به clipboard برمی‌گردیم
+        }
+      }
+
+      // Fallback: کپی در clipboard
+      const ok = await copyLink();
+      if (ok) {
+        showToast('✓', 'لینک کپی شد — برای دوستانتان بفرستید', 'success');
+      } else {
+        showToast('⚠', 'امکان کپی نیست. لطفاً لینک را دستی کپی کنید', 'error');
+      }
+    }
+
+    trigger.addEventListener('click', handleShare);
+
+    // پشتیبانی از کلید Enter/Space (به صورت خودکار کار می‌کند چون button است)
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initShare);
+  } else {
+    initShare();
+  }
+</script>
+
+<style>
+  /* ============================================================
+     Share Button — شیشه‌ای، گوشه‌ی کاور
+     ============================================================ */
+  .share-button {
+    position: absolute;
+    top: 1rem;
+    inset-inline-start: 1rem;
+    z-index: 20;
+  }
+
+  .share-trigger {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.22) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.45) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      0 4px 16px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .share-trigger:hover {
+    background: rgba(255, 255, 255, 0.32) !important;
+    transform: scale(1.05);
+  }
+
+  .share-trigger:active {
+    transform: scale(0.92);
+  }
+
+  /* ============================================================
+     Toast — شیشه‌ی تیره
+     ============================================================ */
+  .share-toast {
+    position: absolute;
+    top: 56px;
+    inset-inline-start: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    border-radius: 20px;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgb(255 240 200);
+    opacity: 0;
+    transform: translateY(-8px) scale(0.92);
+    transition:
+      opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+      transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+    max-width: calc(100vw - 2rem);
+  }
+
+  .share-toast.is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .share-toast--error {
+    border-color: rgba(220, 80, 80, 0.5) !important;
+    color: rgb(255 200 200);
+  }
+
+  .share-toast-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #F5A623, #E8833A);
+    color: white;
+    font-size: 0.625rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .share-toast--error .share-toast-icon {
+    background: linear-gradient(135deg, #DC5050, #A03030);
+  }
+
+  .share-toast-text {
+    flex: 1;
+  }
+
+  /* موبایل */
+  @media (max-width: 640px) {
+    .share-button {
+      top: 0.75rem;
+      inset-inline-start: 0.75rem;
+    }
+
+    .share-toast {
+      top: 52px;
+      font-size: 0.688rem;
+      padding: 0.5rem 0.875rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .share-trigger,
+    .share-toast {
+      transition: none !important;
+    }
+    .share-toast {
+      transform: none;
+    }
+    .share-toast.is-visible {
+      transform: none;
+    }
+  }
+</style>

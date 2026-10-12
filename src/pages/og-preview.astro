@@ -1,0 +1,271 @@
+---
+// صفحه‌ی پیش‌نمایش OG Image (noindex)
+// از این صفحه اسکرین‌شات بگیرید و به عنوان og-default.jpg ذخیره کنید
+import { config } from '../utils/config';
+import { withBase } from '../utils/paths';
+
+const { person } = config;
+---
+
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OG Preview (noindex)</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css"
+  />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Vazirmatn', sans-serif;
+      overflow: hidden;
+    }
+
+    /* کارت OG — دقیقاً ۱۲۰۰×۶۳۰ */
+    .og-canvas {
+      width: 1200px;
+      height: 630px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #FFF8F0 0%, #FBF2E8 40%, #F5E8DD 70%, #EBE0D0 100%);
+      direction: rtl;
+      flex-shrink: 0;
+      /* مقیاس برای نمایش در صفحه */
+      transform-origin: center center;
+    }
+
+    /* blob های تزئینی */
+    .og-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.5;
+    }
+    .og-blob-1 {
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, #F5A623 0%, transparent 70%);
+      top: -150px;
+      inset-inline-start: -100px;
+      opacity: 0.22;
+    }
+    .og-blob-2 {
+      width: 450px;
+      height: 450px;
+      background: radial-gradient(circle, #E8833A 0%, transparent 70%);
+      bottom: -180px;
+      inset-inline-end: -80px;
+      opacity: 0.18;
+    }
+    .og-blob-3 {
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, #D4B483 0%, transparent 70%);
+      top: 40%;
+      inset-inline-start: 35%;
+      opacity: 0.15;
+    }
+
+    /* محتوا */
+    .og-content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      padding: 60px 80px;
+      display: flex;
+      align-items: center;
+      gap: 60px;
+    }
+
+    /* عکس پروفایل */
+    .og-avatar-wrap {
+      position: relative;
+      flex-shrink: 0;
+    }
+    .og-avatar-glow {
+      position: absolute;
+      inset: -20px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(245, 166, 35, 0.4) 0%, transparent 70%);
+      filter: blur(20px);
+    }
+    .og-avatar {
+      width: 380px;
+      height: 380px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 8px solid rgba(255, 255, 255, 0.9);
+      box-shadow:
+        0 20px 60px rgba(74, 63, 53, 0.25),
+        0 8px 24px rgba(74, 63, 53, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+      position: relative;
+      background: #F5EDE0;
+    }
+    .og-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    /* حلقه‌ی طلایی بیرونی */
+    .og-avatar-ring {
+      position: absolute;
+      inset: -16px;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      background: linear-gradient(135deg, #F5A623, #E8833A) border-box;
+      -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      opacity: 0.7;
+    }
+
+    /* متن */
+    .og-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .og-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 100px;
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1.5px solid rgba(255, 255, 255, 0.8);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.9),
+        0 4px 12px rgba(74, 63, 53, 0.08);
+      font-size: 18px;
+      font-weight: 600;
+      color: #8C6D3F;
+      margin-bottom: 28px;
+    }
+    .og-label::before {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #F5A623, #E8833A);
+      box-shadow: 0 0 8px rgba(245, 166, 35, 0.6);
+    }
+
+    .og-name {
+      font-size: 76px;
+      font-weight: 800;
+      color: #3A2E24;
+      line-height: 1.05;
+      letter-spacing: -1.5px;
+      margin-bottom: 20px;
+    }
+
+    .og-dates {
+      font-size: 24px;
+      font-weight: 500;
+      color: #B8915A;
+      letter-spacing: 3px;
+      margin-bottom: 32px;
+      direction: rtl;
+    }
+
+    .og-bio {
+      font-size: 22px;
+      line-height: 1.6;
+      color: #5A4A3F;
+      max-width: 560px;
+      margin-bottom: 36px;
+      font-weight: 500;
+    }
+
+    .og-divider {
+      width: 80px;
+      height: 4px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, #F5A623, #E8833A);
+      margin-bottom: 24px;
+    }
+
+    .og-url {
+      font-size: 20px;
+      font-weight: 700;
+      color: #8C6D3F;
+      letter-spacing: 1px;
+      direction: ltr;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .og-url-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(184, 145, 90, 0.3);
+      font-size: 16px;
+    }
+
+    /* وقتی در مرورگر معمولی باز شد */
+    @media (max-width: 1300px) {
+      .og-canvas {
+        transform: scale(calc(100vw / 1300));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="og-canvas">
+    <!-- Blob های تزئینی -->
+    <div class="og-blob og-blob-1"></div>
+    <div class="og-blob og-blob-2"></div>
+    <div class="og-blob og-blob-3"></div>
+
+    <!-- محتوا -->
+    <div class="og-content">
+      <!-- عکس پروفایل -->
+      <div class="og-avatar-wrap">
+        <div class="og-avatar-glow"></div>
+        <div class="og-avatar-ring"></div>
+        <div class="og-avatar">
+          <img src={withBase(person.profileImage)} alt="" />
+        </div>
+      </div>
+
+      <!-- متن -->
+      <div class="og-text">
+        <div class="og-label">سایت یادبود</div>
+
+        <h1 class="og-name">{person.fullName}</h1>
+
+        <p class="og-dates">{person.birthDateShamsi} — {person.deathDateShamsi}</p>
+
+        <div class="og-divider"></div>
+
+        <p class="og-bio">{person.shortBio}</p>
+
+        <div class="og-url">
+          <span class="og-url-icon">🌐</span>
+          <span>najiye.ir</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
