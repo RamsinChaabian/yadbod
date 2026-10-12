@@ -3,18 +3,17 @@ import { config } from '../../utils/config';
 import ARScene from './ARScene.astro';
 import IPhoneGuide from './IPhoneGuide.astro';
 
-const { location } = config;
+const { location, features } = config;
+const pathEnabled = features.arGroundPath;
 ---
 
 <div class="py-2">
-  <!-- سربرگ شیشه‌ای -->
   <header class="lg-card p-6 mb-5">
     <h2 class="text-xl font-bold text-stone-800 mb-1">یافتن قبر با دوربین</h2>
     <p class="text-sm text-stone-500">با دوربین گوشی، مسیر رسیدن به قبر را ببینید.</p>
   </header>
 
   <div data-ar-start-panel class="space-y-4">
-    <!-- بنر هشدار آفلاین -->
     <div
       data-ar-offline-banner
       hidden
@@ -31,10 +30,8 @@ const { location } = config;
       </div>
     </div>
 
-    <!-- راهنمای آیفون -->
     <IPhoneGuide />
 
-    <!-- پیش‌نمایش دوربین -->
     <div class="lg-card p-2 overflow-hidden">
       <div class="aspect-video rounded-[24px] bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center relative overflow-hidden">
         <div class="text-center px-4">
@@ -45,7 +42,6 @@ const { location } = config;
       </div>
     </div>
 
-    <!-- دکمه شروع -->
     <button
       type="button"
       data-ar-start
@@ -55,7 +51,6 @@ const { location } = config;
       <span>شروع واقعیت افزوده</span>
     </button>
 
-    <!-- عدم پشتیبانی -->
     <div data-ar-unsupported hidden class="lg-card p-4 text-sm border-amber-300/60" role="alert">
       <p data-ar-unsupported-msg class="text-stone-700"></p>
       <a
@@ -68,7 +63,6 @@ const { location } = config;
       </a>
     </div>
 
-    <!-- راهنما -->
     <div class="lg-card p-5">
       <h3 class="text-sm font-bold text-stone-800 mb-3">راهنما</h3>
       <ul class="space-y-2 text-xs text-stone-600 leading-relaxed">
@@ -84,6 +78,12 @@ const { location } = config;
           <span class="text-amber-500 mt-0.5">•</span>
           <span>فاصله و جهت در گوشه صفحه نمایش داده می‌شود</span>
         </li>
+        {pathEnabled && (
+          <li class="flex items-start gap-2">
+            <span class="text-amber-500 mt-0.5">•</span>
+            <span>با دکمه‌ی «نمایش مسیر روی زمین»، یک رد طلایی شما را به قبر می‌رساند</span>
+          </li>
+        )}
       </ul>
     </div>
   </div>
@@ -92,15 +92,14 @@ const { location } = config;
 </div>
 
 <script>
+  import { fetchRoute } from '../../utils/ors';
+
   declare global {
     interface Window {
       __arCleanup?: () => void;
     }
   }
 
-  // ============================================================
-  // محاسبات جغرافیایی
-  // ============================================================
   function calcDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371000;
     const toRad = (d: number) => (d * Math.PI) / 180;
@@ -119,9 +118,6 @@ const { location } = config;
     return (toDeg(Math.atan2(y, x)) + 360) % 360;
   }
 
-  // ============================================================
-  // بررسی GPS
-  // ============================================================
   async function quickGpsCheck(): Promise<{ ok: boolean; accuracy?: number; message?: string }> {
     if (!('geolocation' in navigator)) {
       return { ok: false, message: 'مرورگر شما از GPS پشتیبانی نمی‌کند.' };
@@ -161,19 +157,12 @@ const { location } = config;
     });
   }
 
-  // ============================================================
-  // ساخت نشانگر سه‌بعدی (Beacon + Arrow)
-  // ============================================================
   function buildBeacon(THREE: any) {
     const group = new THREE.Group();
 
-    // ================================================
-    // الف) نشانگر سینماتیک — برای فاصله > ۵۰۰ متر
-    // ================================================
     const beaconGroup = new THREE.Group();
     group.add(beaconGroup);
 
-    // ستون نور
     const columnGeo = new THREE.CylinderGeometry(0.12, 0.35, 5, 24, 1, true);
     const columnMat = new THREE.MeshBasicMaterial({
       color: 0xF5A623, transparent: true, opacity: 0.55,
@@ -183,14 +172,12 @@ const { location } = config;
     column.position.y = 2.5;
     beaconGroup.add(column);
 
-    // الماس مرکزی
     const diamondGeo = new THREE.OctahedronGeometry(0.55, 0);
     const diamondMat = new THREE.MeshBasicMaterial({ color: 0xE8833A });
     const diamond = new THREE.Mesh(diamondGeo, diamondMat);
     diamond.position.y = 2.5;
     beaconGroup.add(diamond);
 
-    // هاله درخشان
     const glowCanvas = document.createElement('canvas');
     glowCanvas.width = 128;
     glowCanvas.height = 128;
@@ -211,7 +198,6 @@ const { location } = config;
     glow.position.y = 2.5;
     beaconGroup.add(glow);
 
-    // حلقه‌ها
     const ring1 = new THREE.Mesh(
       new THREE.TorusGeometry(1.5, 0.08, 12, 48),
       new THREE.MeshBasicMaterial({ color: 0xE8833A, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending })
@@ -234,25 +220,19 @@ const { location } = config;
     ring3.position.y = 2.5;
     beaconGroup.add(ring3);
 
-    // ================================================
-    // ب) فلش رو به پایین — برای فاصله ≤ ۵۰۰ متر
-    // ================================================
     const arrowGroup = new THREE.Group();
     group.add(arrowGroup);
 
-    // بدنه‌ی فلش (شفت + تیغه) — با هم حرکت می‌کنند
     const arrowBody = new THREE.Group();
     arrowBody.position.y = 0;
     arrowGroup.add(arrowBody);
 
-    // شفت (بالای فلش)
     const shaftGeo = new THREE.CylinderGeometry(0.16, 0.16, 0.9, 16);
     const shaftMat = new THREE.MeshBasicMaterial({ color: 0xFFD08A });
     const shaft = new THREE.Mesh(shaftGeo, shaftMat);
     shaft.position.y = 3.0;
     arrowBody.add(shaft);
 
-    // تیغه (مخروط رو به پایین)
     const coneGeo = new THREE.ConeGeometry(0.7, 1.5, 32);
     const coneMat = new THREE.MeshBasicMaterial({
       color: 0xE8833A,
@@ -264,7 +244,6 @@ const { location } = config;
     cone.position.y = 1.75;
     arrowBody.add(cone);
 
-    // هاله‌ی درخشان پشت فلش
     const arrowGlowCanvas = document.createElement('canvas');
     arrowGlowCanvas.width = 128;
     arrowGlowCanvas.height = 128;
@@ -288,7 +267,6 @@ const { location } = config;
     arrowGlow.position.y = 2.0;
     arrowGroup.add(arrowGlow);
 
-    // حلقه‌ی کوچک روی زمین
     const arrowRing = new THREE.Mesh(
       new THREE.TorusGeometry(1.0, 0.06, 12, 48),
       new THREE.MeshBasicMaterial({
@@ -302,70 +280,97 @@ const { location } = config;
     arrowRing.position.y = 0.05;
     arrowGroup.add(arrowRing);
 
-    // در ابتدا فقط beacon نمایش داده می‌شود
     arrowGroup.visible = false;
 
     return {
-      group,
-      beaconGroup,
-      arrowGroup,
-      // beacon items
-      column,
-      diamond,
-      glow,
-      ring1,
-      ring2,
-      ring3,
-      columnMat,
-      glowMat,
-      // arrow items
-      arrowBody,
-      shaft,
-      cone,
-      coneMat,
-      arrowGlow,
-      arrowGlowMat,
-      arrowRing,
+      group, beaconGroup, arrowGroup,
+      column, diamond, glow, ring1, ring2, ring3, columnMat, glowMat,
+      arrowBody, shaft, cone, coneMat, arrowGlow, arrowGlowMat, arrowRing,
     };
   }
 
-  // ============================================================
-  // مقیاس نشانگر سینماتیک (فاصله > ۵۰۰ متر)
-  // ============================================================
+  function buildPathSpheres(THREE: any, count: number) {
+    const group = new THREE.Group();
+    group.visible = false;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d')!;
+    const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    grad.addColorStop(0, 'rgba(255, 245, 210, 1)');
+    grad.addColorStop(0.18, 'rgba(255, 220, 140, 0.95)');
+    grad.addColorStop(0.38, 'rgba(245, 166, 35, 0.7)');
+    grad.addColorStop(0.65, 'rgba(232, 131, 58, 0.25)');
+    grad.addColorStop(1, 'rgba(232, 131, 58, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 128, 128);
+    const texture = new THREE.CanvasTexture(canvas);
+
+    const spheres: any[] = [];
+    const materials: any[] = [];
+
+    for (let i = 0; i < count; i++) {
+      const material = new THREE.SpriteMaterial({
+        map: texture,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        depthTest: false,
+      });
+      const sprite = new THREE.Sprite(material);
+      sprite.visible = false;
+      sprite.scale.set(0.5, 0.5, 1);
+      group.add(sprite);
+      spheres.push(sprite);
+      materials.push(material);
+    }
+
+    return { group, spheres, materials, texture };
+  }
+
+  function interpolatePath(
+    worldCoords: { x: number; z: number }[],
+    spacing: number
+  ): { x: number; z: number }[] {
+    if (worldCoords.length < 2) return worldCoords.slice();
+
+    const result: { x: number; z: number }[] = [];
+    for (let i = 0; i < worldCoords.length - 1; i++) {
+      const a = worldCoords[i];
+      const b = worldCoords[i + 1];
+      const dx = b.x - a.x;
+      const dz = b.z - a.z;
+      const segLen = Math.sqrt(dx * dx + dz * dz);
+      const steps = Math.max(1, Math.round(segLen / spacing));
+      for (let j = 0; j < steps; j++) {
+        const t = j / steps;
+        result.push({ x: a.x + dx * t, z: a.z + dz * t });
+      }
+    }
+    result.push(worldCoords[worldCoords.length - 1]);
+    return result;
+  }
+
   function calcBeaconScale(actualDist: number): number {
-    const NEAR = 500;
-    const FAR = 1500;
-    const MAX_SCALE = 1.4;
-    const MIN_SCALE = 0.4;
-
-    if (actualDist <= NEAR) return MAX_SCALE;
-    if (actualDist >= FAR) return MIN_SCALE;
-
+    const NEAR = 500, FAR = 1500, MAX = 1.4, MIN = 0.4;
+    if (actualDist <= NEAR) return MAX;
+    if (actualDist >= FAR) return MIN;
     const t = (actualDist - NEAR) / (FAR - NEAR);
     const eased = 1 - (1 - t) * (1 - t);
-    return MAX_SCALE - eased * (MAX_SCALE - MIN_SCALE);
+    return MAX - eased * (MAX - MIN);
   }
 
-  // ============================================================
-  // مقیاس فلش رو به پایین (فاصله ≤ ۵۰۰ متر)
-  // ============================================================
   function calcArrowScale(actualDist: number): number {
-    const NEAR = 20;
-    const FAR = 500;
-    const MAX_SCALE = 1.6;
-    const MIN_SCALE = 0.7;
-
-    if (actualDist <= NEAR) return MAX_SCALE;
-    if (actualDist >= FAR) return MIN_SCALE;
-
+    const NEAR = 20, FAR = 500, MAX = 1.6, MIN = 0.7;
+    if (actualDist <= NEAR) return MAX;
+    if (actualDist >= FAR) return MIN;
     const t = (actualDist - NEAR) / (FAR - NEAR);
     const eased = 1 - (1 - t) * (1 - t);
-    return MAX_SCALE - eased * (MAX_SCALE - MIN_SCALE);
+    return MAX - eased * (MAX - MIN);
   }
 
-  // ============================================================
-  // Init AR
-  // ============================================================
   function initAR() {
     const startPanel = document.querySelector<HTMLElement>('[data-ar-start-panel]');
     const startBtn = document.querySelector<HTMLButtonElement>('[data-ar-start]');
@@ -377,6 +382,7 @@ const { location } = config;
     const arrowEl = document.querySelector<HTMLElement>('[data-ar-arrow]');
     const pulseDot = document.querySelector<HTMLElement>('[data-ar-pulse-dot]');
     const hintText = document.querySelector<HTMLElement>('[data-ar-hint-text]');
+    const hintEl = document.querySelector<HTMLElement>('[data-ar-hint]');
     const errorBox = document.querySelector<HTMLElement>('[data-ar-error]');
     const errorMsg = document.querySelector<HTMLElement>('[data-ar-error-msg]');
     const gpsOffBox = document.querySelector<HTMLElement>('[data-ar-gps-off]');
@@ -388,6 +394,10 @@ const { location } = config;
     const accuracyDot = document.querySelector<HTMLElement>('[data-ar-accuracy-dot]');
     const accuracyWarn = document.querySelector<HTMLElement>('[data-ar-accuracy-warn]');
     const groundIndicator = document.querySelector<HTMLElement>('[data-ar-ground-indicator]');
+
+    const pathToggleBtn = document.querySelector<HTMLButtonElement>('[data-ar-path-toggle]');
+    const pathToggleLabel = document.querySelector<HTMLElement>('[data-ar-path-label]');
+    const pathToggleIcon = document.querySelector<HTMLElement>('[data-ar-path-icon]');
 
     const loadingEl = document.querySelector<HTMLElement>('[data-ar-loading]');
     const loadingText = document.querySelector<HTMLElement>('[data-ar-loading-text]');
@@ -401,13 +411,27 @@ const { location } = config;
 
     if (!startBtn || !sceneWrap || !startPanel) return;
 
-    const graveLat = parseFloat(sceneWrap.dataset.lat ?? '') || 32.0498053;
-    const graveLng = parseFloat(sceneWrap.dataset.lng ?? '') || 48.8765405;
+    const graveLat = parseFloat(sceneWrap.dataset.lat ?? '') || 32.04946770441151;
+    const graveLng = parseFloat(sceneWrap.dataset.lng ?? '') || 48.87615613639355;
+
+    // ⭐ خواندن تنظیمات مسیر از data-attributes
+    const pathEnabled = sceneWrap.dataset.pathEnabled === '1';
+    const pathCfg = {
+      sphereCount: parseInt(sceneWrap.dataset.pathSphereCount ?? '20', 10),
+      sphereSpacing: parseFloat(sceneWrap.dataset.pathSphereSpacing ?? '1.8'),
+      visibleDistanceMeters: parseFloat(sceneWrap.dataset.pathVisibleDistance ?? '30'),
+      hiddenDistanceMeters: parseFloat(sceneWrap.dataset.pathHiddenDistance ?? '1.5'),
+      sphereSizeNear: parseFloat(sceneWrap.dataset.pathSizeNear ?? '0.75'),
+      sphereSizeFar: parseFloat(sceneWrap.dataset.pathSizeFar ?? '0.35'),
+      pulseSpeed: parseFloat(sceneWrap.dataset.pathPulseSpeed ?? '2.2'),
+      walkProfile: (sceneWrap.dataset.pathWalkProfile ?? 'foot-walking') as
+        | 'foot-walking'
+        | 'driving-car'
+        | 'cycling-regular',
+    };
+
     const dirs = ['شمال', 'شمال‌شرق', 'شرق', 'جنوب‌شرق', 'جنوب', 'جنوب‌غرب', 'غرب', 'شمال‌غرب'];
 
-    // ============================================================
-    // وضعیت آفلاین/آنلاین
-    // ============================================================
     function updateOfflineStatus() {
       const isOnline = navigator.onLine;
       if (offlineBanner) offlineBanner.hidden = isOnline;
@@ -417,9 +441,6 @@ const { location } = config;
     window.addEventListener('online', updateOfflineStatus);
     window.addEventListener('offline', updateOfflineStatus);
 
-    // ============================================================
-    // Loading helpers
-    // ============================================================
     let loadingTimerId: number | null = null;
     let loadingStartTime = 0;
 
@@ -470,9 +491,6 @@ const { location } = config;
       }
     }
 
-    // ============================================================
-    // Helpers
-    // ============================================================
     function showError(msg: string) {
       if (errorBox && errorMsg) { errorMsg.textContent = msg; errorBox.hidden = false; }
     }
@@ -489,9 +507,6 @@ const { location } = config;
       startBtn.innerHTML = '<span aria-hidden="true" class="text-xl">📸</span><span>شروع واقعیت افزوده</span>';
     }
 
-    // ============================================================
-    // به‌روزرسانی HUD
-    // ============================================================
     function updateHUD(lat: number, lng: number, cameraHeading?: number, accuracy?: number) {
       const dist = calcDistance(lat, lng, graveLat, graveLng);
       const bearing = calcBearing(lat, lng, graveLat, graveLng);
@@ -548,9 +563,6 @@ const { location } = config;
       }
     }
 
-    // ============================================================
-    // Start AR
-    // ============================================================
     startBtn.addEventListener('click', async () => {
       hideError();
       hideGpsOff();
@@ -654,13 +666,20 @@ const { location } = config;
         locar.scene.add(beacon.group);
         beacon.group.visible = false;
 
+        const pathSpheres = buildPathSpheres(THREE, pathCfg.sphereCount);
+        locar.scene.add(pathSpheres.group);
+
+        let pathActive = false;
+        let pathLoading = false;
+        let pathWorldCoords: { x: number; z: number }[] = [];
+        let pathRouteDistance = 0;
+
         let cameraHeadingDeg = 0;
         let lastLat: number | null = null;
         let lastLng: number | null = null;
         let lastAccuracy: number | undefined = initialAccuracy;
         let lastUpdateTime = 0;
 
-        // حالت فعلی — با hysteresis از فلش‌زدن جلوگیری می‌کند
         let isArrowMode = false;
 
         const onGps = (e: any) => {
@@ -673,6 +692,150 @@ const { location } = config;
         };
         locar.on('gpsupdate', onGps);
 
+        function updatePathButton(state: 'idle' | 'loading' | 'active') {
+          if (!pathToggleBtn) return;
+          pathToggleBtn.dataset.state = state;
+          if (state === 'loading') {
+            if (pathToggleIcon) pathToggleIcon.textContent = '⏳';
+            if (pathToggleLabel) pathToggleLabel.textContent = 'در حال محاسبه مسیر…';
+            pathToggleBtn.disabled = true;
+          } else if (state === 'active') {
+            if (pathToggleIcon) pathToggleIcon.textContent = '🛤️';
+            if (pathToggleLabel) pathToggleLabel.textContent = 'پنهان کردن مسیر';
+            pathToggleBtn.disabled = false;
+          } else {
+            if (pathToggleIcon) pathToggleIcon.textContent = '🛤️';
+            if (pathToggleLabel) pathToggleLabel.textContent = 'نمایش مسیر روی زمین';
+            pathToggleBtn.disabled = false;
+          }
+        }
+
+        async function togglePath() {
+          if (pathLoading) return;
+
+          if (pathActive) {
+            pathActive = false;
+            pathSpheres.group.visible = false;
+            updatePathButton('idle');
+            if (hintEl) hintEl.hidden = false;
+            return;
+          }
+
+          if (lastLat === null || lastLng === null) {
+            showError('موقعیت شما هنوز مشخص نشده است.');
+            return;
+          }
+
+          pathLoading = true;
+          updatePathButton('loading');
+          if (hintEl) hintEl.hidden = true;
+
+          try {
+            const route = await fetchRoute(
+              [lastLat, lastLng],
+              [graveLat, graveLng],
+              pathCfg.walkProfile
+            );
+
+            pathRouteDistance = route.distanceMeters;
+
+            const rawWorld = route.coordinates.map(([lng, lat]) => {
+              const [x, z] = locar.lonLatToWorldCoords(lng, lat);
+              return { x, z };
+            });
+
+            pathWorldCoords = interpolatePath(rawWorld, pathCfg.sphereSpacing);
+
+            pathActive = true;
+            pathSpheres.group.visible = true;
+            updatePathButton('active');
+
+            console.log(
+              '[AR Path] route:',
+              pathRouteDistance.toFixed(0),
+              'm,',
+              pathWorldCoords.length,
+              'points'
+            );
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : 'خطا در محاسبه مسیر.';
+            showError(msg);
+            updatePathButton('idle');
+            if (hintEl) hintEl.hidden = false;
+          } finally {
+            pathLoading = false;
+          }
+        }
+
+        if (pathToggleBtn && pathEnabled) {
+          pathToggleBtn.addEventListener('click', togglePath);
+          pathToggleBtn.hidden = false;
+        } else if (pathToggleBtn) {
+          pathToggleBtn.hidden = true;
+        }
+
+        function renderPathSpheres(time: number) {
+          if (!pathActive || pathWorldCoords.length === 0) return;
+
+          const camera = locar.camera;
+          const camX = camera.position.x;
+          const camZ = camera.position.z;
+
+          let closestIdx = 0;
+          let closestDistSq = Infinity;
+          for (let i = 0; i < pathWorldCoords.length; i++) {
+            const wc = pathWorldCoords[i];
+            const dx = wc.x - camX;
+            const dz = wc.z - camZ;
+            const d2 = dx * dx + dz * dz;
+            if (d2 < closestDistSq) {
+              closestDistSq = d2;
+              closestIdx = i;
+            }
+          }
+
+          const visibleRange = pathCfg.visibleDistanceMeters;
+          const hiddenRange = pathCfg.hiddenDistanceMeters;
+          const sizeNear = pathCfg.sphereSizeNear;
+          const sizeFar = pathCfg.sphereSizeFar;
+          const pulseSpeed = pathCfg.pulseSpeed;
+
+          const step = Math.max(1, Math.round(pathWorldCoords.length / (pathCfg.sphereCount * 4)));
+
+          for (let i = 0; i < pathSpheres.spheres.length; i++) {
+            const routeIdx = closestIdx + i * step;
+            const sprite = pathSpheres.spheres[i];
+            const material = pathSpheres.materials[i];
+
+            if (routeIdx >= pathWorldCoords.length) {
+              sprite.visible = false;
+              continue;
+            }
+
+            const wc = pathWorldCoords[routeIdx];
+            const dx = wc.x - camX;
+            const dz = wc.z - camZ;
+            const dist = Math.sqrt(dx * dx + dz * dz);
+
+            if (dist < hiddenRange || dist > visibleRange) {
+              sprite.visible = false;
+              continue;
+            }
+
+            sprite.position.set(wc.x, 0.12, wc.z);
+            sprite.visible = true;
+
+            const t = Math.max(0, Math.min(1, (dist - hiddenRange) / (visibleRange - hiddenRange)));
+            const baseOpacity = 1 - t;
+            const pulse = 0.85 + Math.sin(time * pulseSpeed + i * 0.6) * 0.15;
+            material.opacity = baseOpacity * pulse;
+
+            const size = sizeNear - t * (sizeNear - sizeFar);
+            const sizePulse = 1 + Math.sin(time * pulseSpeed * 1.4 + i * 0.6) * 0.1;
+            sprite.scale.set(size * sizePulse, size * sizePulse, 1);
+          }
+        }
+
         const tmpVec = new THREE.Vector3();
         const upVec = new THREE.Vector3(0, 0, -1);
         let running = true;
@@ -684,7 +847,6 @@ const { location } = config;
 
           const t = (performance.now() - startTime) / 1000;
 
-          // ---------- انیمیشن‌های Beacon ----------
           beacon.ring1.rotation.z = t * 0.6;
           beacon.ring2.rotation.z = -t * 1.2;
           beacon.ring2.rotation.x = Math.sin(t * 0.5) * 0.4;
@@ -702,7 +864,6 @@ const { location } = config;
 
           beacon.columnMat.opacity = 0.4 + Math.sin(t * 1.5) * 0.2;
 
-          // ---------- انیمیشن فلش رو به پایین ----------
           const arrowBob = Math.sin(t * 2.2) * 0.35;
           beacon.arrowBody.position.y = arrowBob;
           beacon.arrowGlow.position.y = 2.0 + arrowBob;
@@ -712,10 +873,8 @@ const { location } = config;
           beacon.arrowGlowMat.opacity = 0.65 + Math.sin(t * 3.5) * 0.3;
 
           beacon.arrowRing.rotation.z = t * 0.4;
-
           beacon.coneMat.opacity = 0.85 + Math.sin(t * 2.2) * 0.15;
 
-          // ---------- موقعیت‌یابی + مقیاس ----------
           if (lastLat !== null && lastLng !== null) {
             const camera = locar.camera;
 
@@ -738,7 +897,6 @@ const { location } = config;
               targetPos.y = 0;
               beacon.group.position.lerp(targetPos, 0.2);
 
-              // تعیین حالت (با hysteresis)
               if (!isArrowMode && actualDist < 480) {
                 isArrowMode = true;
               } else if (isArrowMode && actualDist > 520) {
@@ -759,7 +917,6 @@ const { location } = config;
               beacon.arrowGroup.visible = false;
             }
 
-            // heading دوربین
             upVec.set(0, 0, -1).applyQuaternion(camera.quaternion);
             const cameraHeadingRad = Math.atan2(upVec.x, -upVec.z);
             const headingDeg = ((cameraHeadingRad * 180 / Math.PI) + 360) % 360;
@@ -786,6 +943,8 @@ const { location } = config;
               updateHUD(lastLat, lastLng, cameraHeadingDeg, lastAccuracy);
             }
           }
+
+          renderPathSpheres(t);
         }
         tick();
 
@@ -793,6 +952,9 @@ const { location } = config;
           running = false;
           try { locar.stopGps(); } catch { /* ignore */ }
           try { locar.scene.remove(beacon.group); } catch { /* ignore */ }
+          try { locar.scene.remove(pathSpheres.group); } catch { /* ignore */ }
+          try { pathSpheres.texture.dispose(); } catch { /* ignore */ }
+          pathSpheres.materials.forEach((m: any) => { try { m.dispose(); } catch { /* ignore */ } });
           document.querySelectorAll('video').forEach((v) => v.remove());
           document.querySelectorAll('canvas').forEach((c) => c.remove());
           if (groundIndicator) groundIndicator.hidden = true;

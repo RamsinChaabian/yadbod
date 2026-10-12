@@ -43,6 +43,20 @@ export const locationConfigSchema = z.object({
   googleMapsUrl: z.url(),
   arRadiusMeters: z.number().positive(),
   arMinAccuracyMeters: z.number().positive(),
+
+  // ⭐ این بلوک اضافه شود
+  arGroundPath: z.object({
+    sphereCount: z.number().int().positive().max(50),
+    sphereSpacing: z.number().positive(),
+    visibleDistanceMeters: z.number().positive(),
+    hiddenDistanceMeters: z.number().nonnegative(),
+    sphereSizeNear: z.number().positive(),
+    sphereSizeFar: z.number().positive(),
+    pulseSpeed: z.number().positive(),
+    color: z.number().int().nonnegative(),
+    glowColor: z.number().int().nonnegative(),
+    walkProfile: z.enum(['foot-walking', 'driving-car', 'cycling-regular']),
+  }),
 });
 
 export const themeConfigSchema = z.object({
@@ -96,6 +110,7 @@ export const tabsConfigSchema = z.object({
 
 export const featuresConfigSchema = z.object({
   ar: z.boolean(),
+  arGroundPath: z.boolean(),        // ⭐ این خط اضافه شود
   liveRouting: z.boolean(),
   gallery: z.boolean(),
   timeline: z.boolean(),

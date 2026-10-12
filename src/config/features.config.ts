@@ -3,6 +3,7 @@
  */
 export const featuresConfig = {
   ar: true,
+  arGroundPath: true,        // ⭐ این خط اضافه شود
   liveRouting: true,
   gallery: true,
   timeline: true,
