@@ -414,7 +414,6 @@ const pathEnabled = features.arGroundPath;
     const graveLat = parseFloat(sceneWrap.dataset.lat ?? '') || 32.04946770441151;
     const graveLng = parseFloat(sceneWrap.dataset.lng ?? '') || 48.87615613639355;
 
-    // ⭐ خواندن تنظیمات مسیر از data-attributes
     const pathEnabled = sceneWrap.dataset.pathEnabled === '1';
     const pathCfg = {
       sphereCount: parseInt(sceneWrap.dataset.pathSphereCount ?? '20', 10),
@@ -758,6 +757,7 @@ const pathEnabled = features.arGroundPath;
               'points'
             );
           } catch (err) {
+            console.error('[AR Path] fetch failed:', err);
             const msg = err instanceof Error ? err.message : 'خطا در محاسبه مسیر.';
             showError(msg);
             updatePathButton('idle');

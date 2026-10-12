@@ -36,7 +36,7 @@ export const locationConfig = {
     /** رنگ هاله‌ی درخشان */
     glowColor: 0xFFD08A,
     /** profile نوع مسیر */
-    walkProfile: 'foot-walking' as const,
+    walkProfile: 'driving-car' as const,
   },
 } as const;
 
