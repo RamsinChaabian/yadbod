@@ -14,15 +14,13 @@ const initialVolume = defaultVolume;
   class="music-player"
   hidden={!showPlayer}
 >
-  <!-- دکمه‌ی شیشه‌ای گوشه‌ی کاور -->
   <button
     type="button"
     data-music-trigger
     aria-label="پخش موسیقی"
     aria-expanded="false"
-    class="music-trigger lg-thin"
+    class="music-trigger"
   >
-    <!-- آیکون نت موسیقی (حالت آماده) -->
     <svg
       data-music-icon-idle
       class="music-icon-idle"
@@ -41,7 +39,6 @@ const initialVolume = defaultVolume;
       <circle cx="18" cy="16" r="3"/>
     </svg>
 
-    <!-- Equalizer متحرک (حالت در حال پخش) -->
     <div data-music-icon-eq class="music-icon-eq" hidden aria-hidden="true">
       <span></span>
       <span></span>
@@ -49,9 +46,7 @@ const initialVolume = defaultVolume;
     </div>
   </button>
 
-  <!-- پنل پلیر (وقتی باز شود) -->
   <div data-music-panel hidden class="music-panel lg-dark">
-    <!-- سربرگ: عنوان + بستن -->
     <div class="music-panel-header">
       <p data-music-title class="music-title">{tracks[0]?.title ?? ''}</p>
       <button
@@ -67,7 +62,6 @@ const initialVolume = defaultVolume;
       </button>
     </div>
 
-    <!-- کنترل‌ها -->
     <div class="music-controls">
       {tracks.length > 1 && (
         <button
@@ -110,7 +104,6 @@ const initialVolume = defaultVolume;
       )}
     </div>
 
-    <!-- نوار پیشرفت -->
     <div
       data-music-progress
       class="music-progress"
@@ -124,14 +117,12 @@ const initialVolume = defaultVolume;
       <div data-music-progress-fill class="music-progress-fill"></div>
     </div>
 
-    <!-- زمان -->
     <div class="music-time">
       <span data-music-time-current>0:00</span>
       <span data-music-time-total>0:00</span>
     </div>
   </div>
 
-  <!-- Audio element -->
   <audio
     data-music-audio
     preload="metadata"
@@ -148,7 +139,6 @@ const initialVolume = defaultVolume;
     const player = document.querySelector<HTMLElement>('[data-music-player]');
     if (!player || player.hidden) return;
 
-    // ---------- Type-safe references ----------
     const triggerEl = player.querySelector<HTMLButtonElement>('[data-music-trigger]');
     const panelEl = player.querySelector<HTMLElement>('[data-music-panel]');
     const audioEl = player.querySelector<HTMLAudioElement>('[data-music-audio]');
@@ -187,7 +177,6 @@ const initialVolume = defaultVolume;
     let isPlaying = false;
     let isPanelOpen = false;
 
-    // ---------- بازیابی از localStorage ----------
     try {
       const savedIndex = localStorage.getItem(storageKeys.trackIndex);
       if (savedIndex) {
@@ -208,7 +197,6 @@ const initialVolume = defaultVolume;
       audio.volume = parseFloat(player.dataset.initialVolume ?? '0.35');
     }
 
-    // ---------- بارگذاری آهنگ ----------
     function loadTrack(index: number) {
       const wasPlaying = isPlaying;
       currentTrackIndex = ((index % tracks.length) + tracks.length) % tracks.length;
@@ -234,7 +222,6 @@ const initialVolume = defaultVolume;
       }
     }
 
-    // ---------- به‌روزرسانی UI ----------
     function updatePlayIcon() {
       if (isPlaying) {
         playIcon?.style.setProperty('display', 'none');
@@ -270,7 +257,6 @@ const initialVolume = defaultVolume;
       if (timeTotal) timeTotal.textContent = formatTime(audio.duration);
     }
 
-    // ---------- پنل ----------
     function openPanel() {
       isPanelOpen = true;
       panel.removeAttribute('hidden');
@@ -287,7 +273,6 @@ const initialVolume = defaultVolume;
       try { localStorage.setItem(storageKeys.isOpen, '0'); } catch { /* ignore */ }
     }
 
-    // ---------- پخش/توقف ----------
     async function togglePlay() {
       if (isPlaying) {
         audio.pause();
@@ -300,7 +285,6 @@ const initialVolume = defaultVolume;
       }
     }
 
-    // ---------- رویدادها ----------
     trigger.addEventListener('click', () => {
       if (isPanelOpen) closePanel();
       else openPanel();
@@ -334,7 +318,6 @@ const initialVolume = defaultVolume;
       updatePlayIcon();
     });
 
-        // ---------- نوار پیشرفت ----------
     if (progressBar) {
       progressBar.addEventListener('click', (e) => {
         if (!audio.duration || !isFinite(audio.duration)) return;
@@ -342,7 +325,6 @@ const initialVolume = defaultVolume;
         const rect = progressBar.getBoundingClientRect();
         const x = e.clientX - rect.left;
 
-        // ⭐ تشخیص جهت صفحه — در RTL، محاسبه برعکس می‌شود
         const isRTL = getComputedStyle(progressBar).direction === 'rtl';
         const percent = isRTL ? 1 - x / rect.width : x / rect.width;
 
@@ -355,7 +337,6 @@ const initialVolume = defaultVolume;
 
         if (e.key === 'ArrowRight') {
           e.preventDefault();
-          // در RTL، فلش راست = عقب‌تر (چون پروگرس از راست شروع می‌شود)
           if (isRTL) {
             audio.currentTime = Math.max(0, audio.currentTime - 5);
           } else {
@@ -375,14 +356,12 @@ const initialVolume = defaultVolume;
       });
     }
 
-    // ---------- Volume ----------
     audio.addEventListener('volumechange', () => {
       try {
         localStorage.setItem(storageKeys.volume, String(audio.volume));
       } catch { /* ignore */ }
     });
 
-    // ---------- Media Session ----------
     if ('mediaSession' in navigator) {
       navigator.mediaSession.setActionHandler('play', () => {
         audio.play().catch(() => { /* ignore */ });
@@ -400,7 +379,6 @@ const initialVolume = defaultVolume;
       }
     }
 
-    // ---------- بارگذاری اولیه ----------
     loadTrack(currentTrackIndex);
   }
 
@@ -412,6 +390,9 @@ const initialVolume = defaultVolume;
 </script>
 
 <style>
+  /* ============================================================
+     Music Player
+     ============================================================ */
   .music-player {
     position: absolute;
     top: 1rem;
@@ -423,7 +404,50 @@ const initialVolume = defaultVolume;
     max-width: calc(100% - 2rem);
   }
 
+  /* هاله‌ی نورانی چرخان پشت دکمه */
+  .music-player::before {
+    content: '';
+    position: absolute;
+    top: 1rem;
+    inset-inline-end: 0;
+    width: 60px;
+    height: 60px;
+    margin-top: -30px;
+    margin-inline-end: -8px;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      rgba(245, 166, 35, 0) 0deg,
+      rgba(245, 166, 35, 0.55) 90deg,
+      rgba(255, 244, 220, 0.35) 180deg,
+      rgba(232, 131, 58, 0.55) 270deg,
+      rgba(245, 166, 35, 0) 360deg
+    );
+    filter: blur(8px);
+    opacity: 0.6;
+    z-index: 0;
+    pointer-events: none;
+    transform-origin: center center;
+    animation: music-glow-rotate 8s linear infinite;
+    transition: opacity 0.4s ease, filter 0.4s ease;
+  }
+
+  .music-player:hover::before {
+    opacity: 1;
+    filter: blur(10px);
+  }
+
+  @keyframes music-glow-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* ============================================================
+     دکمه اصلی
+     ============================================================ */
   .music-trigger {
+    position: relative;
+    z-index: 1;
     width: 44px;
     height: 44px;
     border-radius: 50%;
@@ -433,34 +457,119 @@ const initialVolume = defaultVolume;
     color: white;
     cursor: pointer;
     flex-shrink: 0;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     padding: 0;
-    background: rgba(255, 255, 255, 0.22) !important;
+
+    /* ⭐ Border گرادیان طلایی + سطح شیشه‌ای */
+    border: 1.5px solid transparent;
+    background:
+      linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.32) 0%,
+        rgba(255, 255, 255, 0.14) 50%,
+        rgba(255, 255, 255, 0.22) 100%
+      ) padding-box,
+      linear-gradient(
+        135deg,
+        #FFD08A 0%,
+        #FFF9EC 22%,
+        #F5A623 45%,
+        #E8833A 70%,
+        #FFF9EC 88%,
+        #FFD08A 100%
+      ) border-box;
+
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.45) !important;
+
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.6),
-      0 4px 16px rgba(0, 0, 0, 0.2);
+      inset 0 1.5px 0 rgba(255, 255, 255, 0.95),
+      inset 0 -1.5px 0 rgba(140, 109, 63, 0.22),
+      inset 1px 0 0 rgba(255, 255, 255, 0.4),
+      inset -1px 0 0 rgba(255, 255, 255, 0.4),
+      0 6px 20px rgba(0, 0, 0, 0.28),
+      0 2px 6px rgba(0, 0, 0, 0.15),
+      0 0 18px rgba(245, 166, 35, 0.35),
+      0 0 0 1px rgba(255, 255, 255, 0.15);
+
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* آیکون SVG */
+  .music-trigger svg {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+    transition: filter 0.3s ease;
+  }
+
+  .music-trigger:hover svg {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25)) drop-shadow(0 0 6px rgba(255, 244, 220, 0.6));
   }
 
   .music-trigger:hover {
-    background: rgba(255, 255, 255, 0.32) !important;
-    transform: scale(1.05);
+    transform: scale(1.08);
+    background:
+      linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.42) 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0.32) 100%
+      ) padding-box,
+      linear-gradient(
+        135deg,
+        #FFE0A8 0%,
+        #FFFFFF 22%,
+        #FFC13D 45%,
+        #F5994A 70%,
+        #FFFFFF 88%,
+        #FFE0A8 100%
+      ) border-box;
+    box-shadow:
+      inset 0 1.5px 0 rgba(255, 255, 255, 1),
+      inset 0 -1.5px 0 rgba(140, 109, 63, 0.28),
+      inset 1px 0 0 rgba(255, 255, 255, 0.5),
+      inset -1px 0 0 rgba(255, 255, 255, 0.5),
+      0 10px 28px rgba(0, 0, 0, 0.32),
+      0 4px 10px rgba(0, 0, 0, 0.18),
+      0 0 32px rgba(245, 166, 35, 0.65),
+      0 0 0 1px rgba(255, 255, 255, 0.25);
   }
 
   .music-trigger:active {
-    transform: scale(0.95);
+    transform: scale(0.94);
+    transition: all 0.1s ease;
   }
 
+  .music-trigger:focus-visible {
+    outline: 2px solid #F5A623;
+    outline-offset: 3px;
+  }
+
+  /* ⭐ حالت باز — طلایی درخشان */
   .music-trigger.is-open {
-    background: rgba(232, 131, 58, 0.85) !important;
-    border-color: rgba(255, 255, 255, 0.6) !important;
+    background:
+      linear-gradient(
+        135deg,
+        rgba(245, 166, 35, 0.95) 0%,
+        rgba(232, 131, 58, 0.98) 100%
+      ) padding-box,
+      linear-gradient(
+        135deg,
+        #FFE0A8 0%,
+        #FFFFFF 22%,
+        #FFC13D 45%,
+        #F5994A 70%,
+        #FFFFFF 88%,
+        #FFE0A8 100%
+      ) border-box;
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.6),
-      0 8px 24px rgba(232, 131, 58, 0.4);
+      inset 0 1.5px 0 rgba(255, 255, 255, 0.6),
+      inset 0 -1.5px 0 rgba(140, 109, 63, 0.3),
+      0 10px 28px rgba(232, 131, 58, 0.5),
+      0 4px 12px rgba(232, 131, 58, 0.3),
+      0 0 24px rgba(245, 166, 35, 0.7),
+      0 0 0 1px rgba(255, 255, 255, 0.3);
   }
 
+  /* Equalizer */
   .music-icon-idle {
     display: block;
   }
@@ -481,6 +590,7 @@ const initialVolume = defaultVolume;
     border-radius: 2px;
     transform-origin: bottom center;
     animation: music-eq-bounce 0.9s ease-in-out infinite;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
   }
 
   .music-icon-eq span:nth-child(1) {
@@ -501,6 +611,9 @@ const initialVolume = defaultVolume;
     50% { transform: scaleY(1); }
   }
 
+  /* ============================================================
+     Panel
+     ============================================================ */
   .music-panel {
     min-width: 240px;
     max-width: calc(100vw - 5rem);
@@ -576,20 +689,25 @@ const initialVolume = defaultVolume;
     justify-content: center;
     color: white;
     background: linear-gradient(135deg, #F5A623, #E8833A);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1.5px solid transparent;
     cursor: pointer;
     padding: 0;
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.4),
-      0 4px 16px rgba(232, 131, 58, 0.4);
-    transition: all 0.2s;
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      inset 0 -1px 0 rgba(140, 109, 63, 0.2),
+      0 4px 16px rgba(232, 131, 58, 0.4),
+      0 0 0 1px rgba(255, 255, 255, 0.15);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
   .music-play-btn:hover {
-    transform: scale(1.08);
+    transform: scale(1.1);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.5),
-      0 6px 20px rgba(232, 131, 58, 0.55);
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      inset 0 -1px 0 rgba(140, 109, 63, 0.25),
+      0 6px 22px rgba(232, 131, 58, 0.6),
+      0 0 20px rgba(245, 166, 35, 0.5),
+      0 0 0 1px rgba(255, 255, 255, 0.25);
   }
 
   .music-play-btn:active {
@@ -603,31 +721,33 @@ const initialVolume = defaultVolume;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.75);
     background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.18);
     cursor: pointer;
     padding: 0;
-    transition: all 0.2s;
+    transition: all 0.25s;
   }
 
   .music-ctrl-btn:hover {
-    background: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(245, 166, 35, 0.4);
     color: white;
+    transform: scale(1.08);
   }
 
   .music-progress {
-  width: 100%;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 3px;
-  overflow: hidden;
-  cursor: pointer;
-  position: relative;
-  margin-bottom: 0.5rem;
-  outline: none;
-  direction: ltr;  
-}
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    margin-bottom: 0.5rem;
+    outline: none;
+    direction: ltr;
+  }
 
   .music-progress:focus-visible {
     box-shadow: 0 0 0 2px rgba(245, 166, 35, 0.6);
@@ -658,6 +778,10 @@ const initialVolume = defaultVolume;
       inset-inline-end: 0.75rem;
     }
 
+    .music-player::before {
+      top: 0.75rem;
+    }
+
     .music-panel {
       min-width: 220px;
       padding: 0.75rem 0.875rem;
@@ -665,6 +789,9 @@ const initialVolume = defaultVolume;
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .music-player::before {
+      animation: none !important;
+    }
     .music-icon-eq span {
       animation: none !important;
       transform: none !important;
