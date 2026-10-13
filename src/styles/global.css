@@ -350,3 +350,68 @@
     color: #4A3F35 !important;
   }
 }
+
+/* ============================================================
+   TabBar Glass — شیشه‌ی گرم با تینت طلایی
+   خوانا روی هر پس‌زمینه‌ای (سفید، کرم، تیره)
+   ============================================================ */
+.tabbar-glass {
+  /* ⭐ گرادیان گرم — از کرم روشن به طلایی ملایم */
+  background: linear-gradient(
+    135deg,
+    rgba(255, 252, 248, 0.94) 0%,
+    rgba(255, 246, 235, 0.92) 45%,
+    rgba(250, 235, 215, 0.88) 100%
+  );
+
+  /* ⭐ blur + saturate برای شیشه‌ی واقعی */
+  backdrop-filter: blur(32px) saturate(190%);
+  -webkit-backdrop-filter: blur(32px) saturate(190%);
+
+  /* ⭐ border طلایی برای تعریف واضح */
+  border: 1.5px solid rgba(184, 145, 90, 0.42);
+  border-radius: 32px;
+
+  /* ⭐ سایه‌های چندلایه برای عمق و جداسازی از محتوا */
+  box-shadow:
+    /* نور داخلی از بالا */
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    /* سایه‌ی داخلی از پایین */
+    inset 0 -1px 0 rgba(140, 109, 63, 0.15),
+    /* نور از کناره‌ها */
+    inset 1px 0 0 rgba(255, 255, 255, 0.55),
+    inset -1px 0 0 rgba(255, 255, 255, 0.55),
+    /* سایه‌ی بیرونی عمیق (به سمت بالا، چون تب‌بار پایین است) */
+    0 -12px 40px rgba(74, 63, 53, 0.18),
+    0 -4px 12px rgba(74, 63, 53, 0.1),
+    /* هاله‌ی طلایی */
+    0 -8px 24px rgba(245, 166, 35, 0.15),
+    /* حلقه‌ی سفید بیرونی */
+    0 0 0 1px rgba(255, 255, 255, 0.5);
+
+  /* ⭐ transition برای تغییرات حالت */
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
+}
+
+/* در حالت hover (فقط دسکتاپ) */
+@media (hover: hover) {
+  .tabbar-glass:hover {
+    border-color: rgba(184, 145, 90, 0.55);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 1),
+      inset 0 -1px 0 rgba(140, 109, 63, 0.18),
+      inset 1px 0 0 rgba(255, 255, 255, 0.6),
+      inset -1px 0 0 rgba(255, 255, 255, 0.6),
+      0 -14px 48px rgba(74, 63, 53, 0.22),
+      0 -5px 14px rgba(74, 63, 53, 0.12),
+      0 -10px 28px rgba(245, 166, 35, 0.2),
+      0 0 0 1px rgba(255, 255, 255, 0.55);
+  }
+}
+
+/* fallback برای مرورگرهای بدون backdrop-filter */
+@supports not (backdrop-filter: blur(1px)) {
+  .tabbar-glass {
+    background: rgba(255, 248, 240, 0.97);
+  }
+}
