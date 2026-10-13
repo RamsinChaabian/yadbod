@@ -321,6 +321,26 @@
 }
 
 /* ============================================================
-   Safari fix — backdrop-filter در iOS فقط با -webkit- کار می‌کند
-   (بالا گذاشتیم، ولی به عنوان یادآوری)
+   Force Light Theme — جلوگیری از Auto Dark Mode مرورگرها
    ============================================================ */
+
+/* همه‌چیز را به حالت Light مجبور می‌کند، حتی در Dark Mode */
+@media (prefers-color-scheme: dark) {
+  html {
+    background: linear-gradient(
+      165deg,
+      #FFF8F0 0%,
+      #FBF2E8 35%,
+      #F9EDE2 65%,
+      #F5E8DD 100%
+    ) !important;
+    background-attachment: fixed !important;
+    color: #4A3F35 !important;
+    color-scheme: only light !important;
+  }
+
+  body {
+    background-color: #FFF8F0 !important;
+    color: #4A3F35 !important;
+  }
+}
