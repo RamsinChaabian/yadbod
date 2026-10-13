@@ -78,6 +78,7 @@
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
     min-height: 100dvh;
+    color-scheme: only light;
   }
 
   body {
