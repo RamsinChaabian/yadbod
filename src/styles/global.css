@@ -64,7 +64,6 @@
   html {
     font-family: var(--font-sans);
     font-size: 16px;
-    /* پس‌زمینه‌ی گرادیان ملایم — برای اینکه شیشه رنگ بگیرد */
     background: linear-gradient(
       165deg,
       #FFF8F0 0%,
@@ -79,12 +78,19 @@
     scroll-behavior: smooth;
     min-height: 100dvh;
     color-scheme: only light;
+    /* ⭐ جلوگیری از overflow افقی */
+    overflow-x: hidden;
+    max-width: 100%;
   }
 
   body {
     margin: 0;
     min-height: 100dvh;
-    background: transparent; /* گرادیان روی html است */
+    background: transparent;
+    /* ⭐ جلوگیری از overflow افقی */
+    overflow-x: hidden;
+    max-width: 100%;
+    position: relative;
   }
 
   [hidden] {
