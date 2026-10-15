@@ -7,10 +7,10 @@ const isDev = import.meta.env.DEV;
 export const candlesConfig = {
   enabled: true,
 
-  /** در dev به Worker محلی، در prod به Worker واقعی */
+  /** در dev به Worker محلی، در prod به دامنهٔ اختصاصی api.najiye.ir */
   apiUrl: isDev
     ? 'http://127.0.0.1:8787'
-    : 'https://yadbod-api.ramsin-chaabian.workers.dev',
+    : 'https://api.najiye.ir',
 
   /** در dev از sitekey تستی (همیشه پاس)، در prod از sitekey واقعی */
   turnstileSiteKey: isDev
