@@ -1,26 +1,26 @@
 /**
  * تنظیمات دیوار شمع‌ها
- *
- * برای تغییر API URL یا Site Key، فقط این فایل را ویرایش کنید.
  */
+
+const isDev = import.meta.env.DEV;
+
 export const candlesConfig = {
-  /** فعال/غیرفعال کردن کل ماژول */
   enabled: true,
 
-  /** آدرس API روی Cloudflare Workers */
-  apiUrl: 'https://yadbod-api.ramsin-chaabian.workers.dev',
+  /** در dev به Worker محلی، در prod به Worker واقعی */
+  apiUrl: isDev
+    ? 'http://127.0.0.1:8787'
+    : 'https://yadbod-api.ramsin-chaabian.workers.dev',
 
-  /** Site Key مربوط به Turnstile */
-  turnstileSiteKey: '0x4AAAAAAAWFW3_B0ZN1FCtOzD',
+  /** در dev از sitekey تستی (همیشه پاس)، در prod از sitekey واقعی */
+  turnstileSiteKey: isDev
+    ? '1x00000000000000000000AA'      // test key — always passes
+    : '0x4AAAAAAAWFW3_B0ZN1FCtOzD',   // real key
 
-  /** حداکثر تعداد شمع قابل نمایش */
   maxDisplay: 100,
-
-  /** حداکثر طول نام */
   maxNameLength: 30,
 
-  /** متن‌های UI */
-    texts: {
+  texts: {
     tabTitle: 'دیوار شمع‌ها',
     tabSubtitle: 'یاد نجیه جان را با روشن کردن یک شمع گرامی بدارید',
     formTitle: 'شمعی روشن کنید',
