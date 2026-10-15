@@ -160,19 +160,11 @@ const texts = candlesConfig.texts;
 )}
 
 <style is:global>
-  /* انیمیشن Toast */
   @keyframes toast-in {
-    from {
-      opacity: 0;
-      transform: translateY(-20px) scale(0.95);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
+    from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
-  /* Shimmer Skeleton */
   @keyframes shimmer {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
@@ -189,23 +181,15 @@ const texts = candlesConfig.texts;
     animation: shimmer 1.5s linear infinite;
   }
 
-  /* انیمیشن ورود کارت جدید */
   @keyframes candle-appear {
-    from {
-      opacity: 0;
-      transform: scale(0.7) translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-    }
+    from { opacity: 0; transform: scale(0.7) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
   }
 
   [data-candle-card-new] {
     animation: candle-appear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
-  /* چرخش icon refresh هنگام بارگذاری */
   [data-candles-refresh][data-loading="true"] [data-refresh-icon] {
     animation: spin 0.8s linear infinite;
   }
@@ -237,6 +221,7 @@ const texts = candlesConfig.texts;
       onTurnstileSuccess?: (token: string) => void;
       turnstile?: {
         reset: (widget?: string | HTMLElement) => void;
+        getResponse: (widget?: string | HTMLElement) => string | undefined;
       };
     }
   }
@@ -255,6 +240,7 @@ const texts = candlesConfig.texts;
     const skeletonEl = moduleEl.querySelector<HTMLElement>('[data-candles-skeleton]');
     const emptyEl = moduleEl.querySelector<HTMLElement>('[data-candles-empty]');
     const refreshBtn = moduleEl.querySelector<HTMLButtonElement>('[data-candles-refresh]');
+    const widgetEl = moduleEl.querySelector<HTMLElement>('.cf-turnstile');
 
     const toast = document.querySelector<HTMLElement>('[data-toast]');
     const toastInner = document.querySelector<HTMLElement>('[data-toast-inner]');
@@ -357,6 +343,29 @@ const texts = candlesConfig.texts;
       updateSubmitButton();
     };
 
+    // اگر Turnstile قبل از این اسکریپت حل شده، توکن موجود را بردار
+    function pickupExistingToken() {
+      if (turnstileToken) return;
+      if (!window.turnstile) return;
+      if (typeof window.turnstile.getResponse !== 'function') return;
+      try {
+        const existing = widgetEl
+          ? window.turnstile.getResponse(widgetEl)
+          : window.turnstile.getResponse();
+        if (existing) {
+          console.log('[candles] picked up existing token');
+          window.onTurnstileSuccess?.(existing);
+        }
+      } catch {
+        /* widget هنوز آماده نیست */
+      }
+    }
+
+    pickupExistingToken();
+    setTimeout(pickupExistingToken, 300);
+    setTimeout(pickupExistingToken, 1000);
+    setTimeout(pickupExistingToken, 2500);
+
     // ---------- رندر دیوار ----------
     function renderWall(candles: Candle[]) {
       const recent = filterRecentCandles(candles);
@@ -386,7 +395,6 @@ const texts = candlesConfig.texts;
         })
         .join('');
 
-      // پاک کردن علامت جدید بعد از انیمیشن
       setTimeout(() => {
         lastNewId = null;
       }, 1000);
@@ -488,7 +496,6 @@ const texts = candlesConfig.texts;
         updateCharCounter();
         updateSubmitButton();
 
-        // ریست Turnstile
         if (window.turnstile && typeof window.turnstile.reset === 'function') {
           const widget = moduleEl.querySelector<HTMLElement>('.cf-turnstile');
           if (widget) window.turnstile.reset(widget);
@@ -499,7 +506,6 @@ const texts = candlesConfig.texts;
         const msg = err instanceof Error ? err.message : 'خطای ناشناخته';
         showToast(msg, 'error');
 
-        // اگر خطای Rate Limit است، Turnstile را هم ریست کن
         if (msg.includes('تازه') || msg.includes('دقیقه')) {
           if (window.turnstile && typeof window.turnstile.reset === 'function') {
             const widget = moduleEl.querySelector<HTMLElement>('.cf-turnstile');
