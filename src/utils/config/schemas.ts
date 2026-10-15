@@ -82,7 +82,7 @@ export const themeConfigSchema = z.object({
 });
 
 export const tabConfigSchema = z.object({
-  id: z.enum(['biography', 'gallery', 'timeline', 'navigate', 'candles', 'contacts']),
+  id: z.enum(['biography', 'gallery', 'timeline', 'navigate', 'contacts']),
   label: z.string().min(1),
   icon: z.string().min(1),
   enabled: z.boolean(),
@@ -106,7 +106,6 @@ export const featuresConfigSchema = z.object({
   analytics: z.boolean(),
   floatingTabBar: z.boolean(),
   googleMapsFallback: z.boolean(),
-  candles: z.boolean(),
 });
 
 export const seoConfigSchema = z.object({
