@@ -1,4 +1,4 @@
-export type TabId = 'biography' | 'gallery' | 'timeline' | 'navigate' | 'contacts';
+export type TabId = 'biography' | 'gallery' | 'timeline' | 'navigate' | 'candles' | 'contacts';
 
 export interface TabConfig {
   id: TabId;
@@ -12,10 +12,11 @@ export interface TabConfig {
 export const tabsConfig = {
   tabs: [
     { id: 'biography', label: 'زندگی',      icon: 'user',     enabled: true, order: 1, ariaLabel: 'زندگی‌نامه' },
-    { id: 'gallery',   label: 'گالری',      icon: 'image',    enabled: true, order: 2, ariaLabel: 'گالری تصاویر و ویدیوها' },
+    { id: 'gallery',   label: 'خاطرات',     icon: 'image',    enabled: true, order: 2, ariaLabel: 'گالری خاطرات' },
     { id: 'timeline',  label: 'تایم‌لاین',   icon: 'clock',    enabled: true, order: 3, ariaLabel: 'تایم‌لاین زندگی' },
     { id: 'navigate',  label: 'مسیر و قبر', icon: 'map-pin',  enabled: true, order: 4, ariaLabel: 'مسیریابی و یافتن قبر' },
-    { id: 'contacts',  label: 'تماس',       icon: 'phone',    enabled: true, order: 5, ariaLabel: 'تماس با اقوام' },
+    { id: 'candles',   label: 'شمع‌ها',      icon: 'candle',   enabled: true, order: 5, ariaLabel: 'دیوار شمع‌ها' },
+    { id: 'contacts',  label: 'تماس',       icon: 'phone',    enabled: true, order: 6, ariaLabel: 'تماس با اقوام' },
   ] as TabConfig[],
 } as const;
 
