@@ -1,0 +1,525 @@
+---
+import { config } from '../../utils/config';
+import { candlesConfig } from '../../config/candles.config';
+
+const enabled = config.features.candles && candlesConfig.enabled;
+const texts = candlesConfig.texts;
+---
+
+{enabled && (
+  <div
+    data-candles-module
+    data-api-url={candlesConfig.apiUrl}
+    data-max-length={candlesConfig.maxNameLength}
+    class="py-2"
+  >
+    <!-- Toast -->
+    <div
+      data-toast
+      hidden
+      class="fixed top-4 inset-x-4 z-[500] flex justify-center pointer-events-none"
+    >
+      <div
+        data-toast-inner
+        class="lg-dark px-5 py-3 max-w-md flex items-center gap-3 pointer-events-auto"
+        style="border-radius: 24px; animation: toast-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);"
+      >
+        <span data-toast-icon class="text-xl shrink-0" aria-hidden="true">✓</span>
+        <p data-toast-text class="text-amber-100 text-sm font-medium leading-relaxed"></p>
+      </div>
+    </div>
+
+    <!-- سربرگ -->
+    <header class="lg-card p-6 mb-5 text-center">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 text-3xl mb-4 shadow-glass">
+        🕯️
+      </div>
+      <h2 class="text-2xl font-bold text-stone-800 mb-2">{texts.tabTitle}</h2>
+      <p class="text-sm text-stone-500 max-w-md mx-auto leading-relaxed">
+        {texts.tabSubtitle}
+      </p>
+    </header>
+
+    <!-- شمارنده کل -->
+    <div class="lg-card p-6 mb-5 text-center">
+      <p class="text-stone-500 text-xs mb-1">{texts.totalLabel}</p>
+      <p
+        data-candles-total
+        class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500 tabular-nums leading-none transition-transform duration-300"
+      >
+        —
+      </p>
+      <p class="text-stone-500 text-xs mt-2">{texts.totalUnit}</p>
+    </div>
+
+    <!-- فرم روشن کردن -->
+    <div class="lg-card p-6 mb-5">
+      <h3 class="text-base font-bold text-stone-800 mb-4">{texts.formTitle}</h3>
+
+      <form data-candle-form class="space-y-4" novalidate>
+        <div>
+          <input
+            type="text"
+            data-candle-name
+            maxlength={candlesConfig.maxNameLength}
+            placeholder={texts.namePlaceholder}
+            class="w-full rounded-2xl border border-stone-200 bg-white/60 px-4 py-3 text-stone-800 placeholder:text-stone-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400/20 transition-all"
+            required
+            autocomplete="name"
+            aria-label={texts.namePlaceholder}
+          />
+          <div class="flex justify-end mt-1.5 px-1">
+            <p
+              data-char-counter
+              class="text-[10px] text-stone-400 tabular-nums transition-colors"
+            >
+              ۰ / {candlesConfig.maxNameLength} {texts.charCounter}
+            </p>
+          </div>
+        </div>
+
+        <!-- Turnstile Widget -->
+        <div
+          data-turnstile
+          class="cf-turnstile"
+          data-sitekey={candlesConfig.turnstileSiteKey}
+          data-theme="light"
+          data-size="flexible"
+          data-callback="onTurnstileSuccess"
+        ></div>
+
+        <button
+          type="submit"
+          data-candle-submit
+          disabled
+          class="lg-button-primary touch-target w-full inline-flex items-center justify-center gap-2 px-6 py-4 font-bold text-base disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        >
+          <span data-submit-label>{texts.submitButtonWaiting}</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- دیوار شمع‌ها -->
+    <div class="lg-card p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base font-bold text-stone-800">{texts.wallTitle}</h3>
+        <button
+          type="button"
+          data-candles-refresh
+          aria-label={texts.wallRefresh}
+          class="touch-target inline-flex items-center justify-center w-9 h-9 rounded-full text-stone-500 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+        >
+          <svg
+            data-refresh-icon
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M23 4v6h-6M1 20v-6h6"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Skeleton Loading -->
+      <div
+        data-candles-skeleton
+        hidden
+        class="grid grid-cols-2 sm:grid-cols-3 gap-3"
+      >
+        {Array.from({ length: 6 }).map(() => (
+          <div class="rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/60 p-3 text-center overflow-hidden">
+            <div class="skeleton-shimmer w-8 h-8 rounded-full mx-auto mb-2"></div>
+            <div class="skeleton-shimmer h-3 rounded-full w-3/4 mx-auto"></div>
+          </div>
+        ))}
+      </div>
+
+      <!-- دیوار واقعی -->
+      <div
+        data-candles-wall
+        class="grid grid-cols-2 sm:grid-cols-3 gap-3"
+      ></div>
+
+      <!-- Empty State -->
+      <p
+        data-candles-empty
+        hidden
+        class="text-stone-500 text-sm text-center py-8 italic"
+      >
+        {texts.emptyState}
+      </p>
+    </div>
+  </div>
+)}
+
+<style is:global>
+  /* انیمیشن Toast */
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(-20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* Shimmer Skeleton */
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(245, 235, 220, 0.4) 25%,
+      rgba(255, 248, 240, 0.8) 50%,
+      rgba(245, 235, 220, 0.4) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s linear infinite;
+  }
+
+  /* انیمیشن ورود کارت جدید */
+  @keyframes candle-appear {
+    from {
+      opacity: 0;
+      transform: scale(0.7) translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  [data-candle-card-new] {
+    animation: candle-appear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* چرخش icon refresh هنگام بارگذاری */
+  [data-candles-refresh][data-loading="true"] [data-refresh-icon] {
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-shimmer,
+    [data-candle-card-new],
+    [data-candles-refresh][data-loading="true"] [data-refresh-icon] {
+      animation: none !important;
+    }
+  }
+</style>
+
+<script>
+  import {
+    fetchCandles,
+    createCandle,
+    filterRecentCandles,
+    type Candle,
+  } from '../../utils/candles-api';
+
+  declare global {
+    interface Window {
+      onTurnstileSuccess?: (token: string) => void;
+      turnstile?: {
+        reset: (widget?: string | HTMLElement) => void;
+      };
+    }
+  }
+
+  function initCandles() {
+    const moduleEl = document.querySelector<HTMLElement>('[data-candles-module]');
+    if (!moduleEl) return;
+
+    const form = moduleEl.querySelector<HTMLFormElement>('[data-candle-form]');
+    const nameInput = moduleEl.querySelector<HTMLInputElement>('[data-candle-name]')!;
+    const charCounter = moduleEl.querySelector<HTMLElement>('[data-char-counter]');
+    const submitBtn = moduleEl.querySelector<HTMLButtonElement>('[data-candle-submit]')!;
+    const submitLabel = moduleEl.querySelector<HTMLElement>('[data-submit-label]');
+    const totalEl = moduleEl.querySelector<HTMLElement>('[data-candles-total]');
+    const wallEl = moduleEl.querySelector<HTMLElement>('[data-candles-wall]')!;
+    const skeletonEl = moduleEl.querySelector<HTMLElement>('[data-candles-skeleton]');
+    const emptyEl = moduleEl.querySelector<HTMLElement>('[data-candles-empty]');
+    const refreshBtn = moduleEl.querySelector<HTMLButtonElement>('[data-candles-refresh]');
+
+    const toast = document.querySelector<HTMLElement>('[data-toast]');
+    const toastInner = document.querySelector<HTMLElement>('[data-toast-inner]');
+    const toastIcon = document.querySelector<HTMLElement>('[data-toast-icon]');
+    const toastText = document.querySelector<HTMLElement>('[data-toast-text]');
+
+    if (!form || !nameInput || !submitBtn || !wallEl) return;
+
+    const maxLength = parseInt(moduleEl.dataset.maxLength ?? '30', 10);
+    const FA_DIGITS = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+    const toFa = (n: number | string): string =>
+      String(n).replace(/\d/g, (d) => FA_DIGITS[parseInt(d, 10)] ?? d);
+
+    let turnstileToken: string | null = null;
+    let isSubmitting = false;
+    let lastNewId: number | null = null;
+
+    // ---------- Toast ----------
+    let toastTimer: number | null = null;
+    function showToast(text: string, type: 'success' | 'error' = 'success') {
+      if (!toast || !toastInner || !toastText || !toastIcon) return;
+
+      toastText.textContent = text;
+      toastIcon.textContent = type === 'success' ? '✓' : '⚠';
+
+      toastInner.classList.toggle('border-red-400/50', type === 'error');
+      toastInner.classList.toggle('text-red-200', type === 'error');
+
+      toast.hidden = false;
+
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => {
+        toast.hidden = true;
+      }, 4000);
+    }
+
+    // ---------- Time Ago ----------
+    function timeAgo(dateStr: string): string {
+      const then = new Date(dateStr.replace(' ', 'T') + 'Z').getTime();
+      const diffSec = Math.floor((Date.now() - then) / 1000);
+
+      if (diffSec < 60) return 'همین الان';
+      const min = Math.floor(diffSec / 60);
+      if (min < 60) return `${toFa(min)} دقیقه پیش`;
+      const hrs = Math.floor(min / 60);
+      if (hrs < 24) return `${toFa(hrs)} ساعت پیش`;
+      const days = Math.floor(hrs / 24);
+      if (days === 1) return 'دیروز';
+      return `${toFa(days)} روز پیش`;
+    }
+
+    // ---------- شمارنده کاراکتر ----------
+    function updateCharCounter() {
+      if (!charCounter) return;
+      const len = nameInput.value.length;
+      charCounter.textContent = `${toFa(len)} / ${toFa(maxLength)} کاراکتر`;
+
+      charCounter.classList.toggle('text-red-500', len >= maxLength);
+      charCounter.classList.toggle('text-stone-400', len < maxLength);
+    }
+
+    // ---------- فعال/غیرفعال دکمه ----------
+    function updateSubmitButton() {
+      if (isSubmitting) {
+        submitBtn.disabled = true;
+        return;
+      }
+
+      const hasName = nameInput.value.trim().length > 0;
+      const hasToken = turnstileToken !== null;
+      const isReady = hasName && hasToken;
+
+      submitBtn.disabled = !isReady;
+
+      if (submitLabel) {
+        if (isSubmitting) {
+          submitLabel.textContent = 'در حال روشن کردن...';
+        } else if (!hasToken) {
+          submitLabel.textContent = 'لطفاً صبر کنید…';
+        } else if (!hasName) {
+          submitLabel.textContent = 'نام خود را وارد کنید';
+        } else {
+          submitLabel.textContent = '🕯️ روشن کردن شمع';
+        }
+      }
+    }
+
+    nameInput.addEventListener('input', () => {
+      updateCharCounter();
+      updateSubmitButton();
+    });
+
+    updateCharCounter();
+    updateSubmitButton();
+
+    // ---------- Turnstile ----------
+    window.onTurnstileSuccess = (token: string) => {
+      turnstileToken = token;
+      console.log('[candles] Turnstile token received');
+      updateSubmitButton();
+    };
+
+    // ---------- رندر دیوار ----------
+    function renderWall(candles: Candle[]) {
+      const recent = filterRecentCandles(candles);
+
+      if (recent.length === 0) {
+        wallEl.innerHTML = '';
+        wallEl.hidden = true;
+        if (emptyEl) emptyEl.hidden = false;
+        return;
+      }
+
+      wallEl.hidden = false;
+      if (emptyEl) emptyEl.hidden = true;
+
+      wallEl.innerHTML = recent
+        .map((candle) => {
+          const isNew = candle.id === lastNewId;
+          const newAttr = isNew ? ' data-candle-card-new' : '';
+
+          return `
+            <div${newAttr} class="rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/60 p-3 text-center transition-transform hover:scale-105">
+              <div class="text-3xl mb-1">🕯️</div>
+              <p class="text-xs font-bold text-stone-700 truncate">${escapeHtml(candle.name)}</p>
+              <p class="text-[10px] text-stone-400 mt-1">${timeAgo(candle.created_at)}</p>
+            </div>
+          `;
+        })
+        .join('');
+
+      // پاک کردن علامت جدید بعد از انیمیشن
+      setTimeout(() => {
+        lastNewId = null;
+      }, 1000);
+    }
+
+    function escapeHtml(text: string): string {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---------- شمارنده متحرک ----------
+    function animateTotal(to: number) {
+      if (!totalEl) return;
+
+      const from = parseInt(totalEl.textContent ?? '0', 10) || 0;
+      if (from === to) {
+        totalEl.textContent = toFa(to);
+        return;
+      }
+
+      const duration = 600;
+      const start = performance.now();
+
+      function step(now: number) {
+        const t = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - t, 3);
+        const current = Math.round(from + (to - from) * eased);
+        totalEl!.textContent = toFa(current);
+
+        if (t < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    // ---------- بارگذاری ----------
+    async function loadCandles(showSkeleton = false) {
+      if (showSkeleton && skeletonEl) {
+        skeletonEl.hidden = false;
+        wallEl.hidden = true;
+        if (emptyEl) emptyEl.hidden = true;
+      }
+
+      if (refreshBtn) refreshBtn.dataset.loading = 'true';
+
+      try {
+        const data = await fetchCandles();
+        animateTotal(data.total);
+        renderWall(data.candles);
+      } catch (err) {
+        console.error('[candles] load failed:', err);
+        if (totalEl) totalEl.textContent = '—';
+        showToast('خطا در بارگذاری شمع‌ها', 'error');
+      } finally {
+        if (skeletonEl) skeletonEl.hidden = true;
+        if (refreshBtn) refreshBtn.dataset.loading = 'false';
+      }
+    }
+
+    // ---------- Refresh ----------
+    refreshBtn?.addEventListener('click', () => {
+      loadCandles(true);
+    });
+
+    // ---------- Submit ----------
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (isSubmitting) return;
+
+      const name = nameInput.value.trim();
+
+      if (!name) {
+        showToast('لطفاً نام خود را وارد کنید.', 'error');
+        nameInput.focus();
+        return;
+      }
+
+      if (name.length > maxLength) {
+        showToast(`نام حداکثر ${toFa(maxLength)} کاراکتر باشد.`, 'error');
+        return;
+      }
+
+      if (!turnstileToken) {
+        showToast('اعتبارسنجی امنیتی هنوز کامل نشده.', 'error');
+        return;
+      }
+
+      isSubmitting = true;
+      updateSubmitButton();
+
+      try {
+        const result = await createCandle(name, turnstileToken);
+        lastNewId = result.id;
+
+        showToast('شمع شما روشن شد. یادش گرامی باد 🕯️', 'success');
+
+        nameInput.value = '';
+        turnstileToken = null;
+        updateCharCounter();
+        updateSubmitButton();
+
+        // ریست Turnstile
+        if (window.turnstile && typeof window.turnstile.reset === 'function') {
+          const widget = moduleEl.querySelector<HTMLElement>('.cf-turnstile');
+          if (widget) window.turnstile.reset(widget);
+        }
+
+        await loadCandles(false);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'خطای ناشناخته';
+        showToast(msg, 'error');
+
+        // اگر خطای Rate Limit است، Turnstile را هم ریست کن
+        if (msg.includes('تازه') || msg.includes('دقیقه')) {
+          if (window.turnstile && typeof window.turnstile.reset === 'function') {
+            const widget = moduleEl.querySelector<HTMLElement>('.cf-turnstile');
+            if (widget) window.turnstile.reset(widget);
+          }
+          turnstileToken = null;
+        }
+      } finally {
+        isSubmitting = false;
+        updateSubmitButton();
+      }
+    });
+
+    // ---------- راه‌اندازی ----------
+    loadCandles(true);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initCandles);
+  } else {
+    initCandles();
+  }
+</script>

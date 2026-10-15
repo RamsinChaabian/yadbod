@@ -7,6 +7,7 @@ export const featuresConfig = {
   gallery: true,
   timeline: true,
   visitorMemories: true,
+  candles: true,        // ⭐ این خط
   qrCode: true,
   threeBackground: false,
   animations: true,
