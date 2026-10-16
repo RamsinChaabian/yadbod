@@ -6,6 +6,7 @@ import GalleryModule from '../../modules/gallery/GalleryModule.astro';
 import TimelineModule from '../../modules/timeline/TimelineModule.astro';
 import NavigateModule from '../../modules/navigate/NavigateModule.astro';
 import ContactsModule from '../../modules/contacts/ContactsModule.astro';
+import CandlesModule from '../../modules/candles/CandlesModule.astro'; // <-- ۱. ایمپورت ماژول شمع یادبود
 
 const tabs = getEnabledTabs();
 const firstTabId = tabs[0]?.id ?? '';
@@ -16,6 +17,7 @@ const moduleMap = {
   timeline: TimelineModule,
   navigate: NavigateModule,
   contacts: ContactsModule,
+  candles: CandlesModule, // <-- ۲. اضافه کردن به مپ ماژول‌ها
 } as const;
 ---
 
@@ -31,7 +33,7 @@ const moduleMap = {
         data-tab-panel={tab.id}
         hidden={!isActive}
       >
-        <Module />
+        {Module ? <Module /> : null}
       </section>
     );
   })}
