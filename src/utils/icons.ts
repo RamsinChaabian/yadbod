@@ -9,7 +9,7 @@ export const iconMap: Record<string, string> = {
   'map-pin': '📍',
   camera: '📷',
   phone: '📞',
-  candle: '🕯️',   // ⭐ این خط
+  candle: '🕯️',
 };
 
 export function getIcon(name: string): string {

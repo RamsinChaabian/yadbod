@@ -34,6 +34,8 @@ jobs:
         run: npm run build
         env:
           PUBLIC_ORS_API_KEY: ${{ secrets.PUBLIC_ORS_API_KEY }}
+          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

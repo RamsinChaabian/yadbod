@@ -13,6 +13,7 @@ export const featuresConfig = {
   analytics: false,
   floatingTabBar: true,
   googleMapsFallback: true,
+  candles: true,
 } as const;
 
 export type FeaturesConfig = typeof featuresConfig;

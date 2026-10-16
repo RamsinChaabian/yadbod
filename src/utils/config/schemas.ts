@@ -82,7 +82,7 @@ export const themeConfigSchema = z.object({
 });
 
 export const tabConfigSchema = z.object({
-  id: z.enum(['biography', 'gallery', 'timeline', 'navigate', 'contacts']),
+  id: z.enum(['biography', 'gallery', 'timeline', 'navigate', 'contacts','candles']),
   label: z.string().min(1),
   icon: z.string().min(1),
   enabled: z.boolean(),

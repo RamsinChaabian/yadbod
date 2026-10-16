@@ -1,0 +1,403 @@
+---
+// src/modules/candles/CandlesModule.astro
+---
+
+<section class="candles-container relative py-8 px-4 max-w-5xl mx-auto text-right" dir="rtl">
+  <!-- هدر و فرم روشن کردن شمع -->
+  <div class="relative z-10 bg-gradient-to-b from-stone-900/90 to-stone-950/95 border border-amber-500/20 rounded-3xl p-6 md:p-8 shadow-2xl backdrop-blur-md mb-10 text-center">
+    <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 mb-4 shadow-[0_0_25px_rgba(245,158,11,0.2)]">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M12 2c0 3-3 5-3 8a3 3 0 0 0 6 0c0-3-3-5-3-8Z" fill="currentColor" fill-opacity="0.3"/>
+        <path d="M9 14h6v8H9z"/><path d="M5 22h14"/>
+      </svg>
+    </div>
+    
+    <h2 class="text-2xl md:text-3xl font-bold text-amber-50 mb-2">روشن کردن شمع یادبود</h2>
+    <p class="text-stone-400 text-sm md:text-base max-w-lg mx-auto mb-6 leading-relaxed">
+      به یاد عزیزمان شمعی روشن کنید. هر شمع به مدت <span class="text-amber-400 font-semibold">۳۰ روز</span> روشن می‌ماند و به آرامی آب می‌شود، اما یاد و نام شما برای همیشه در این صفحه باقی خواهد ماند.
+    </p>
+
+    <form id="light-candle-form" class="max-w-md mx-auto space-y-4">
+      <div>
+        <input
+          type="text"
+          id="candle-user-name"
+          required
+          maxlength="50"
+          placeholder="نام و نام خانوادگی خود را وارد کنید..."
+          class="w-full px-4 py-3 rounded-xl bg-stone-900/80 border border-stone-700/80 text-amber-50 placeholder-stone-500 focus:outline-none focus:border-amber-500/70 focus:ring-2 focus:ring-amber-500/20 transition-all text-center"
+        />
+      </div>
+      <button
+        type="submit"
+        id="submit-candle-btn"
+        class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-orange-500 hover:from-amber-500 hover:to-orange-400 text-stone-950 font-bold shadow-[0_0_25px_rgba(245,158,11,0.35)] hover:shadow-[0_0_35px_rgba(245,158,11,0.55)] transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
+      >
+        <span>🕯️ روشن کردن شمع</span>
+      </button>
+      <p id="candle-form-status" class="text-xs min-h-[1.25rem] transition-opacity"></p>
+    </form>
+
+    <!-- آمار شمع‌ها -->
+    <div class="mt-6 pt-5 border-t border-stone-800/80 flex justify-center gap-6 text-xs md:text-sm text-stone-400">
+      <div>شمع‌های روشن فعلی: <strong id="active-candles-count" class="text-amber-400">0</strong></div>
+      <div>کل شمع‌های به یادگار مانده: <strong id="total-candles-count" class="text-stone-200">0</strong></div>
+    </div>
+  </div>
+
+  <!-- تالار سینماتیک شمع‌ها -->
+  <div id="candles-sanctuary" class="relative min-h-[380px] rounded-3xl bg-stone-950 border border-stone-800/80 p-6 md:p-10 shadow-inner overflow-hidden">
+    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(245,158,11,0.07),transparent_70%)]"></div>
+
+    <div id="candles-loading" class="flex flex-col items-center justify-center py-20 text-stone-400">
+      <div class="w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+      <p class="text-sm">در حال بارگذاری شمع‌های یادبود...</p>
+    </div>
+
+    <div id="candles-grid" class="hidden grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-12 items-end justify-items-center pt-10 pb-4">
+    </div>
+  </div>
+</section>
+
+<style is:global>
+  .candle-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    width: 100%;
+    position: relative;
+  }
+
+  .candle-holder-visual {
+    height: 150px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    position: relative;
+    width: 70px;
+  }
+
+  .candle-wax {
+    width: 38px;
+    background: linear-gradient(90deg, #d6ccc2 0%, #f5ebe0 45%, #e3d5ca 80%, #b8a99a 100%);
+    border-radius: 6px 6px 3px 3px;
+    position: relative;
+    box-shadow: 
+      inset 0 4px 8px rgba(255, 255, 255, 0.6),
+      inset 0 -10px 15px rgba(0, 0, 0, 0.35),
+      0 6px 15px rgba(0, 0, 0, 0.6);
+    transition: height 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .candle-wax::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: radial-gradient(circle, #fff3b0 10%, #e3d5ca 80%);
+    border-radius: 50%;
+    opacity: 0.85;
+  }
+
+  .wax-drip {
+    position: absolute;
+    top: 2px;
+    width: 5px;
+    background: linear-gradient(180deg, #f5ebe0, #d6ccc2);
+    border-radius: 0 0 5px 5px;
+    opacity: 0.9;
+  }
+
+  .candle-wick {
+    width: 2px;
+    height: 8px;
+    background: linear-gradient(180deg, #ff9900 0%, #2b2b2b 50%, #111 100%);
+    position: relative;
+    z-index: 2;
+    margin-bottom: -2px;
+  }
+
+  .candle-melted .candle-wick {
+    background: #222;
+    height: 5px;
+    transform: rotate(12deg);
+  }
+
+  .flame-wrapper {
+    position: relative;
+    width: 24px;
+    height: 42px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    margin-bottom: -3px;
+    z-index: 3;
+  }
+
+  .flame-outer {
+    width: 16px;
+    height: 34px;
+    background: radial-gradient(ellipse at bottom, rgba(255, 255, 255, 0.95) 0%, rgba(255, 200, 50, 0.9) 35%, rgba(255, 110, 0, 0.75) 75%, transparent 100%);
+    border-radius: 50% 50% 35% 35% / 65% 65% 35% 35%;
+    box-shadow: 
+      0 0 18px 4px rgba(255, 160, 20, 0.55),
+      0 -8px 28px 8px rgba(255, 100, 0, 0.3);
+    transform-origin: 50% 90%;
+    animation: cinematic-flicker 3.2s infinite ease-in-out alternate;
+  }
+
+  .flame-core {
+    position: absolute;
+    bottom: 2px;
+    width: 7px;
+    height: 14px;
+    background: radial-gradient(ellipse at bottom, #60a5fa 0%, #ffffff 70%, transparent 100%);
+    border-radius: 50%;
+    opacity: 0.9;
+  }
+
+  .flame-halo {
+    position: absolute;
+    bottom: 8px;
+    width: 85px;
+    height: 85px;
+    background: radial-gradient(circle, rgba(251, 191, 36, 0.22) 0%, rgba(245, 158, 11, 0.06) 50%, transparent 75%);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: halo-pulse 4s infinite ease-in-out;
+  }
+
+  .smoke-wisps {
+    position: absolute;
+    bottom: 18px;
+    width: 6px;
+    height: 28px;
+    background: linear-gradient(to top, rgba(168, 162, 158, 0.25), transparent);
+    filter: blur(3px);
+    animation: smoke-rise 4.5s infinite ease-out;
+  }
+
+  .candle-plate {
+    width: 54px;
+    height: 7px;
+    background: linear-gradient(90deg, #44403c, #a8a29e 50%, #44403c);
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
+    z-index: 1;
+  }
+
+  @keyframes cinematic-flicker {
+    0%   { transform: scale(1) rotate(-1.5deg) skewX(-1deg); opacity: 0.96; }
+    25%  { transform: scale(1.03, 0.97) rotate(1.5deg) skewX(1deg); opacity: 1; }
+    50%  { transform: scale(0.97, 1.04) rotate(-1deg); opacity: 0.92; }
+    75%  { transform: scale(1.04, 0.98) rotate(2deg) skewX(-1.5deg); opacity: 0.98; }
+    100% { transform: scale(0.99, 1.02) rotate(0deg); opacity: 0.95; }
+  }
+
+  @keyframes halo-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50%      { transform: scale(1.12); opacity: 1; }
+  }
+
+  @keyframes smoke-rise {
+    0%   { transform: translateY(0) scaleX(1); opacity: 0.35; }
+    100% { transform: translateY(-22px) scaleX(2.4); opacity: 0; }
+  }
+</style>
+
+<script>
+  import { supabase, type CandleRecord } from '../../utils/supabase';
+
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+  const MAX_WAX_HEIGHT = 105;
+  const MIN_WAX_HEIGHT = 14;
+
+  const form = document.getElementById('light-candle-form') as HTMLFormElement | null;
+  const nameInput = document.getElementById('candle-user-name') as HTMLInputElement | null;
+  const submitBtn = document.getElementById('submit-candle-btn') as HTMLButtonElement | null;
+  const statusEl = document.getElementById('candle-form-status');
+  const loadingEl = document.getElementById('candles-loading');
+  const gridEl = document.getElementById('candles-grid');
+  const activeCountEl = document.getElementById('active-candles-count');
+  const totalCountEl = document.getElementById('total-candles-count');
+
+  let candlesList: CandleRecord[] = [];
+
+  function computeCandleMetrics(createdAtIso: string) {
+    const createdTime = new Date(createdAtIso).getTime();
+    const now = Date.now();
+    const elapsedMs = Math.max(0, now - createdTime);
+
+    const remainingRatio = Math.max(0, 1 - elapsedMs / THIRTY_DAYS_MS);
+    const isAlive = remainingRatio > 0;
+
+    const waxHeightPx = Math.round(
+      MIN_WAX_HEIGHT + remainingRatio * (MAX_WAX_HEIGHT - MIN_WAX_HEIGHT)
+    );
+
+    const remainingDays = Math.ceil((THIRTY_DAYS_MS - elapsedMs) / (1000 * 60 * 60 * 24));
+    const formattedDate = new Intl.DateTimeFormat('fa-IR', {
+      month: 'short',
+      day: 'numeric',
+    }).format(new Date(createdAtIso));
+
+    return {
+      isAlive,
+      remainingRatio,
+      waxHeightPx,
+      remainingDays: Math.max(0, remainingDays),
+      formattedDate,
+    };
+  }
+
+  function escapeHtml(str: string) {
+    return str.replace(/[&<>"']/g, (m) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[m] || m));
+  }
+
+  function renderCandles() {
+    if (!gridEl || !loadingEl) return;
+
+    loadingEl.classList.add('hidden');
+    gridEl.classList.remove('hidden');
+    gridEl.classList.add('grid');
+
+    let activeCount = 0;
+
+    if (candlesList.length === 0) {
+      gridEl.innerHTML = `
+        <div class="col-span-full text-center py-12 text-stone-500">
+          هنوز شمعی روشن نشده است. اولین نفری باشید که شمعی به یادگار روشن می‌کند.
+        </div>
+      `;
+      if (activeCountEl) activeCountEl.textContent = '0';
+      if (totalCountEl) totalCountEl.textContent = '0';
+      return;
+    }
+
+    gridEl.innerHTML = candlesList.map((candle, index) => {
+      const metrics = computeCandleMetrics(candle.created_at);
+      if (metrics.isAlive) activeCount++;
+
+      const animDelay = ((index * 0.37) % 2.5).toFixed(2);
+      const dripHeight = Math.min(metrics.waxHeightPx - 4, Math.round((1 - metrics.remainingRatio) * 28 + 6));
+
+      return `
+        <div class="candle-stage group ${metrics.isAlive ? 'candle-lit' : 'candle-melted opacity-65 hover:opacity-100 transition-opacity'}">
+          <div class="candle-holder-visual">
+            ${metrics.isAlive ? `
+              <div class="flame-halo" style="animation-delay: -${animDelay}s; opacity:${0.4 + metrics.remainingRatio * 0.6}"></div>
+              <div class="flame-wrapper">
+                <div class="flame-outer" style="animation-delay: -${animDelay}s; transform: scale(${0.75 + metrics.remainingRatio * 0.25});"></div>
+                <div class="flame-core"></div>
+              </div>
+            ` : `
+              <div class="smoke-wisps"></div>
+            `}
+            <div class="candle-wick"></div>
+            <div class="candle-wax" style="height: ${metrics.waxHeightPx}px;">
+              <span class="wax-drip" style="left: 6px; height: ${dripHeight}px;"></span>
+              <span class="wax-drip" style="right: 8px; height: ${Math.max(4, Math.round(dripHeight * 0.65))}px;"></span>
+            </div>
+            <div class="candle-plate"></div>
+          </div>
+
+          <div class="mt-3 text-center max-w-[140px]">
+            <p class="text-amber-100 font-bold text-xs md:text-sm truncate" title="${escapeHtml(candle.name)}">
+              ${escapeHtml(candle.name)}
+            </p>
+            <span class="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] ${
+              metrics.isAlive 
+                ? 'bg-amber-500/10 text-amber-300 border border-amber-500/20' 
+                : 'bg-stone-800 text-stone-400'
+            }">
+              ${metrics.isAlive 
+                ? `${metrics.remainingDays} روز تا آب شدن` 
+                : `آب‌شده (${metrics.formattedDate})`
+              }
+            </span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    if (activeCountEl) activeCountEl.textContent = activeCount.toLocaleString('fa-IR');
+    if (totalCountEl) totalCountEl.textContent = candlesList.length.toLocaleString('fa-IR');
+  }
+
+  async function fetchAllCandles() {
+    if (!supabase) {
+      if (loadingEl) {
+        loadingEl.innerHTML = `<p class="text-amber-400/90 text-sm">متغیرهای اتصال به Supabase در فایل .env تنظیم نشده‌اند.</p>`;
+      }
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('candles')
+      .select('id, name, created_at')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Supabase fetch error:', error);
+      if (loadingEl) {
+        loadingEl.innerHTML = `<p class="text-red-400 text-sm">خطا در دریافت اطلاعات شمع‌ها. لطفاً اتصال اینترنت را بررسی کنید.</p>`;
+      }
+      return;
+    }
+
+    candlesList = data || [];
+    renderCandles();
+  }
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!supabase || !nameInput || !submitBtn) return;
+
+    const name = nameInput.value.trim();
+    if (!name) return;
+
+    submitBtn.disabled = true;
+    submitBtn.classList.add('opacity-60');
+    if (statusEl) {
+      statusEl.textContent = 'در حال روشن کردن شمع شما...';
+      statusEl.className = 'text-xs text-amber-300';
+    }
+
+    const { data, error } = await supabase
+      .from('candles')
+      .insert([{ name }])
+      .select()
+      .single();
+
+    submitBtn.disabled = `false` as any;
+    submitBtn.classList.remove('opacity-60');
+
+    if (error) {
+      console.error('Supabase insert error:', error);
+      if (statusEl) {
+        statusEl.textContent = 'خطا در ثبت شمع. لطفاً دوباره تلاش کنید.';
+        statusEl.className = 'text-xs text-red-400';
+      }
+      return;
+    }
+
+    if (data) {
+      candlesList.unshift(data);
+      renderCandles();
+      form.reset();
+      if (statusEl) {
+        statusEl.textContent = 'شمع شما با موفقیت روشن شد و تا ۳۰ روز آینده روشن خواهد ماند.';
+        statusEl.className = 'text-xs text-emerald-400';
+      }
+    }
+  });
+
+  fetchAllCandles();
+  setInterval(renderCandles, 60 * 1000);
+</script>

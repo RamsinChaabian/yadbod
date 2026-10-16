@@ -1,8 +1,10 @@
 ---
+// src/pages/index.astro
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Header from '../components/layout/Header.astro';
 import TabBar from '../components/layout/TabBar.astro';
 import TabContent from '../components/layout/TabContent.astro';
+import CandlesModule from '../modules/candles/CandlesModule.astro'; // <-- ایمپورت ماژول شمع یادبود
 ---
 
 <BaseLayout>
@@ -16,7 +18,12 @@ import TabContent from '../components/layout/TabContent.astro';
   <Header />
 
   <main class="pb-32 sm:pb-40">
-    <TabContent />
+    <TabContent>
+      <!-- پنل تب شمع یادبود -->
+      <div data-tab-panel="candles" hidden class="w-full">
+        <CandlesModule />
+      </div>
+    </TabContent>
   </main>
 
   <TabBar />
