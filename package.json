@@ -21,7 +21,7 @@
     "locar": "^0.2.7",
     "locar-aframe": "^0.2.0",
     "ors-client": "^1.2.0",
-    "three": "^0.164.0",
+    "three": "^0.164.1",
     "zod": "^4.6.5"
   },
   "devDependencies": {

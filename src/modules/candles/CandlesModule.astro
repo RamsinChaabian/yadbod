@@ -4,15 +4,13 @@
 
 <section class="candles-module relative py-6 sm:py-10 px-3 sm:px-6 max-w-6xl mx-auto select-none" dir="rtl">
   
-  <!-- ۱. کارت شیشه‌ای هدر و فرم روشن کردن شمع (هماهنگ با تم اصلی پروژه) -->
+  <!-- ۱. کارت شیشه‌ای هدر و فرم روشن کردن شمع -->
   <div class="relative z-10 rounded-[2rem] bg-gradient-to-b from-stone-900/90 via-stone-950/95 to-stone-950 border border-amber-500/25 p-6 sm:p-10 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.75),0_0_40px_rgba(245,158,11,0.08)] backdrop-blur-2xl mb-10 overflow-hidden">
     
-    <!-- پرتوهای نوری پس‌زمینه کارت فرم -->
     <div class="pointer-events-none absolute -top-28 left-1/2 -translate-x-1/2 w-[28rem] h-56 bg-gradient-to-b from-amber-500/20 via-orange-500/10 to-transparent blur-3xl rounded-full"></div>
     <div class="pointer-events-none absolute -bottom-24 -right-24 w-72 h-72 bg-amber-600/10 blur-3xl rounded-full"></div>
 
     <div class="relative z-10 text-center max-w-xl mx-auto">
-      <!-- نشانگر سه‌بعدی شمع در بالای فرم -->
       <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500/20 via-amber-500/5 to-transparent border border-amber-400/30 shadow-[0_0_35px_rgba(245,158,11,0.3),inset_0_1px_1px_rgba(255,255,255,0.2)] mb-5">
         <span class="text-3xl filter drop-shadow-[0_0_12px_rgba(251,191,36,0.9)] animate-pulse">🕯️</span>
       </div>
@@ -27,7 +25,6 @@
         روشن می‌ماند و به آرامی ذوب می‌شود، اما نام و یاد شما برای همیشه در این تالار جاودانه خواهد ماند.
       </p>
 
-      <!-- فرم ثبت شمع -->
       <form id="light-candle-form" class="max-w-md mx-auto space-y-4">
         <div class="relative group">
           <div class="absolute -inset-0.5 bg-gradient-to-r from-amber-500/40 via-orange-500/40 to-amber-500/40 rounded-2xl blur opacity-30 group-focus-within:opacity-80 transition duration-500"></div>
@@ -75,423 +72,130 @@
     </div>
   </div>
 
-  <!-- ۲. صحنه سینماتیک و سه‌بعدی تالار شمع‌ها (3D Sanctuary Stage) -->
-  <div id="candles-sanctuary" class="sanctuary-stage relative min-h-[460px] rounded-[2.25rem] bg-[#090807] border border-amber-500/15 p-5 sm:p-10 md:p-12 shadow-[0_30px_80px_rgba(0,0,0,0.9),inset_0_0_80px_rgba(0,0,0,0.95)] overflow-hidden">
+  <!-- ۲. تالار جایگاه‌های سه‌بعدی مستقل برای هر شمع -->
+  <div id="candles-sanctuary" class="sanctuary-wrapper relative min-h-[420px] rounded-[2.25rem] bg-[#080706] border border-amber-500/20 p-4 sm:p-8 md:p-10 shadow-[0_30px_90px_rgba(0,0,0,0.95),inset_0_0_80px_rgba(0,0,0,0.9)] overflow-hidden">
     
-    <!-- نورپردازی حجمی سقف و کف تالار -->
-    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_0%,rgba(245,158,11,0.12),transparent_70%)]"></div>
-    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_95%,rgba(217,119,6,0.08),transparent_65%)]"></div>
-
-    <!-- ذرات معلق نورانی در فضای تالار (Ambient Floating Embers) -->
-    <div class="ambient-embers pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-      <span class="ember e-1"></span>
-      <span class="ember e-2"></span>
-      <span class="ember e-3"></span>
-      <span class="ember e-4"></span>
-      <span class="ember e-5"></span>
-      <span class="ember e-6"></span>
-    </div>
+    <!-- نور محیطی پس‌زمینه تالار -->
+    <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_40%_at_50%_0%,rgba(245,158,11,0.09),transparent_70%)]"></div>
 
     <!-- وضعیت در حال بارگذاری -->
-    <div id="candles-loading" class="relative z-10 flex flex-col items-center justify-center py-28 text-stone-400">
+    <div id="candles-loading" class="relative z-10 flex flex-col items-center justify-center py-24 text-stone-400">
       <div class="relative w-12 h-12 flex items-center justify-center mb-4">
         <div class="absolute inset-0 rounded-full border-2 border-amber-500/20"></div>
         <div class="absolute inset-0 rounded-full border-2 border-amber-400 border-t-transparent animate-spin"></div>
         <span class="text-lg">🕯️</span>
       </div>
-      <p class="text-sm text-amber-100/70 font-medium">در حال چیدمان شمع‌های یادبود...</p>
+      <p id="candles-loading-text" class="text-sm text-amber-100/80 font-medium">در حال آماده‌سازی جایگاه‌های سه‌بعدی شمع‌ها...</p>
     </div>
 
-    <!-- شبکه سه‌بعدی شمع‌ها -->
-    <div id="candles-grid" class="relative z-10 hidden grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-5 gap-y-14 items-end justify-items-center pt-12 pb-6">
+    <!-- شبکه کارت‌های مستقل شمع (هر کارت بوم سه‌بعدی اختصاصی داخل خودش دارد) -->
+    <div id="candles-grid" class="relative z-10 hidden grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 items-stretch">
     </div>
   </div>
 </section>
 
 <style is:global>
-  /* ===== ذرات معلق تالار (Ambient Embers) ===== */
-  .ambient-embers .ember {
-    position: absolute;
-    bottom: -10px;
-    width: 4px;
-    height: 4px;
-    border-radius: 9999px;
-    background: radial-gradient(circle, #fde68a 0%, #f59e0b 60%, transparent 100%);
-    box-shadow: 0 0 10px 2px rgba(245, 158, 11, 0.6);
-    opacity: 0;
-    animation: float-ember 10s infinite ease-in-out;
-  }
-  .ambient-embers .e-1 { left: 12%; animation-duration: 9s; animation-delay: 0s; }
-  .ambient-embers .e-2 { left: 28%; animation-duration: 12s; animation-delay: 2s; }
-  .ambient-embers .e-3 { left: 48%; animation-duration: 8.5s; animation-delay: 4s; }
-  .ambient-embers .e-4 { left: 66%; animation-duration: 11s; animation-delay: 1.5s; }
-  .ambient-embers .e-5 { left: 82%; animation-duration: 10s; animation-delay: 3.5s; }
-  .ambient-embers .e-6 { left: 91%; animation-duration: 13s; animation-delay: 5s; }
-
-  @keyframes float-ember {
-    0%   { transform: translateY(0) translateX(0) scale(0.6); opacity: 0; }
-    20%  { opacity: 0.55; }
-    60%  { transform: translateY(-220px) translateX(18px) scale(1); opacity: 0.35; }
-    100% { transform: translateY(-420px) translateX(-14px) scale(0.3); opacity: 0; }
-  }
-
-  /* ===== کارت و استیج سه‌بعدی هر شمع (3D Perspective Pod) ===== */
-  .candle-pod-3d {
-    perspective: 900px;
-    width: 100%;
-    max-width: 175px;
+  .candle-dedicated-card {
+    position: relative;
     display: flex;
     flex-direction: column;
-    align-items: center;
-  }
-
-  .candle-scene-inner {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transform-style: preserve-3d;
-    transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-    will-change: transform;
-  }
-
-  /* بخش بصری نگه‌دارنده شمع با ارتفاع ثابت برای تراز بودن پایه‌ها */
-  .candle-visual-box {
-    position: relative;
-    height: 175px;
-    width: 110px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-    transform-style: preserve-3d;
-  }
-
-  /* ===== ۱. سیستم شعله ۴ لایه سینماتیک ===== */
-  .flame-system-3d {
-    position: relative;
-    width: 34px;
-    height: 54px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    margin-bottom: -4px;
-    z-index: 6;
-    transform: translateZ(18px);
-    pointer-events: none;
-  }
-
-  /* هاله نورانی بزرگ پشت شعله */
-  .flame-ambient-halo {
-    position: absolute;
-    bottom: -18px;
-    width: 135px;
-    height: 135px;
-    border-radius: 50%;
-    background: radial-gradient(
-      circle,
-      rgba(251, 191, 36, 0.35) 0%,
-      rgba(245, 158, 11, 0.14) 38%,
-      rgba(234, 88, 12, 0.04) 62%,
-      transparent 78%
-    );
-    animation: halo-breathe 3.6s infinite ease-in-out alternate;
-    pointer-events: none;
-  }
-
-  /* بدنه اصلی شعله */
-  .flame-main-body {
-    position: relative;
-    width: 18px;
-    height: 40px;
-    border-radius: 50% 50% 36% 36% / 68% 68% 32% 32%;
-    background: radial-gradient(
-      ellipse at 50% 82%,
-      rgba(255, 255, 255, 0.98) 0%,
-      rgba(254, 240, 138, 0.96) 24%,
-      rgba(251, 191, 36, 0.92) 52%,
-      rgba(234, 88, 12, 0.78) 80%,
-      rgba(180, 83, 9, 0) 100%
-    );
-    box-shadow:
-      0 0 18px 4px rgba(251, 191, 36, 0.65),
-      0 -10px 32px 8px rgba(245, 158, 11, 0.4),
-      0 -20px 50px 12px rgba(234, 88, 12, 0.2);
-    transform-origin: 50% 90%;
-    animation: flame-dance-3d var(--flicker-speed, 2.9s) infinite ease-in-out alternate;
-  }
-
-  /* هسته سفید خیره‌کننده میانی */
-  .flame-inner-bright {
-    position: absolute;
-    bottom: 4px;
-    width: 9px;
-    height: 21px;
-    border-radius: 50% 50% 40% 40% / 70% 70% 30% 30%;
-    background: linear-gradient(to top, #ffffff 10%, #fef08a 75%, transparent 100%);
-    opacity: 0.95;
-    filter: blur(0.4px);
-  }
-
-  /* پایه آبی حرارتی پایین فتیله */
-  .flame-blue-base {
-    position: absolute;
-    bottom: 0px;
-    width: 9px;
-    height: 8px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(96, 165, 250, 0.9) 0%, rgba(59, 130, 246, 0.4) 60%, transparent 100%);
-    filter: blur(0.5px);
-  }
-
-  /* جرقه ریز بالای شعله */
-  .flame-spark {
-    position: absolute;
-    bottom: 38px;
-    width: 3px;
-    height: 3px;
-    border-radius: 50%;
-    background: #fef08a;
-    box-shadow: 0 0 6px #f59e0b;
-    animation: spark-rise 2.4s infinite ease-out;
-  }
-
-  /* ===== ۲. فتیله شمع (Wick) ===== */
-  .candle-wick-3d {
-    width: 2.5px;
-    height: 9px;
-    background: linear-gradient(180deg, #fb923c 0%, #44403c 45%, #1c1917 100%);
-    border-radius: 2px;
-    position: relative;
-    z-index: 5;
-    margin-bottom: -3px;
-    transform: translateZ(15px);
-  }
-
-  .candle-wick-3d.is-melted {
-    height: 6px;
-    background: #1c1917;
-    transform: translateZ(15px) rotate(18deg) translateY(2px);
-  }
-
-  /* ===== ۳. استوانه سه‌بعدی موم شمع با Subsurface Scattering ===== */
-  .candle-cylinder-3d {
-    position: relative;
-    width: 46px;
-    border-radius: 6px 6px 8px 8px;
-    z-index: 4;
-    transform: translateZ(12px);
-    transition: height 1.2s cubic-bezier(0.22, 1, 0.36, 1);
-    /* شبیه‌سازی استوانه سه‌بعدی با گرادیانت افقی */
-    background: linear-gradient(
-      90deg,
-      #a89f91 0%,
-      #dfd7ca 18%,
-      #fbf8f3 42%,
-      #e6dec8 68%,
-      #b5aa99 88%,
-      #787065 100%
-    );
-    box-shadow:
-      inset 0 18px 22px -6px rgba(251, 191, 36, 0.55), /* نفوذ نور گرم شعله به داخل موم (SSS) */
-      inset 0 -14px 18px rgba(12, 10, 9, 0.55),
-      inset 3px 0 6px rgba(255, 255, 255, 0.5),
-      inset -4px 0 8px rgba(0, 0, 0, 0.45),
-      0 14px 24px -4px rgba(0, 0, 0, 0.85);
-  }
-
-  /* شمع آب‌شده فاقد درخشش درونی موم است */
-  .candle-cylinder-3d.is-melted {
-    background: linear-gradient(
-      90deg,
-      #57534e 0%,
-      #78716c 30%,
-      #a8a29e 50%,
-      #57534e 85%,
-      #292524 100%
-    );
-    box-shadow:
-      inset 0 -6px 10px rgba(0, 0, 0, 0.7),
-      0 8px 16px rgba(0, 0, 0, 0.85);
-  }
-
-  /* دهانه بیضی‌شکل بالای استوانه شمع (3D Top Meniscus & Melted Pool) */
-  .candle-top-rim {
-    position: absolute;
-    top: -6px;
-    left: 0;
-    width: 100%;
-    height: 12px;
-    border-radius: 50%;
-    background: radial-gradient(
-      ellipse at center,
-      #fde68a 0%,
-      #f59e0b 38%,
-      #f5ebe0 72%,
-      #c7bdb1 100%
-    );
-    box-shadow:
-      inset 0 2px 4px rgba(0, 0, 0, 0.25),
-      0 0 12px rgba(251, 191, 36, 0.4);
-  }
-
-  .candle-cylinder-3d.is-melted .candle-top-rim {
-    background: radial-gradient(ellipse at center, #292524 0%, #57534e 65%, #78716c 100%);
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8);
-  }
-
-  /* اشک‌های موم سه‌بعدی روی بدنه */
-  .wax-stream {
-    position: absolute;
-    top: 3px;
-    width: 5px;
-    border-radius: 0 0 999px 999px;
-    background: linear-gradient(
-      90deg,
-      rgba(214, 204, 194, 0.9),
-      rgba(255, 252, 247, 0.98) 50%,
-      rgba(168, 159, 145, 0.9)
-    );
-    box-shadow: 1px 3px 4px rgba(0, 0, 0, 0.35);
-    opacity: 0.92;
-  }
-
-  .wax-stream::after {
-    content: '';
-    position: absolute;
-    bottom: -2px;
-    left: -0.5px;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: inherit;
-  }
-
-  /* ===== ۴. دود سینماتیک شمع‌های به‌پایان‌رسیده ===== */
-  .smoke-plume {
-    position: relative;
-    width: 14px;
-    height: 44px;
-    margin-bottom: -2px;
-    z-index: 5;
-    pointer-events: none;
-  }
-
-  .smoke-wisp {
-    position: absolute;
-    bottom: 0;
-    left: 4px;
-    width: 6px;
-    height: 34px;
-    border-radius: 50%;
-    background: linear-gradient(to top, rgba(168, 162, 158, 0.35), rgba(214, 211, 209, 0.12), transparent);
-    filter: blur(3px);
-    animation: smoke-curl 4.2s infinite ease-out;
-  }
-
-  .smoke-wisp.w-2 {
-    animation-delay: -2.1s;
-    left: 6px;
-  }
-
-  /* ===== ۵. پایه برنزی/سنگی سه‌بعدی شمع + بازتاب نور روی زمین ===== */
-  .candle-pedestal-3d {
-    position: relative;
-    width: 72px;
-    height: 14px;
-    border-radius: 50%;
-    background: linear-gradient(
-      90deg,
-      #1c1917 0%,
-      #57534e 25%,
-      #a8a29e 48%,
-      #44403c 78%,
-      #0c0a09 100%
-    );
-    box-shadow:
-      0 8px 18px rgba(0, 0, 0, 0.95),
-      inset 0 2px 3px rgba(255, 255, 255, 0.28),
-      inset 0 -3px 6px rgba(0, 0, 0, 0.85);
-    margin-top: -5px;
-    z-index: 3;
-    transform: translateZ(8px);
-  }
-
-  /* بازتاب نور گرم شعله روی سطح پایه و زمین */
-  .floor-light-pool {
-    position: absolute;
-    bottom: -8px;
-    width: 115px;
-    height: 26px;
-    border-radius: 50%;
-    background: radial-gradient(
-      ellipse at center,
-      rgba(245, 158, 11, 0.32) 0%,
-      rgba(217, 119, 6, 0.12) 50%,
-      transparent 78%
-    );
-    filter: blur(4px);
-    z-index: 1;
-    pointer-events: none;
-  }
-
-  /* ===== ۶. پلاک مشخصات شیشه‌ای زیر هر شمع ===== */
-  .candle-plaque-3d {
-    margin-top: 14px;
-    width: 100%;
-    padding: 10px 12px;
-    border-radius: 16px;
-    background: linear-gradient(180deg, rgba(28, 25, 23, 0.82) 0%, rgba(12, 10, 9, 0.92) 100%);
-    border: 1px solid rgba(245, 158, 11, 0.16);
-    box-shadow:
-      0 12px 25px -6px rgba(0, 0, 0, 0.7),
+    justify-content: space-between;
+    border-radius: 1.5rem;
+    background: radial-gradient(circle at 50% 28%, rgba(48, 36, 24, 0.65) 0%, rgba(12, 10, 9, 0.98) 75%);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    box-shadow: 
+      0 18px 40px -10px rgba(0, 0, 0, 0.85),
       inset 0 1px 0 rgba(255, 255, 255, 0.07);
-    backdrop-filter: blur(10px);
-    text-align: center;
-    transform: translateZ(22px);
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+    transition: border-color 0.35s ease, box-shadow 0.35s ease;
   }
 
-  .candle-pod-3d:hover .candle-plaque-3d {
-    border-color: rgba(251, 191, 36, 0.45);
-    box-shadow:
-      0 16px 32px -6px rgba(0, 0, 0, 0.85),
-      0 0 20px rgba(245, 158, 11, 0.15);
+  .candle-dedicated-card:hover {
+    border-color: rgba(251, 191, 36, 0.5);
+    box-shadow: 
+      0 22px 45px -10px rgba(0, 0, 0, 0.95),
+      0 0 30px rgba(245, 158, 11, 0.16);
   }
 
-  /* انیمیشن‌های کلیدی شعله و دود */
-  @keyframes flame-dance-3d {
-    0%   { transform: scale(1, 1) rotate(-1.5deg) skewX(-1deg); }
-    25%  { transform: scale(1.04, 0.96) rotate(1.2deg) skewX(1.2deg); }
-    50%  { transform: scale(0.96, 1.05) rotate(-0.8deg) skewX(-0.5deg); }
-    75%  { transform: scale(1.03, 0.98) rotate(1.8deg) skewX(1deg); }
-    100% { transform: scale(0.99, 1.03) rotate(-0.5deg) skewX(0deg); }
+  .candle-3d-viewport {
+    width: 100%;
+    height: 250px;
+    position: relative;
+    cursor: grab;
+    touch-action: pan-y;
+    overflow: hidden;
   }
 
-  @keyframes halo-breathe {
-    0%   { transform: scale(0.92); opacity: 0.72; }
-    100% { transform: scale(1.12); opacity: 1; }
+  .candle-3d-viewport:active {
+    cursor: grabbing;
   }
 
-  @keyframes spark-rise {
-    0%   { transform: translateY(0) scale(1); opacity: 0.9; }
-    100% { transform: translateY(-22px) translateX(5px) scale(0); opacity: 0; }
+  .candle-card-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    pointer-events: none;
   }
 
-  @keyframes smoke-curl {
-    0%   { transform: translateY(0) translateX(0) scaleX(1); opacity: 0.42; }
-    50%  { transform: translateY(-16px) translateX(-5px) scaleX(1.8); opacity: 0.22; }
-    100% { transform: translateY(-34px) translateX(6px) scaleX(2.6); opacity: 0; }
+  .rotate-360-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    color: rgba(253, 230, 138, 0.75);
+    background: rgba(12, 10, 9, 0.65);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    backdrop-filter: blur(4px);
+    pointer-events: none;
+    opacity: 0.65;
+    transition: opacity 0.3s ease;
+  }
+
+  .candle-dedicated-card:hover .rotate-360-badge {
+    opacity: 1;
   }
 </style>
 
 <script>
+  import * as THREE from 'three';
   import { supabase, type CandleRecord } from '../../utils/supabase';
 
-  // طول عمر دقیق شمع: ۳۰ روز به میلی‌ثانیه
+  // طول عمر دقیق هر شمع: ۳۰ روز به میلی‌ثانیه
   const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-  const MAX_WAX_HEIGHT = 112; // ارتفاع شمع تازه روشن‌شده (پیکسل)
-  const MIN_WAX_HEIGHT = 16;  // ارتفاع شمع کاملاً آب‌شده پس از ۳۰ روز (پیکسل)
+
+  interface CandleSlot {
+    viewportEl: HTMLElement;
+    canvasEl: HTMLCanvasElement;
+    ctx2d: CanvasRenderingContext2D;
+    scene: THREE.Scene;
+    camera: THREE.PerspectiveCamera;
+    candleGroup: THREE.Group;
+    flameLight: THREE.PointLight | null;
+    flameUniforms: {
+      uTime: { value: number };
+      uWind: { value: THREE.Vector2 };
+      uPhase: { value: number };
+    };
+    haloSprite: THREE.Sprite | null;
+    innerGlowSprite: THREE.Sprite | null;
+    emberPoints: THREE.Points | null;
+    smokeParticles: THREE.Points | null;
+    isAlive: boolean;
+    remainingRatio: number;
+    // متغیرهای چرخش ۳۶۰ درجه و فیزیک اینرسی
+    rotY: number;
+    rotX: number;
+    velY: number;
+    velX: number;
+    autoSpinSpeed: number;
+    windVelocity: THREE.Vector2;
+    isDragging: boolean;
+    isVisible: boolean;
+    lastPointerX: number;
+    lastPointerY: number;
+  }
 
   const form = document.getElementById('light-candle-form') as HTMLFormElement | null;
   const nameInput = document.getElementById('candle-user-name') as HTMLInputElement | null;
@@ -499,13 +203,60 @@
   const submitText = document.getElementById('submit-candle-text');
   const statusEl = document.getElementById('candle-form-status');
   const loadingEl = document.getElementById('candles-loading');
+  const loadingTextEl = document.getElementById('candles-loading-text');
   const gridEl = document.getElementById('candles-grid');
   const activeCountEl = document.getElementById('active-candles-count');
   const totalCountEl = document.getElementById('total-candles-count');
 
   let candlesList: CandleRecord[] = [];
+  let activeSlots: CandleSlot[] = [];
+  let offscreenRenderer: THREE.WebGLRenderer | null = null;
+  let sharedGlowTexture: THREE.CanvasTexture | null = null;
+  let visibilityObserver: IntersectionObserver | null = null;
 
-  // محاسبه دقیق پارامترهای سینماتیک هر شمع بر اساس زمان سپری‌شده
+  // ابعاد رندر اختصاصی هر کارت شمع
+  const RENDER_W = 300;
+  const RENDER_H = 260;
+
+  // هندسه‌های سه‌بعدی اشتراکی با جزئیات بالا
+  const baseGeometries = {
+    pedestalBase: new THREE.CylinderGeometry(0.76, 0.88, 0.12, 36),
+    pedestalRim: new THREE.TorusGeometry(0.72, 0.055, 16, 40),
+    pedestalBowl: new THREE.CylinderGeometry(0.68, 0.58, 0.1, 36),
+    waxCylinder: new THREE.CylinderGeometry(0.44, 0.46, 1.55, 40, 16, false),
+    waxRim: new THREE.TorusGeometry(0.41, 0.035, 14, 36),
+    waxPool: new THREE.CircleGeometry(0.4, 32),
+    wick: new THREE.CylinderGeometry(0.024, 0.028, 0.19, 12),
+    wickEmber: new THREE.SphereGeometry(0.036, 12, 12),
+    flame: new THREE.SphereGeometry(0.21, 28, 32),
+    dripCylinder: new THREE.CylinderGeometry(0.032, 0.016, 1, 12),
+    dripDrop: new THREE.SphereGeometry(0.036, 12, 12),
+  };
+
+  baseGeometries.pedestalRim.rotateX(Math.PI / 2);
+  baseGeometries.waxCylinder.translate(0, 1.55 / 2, 0);
+  baseGeometries.waxRim.rotateX(Math.PI / 2);
+  baseGeometries.wick.translate(0, 0.095, 0);
+  baseGeometries.flame.translate(0, 0.21, 0);
+  baseGeometries.dripCylinder.translate(0, -0.5, 0);
+
+  function getGlowTexture(): THREE.CanvasTexture {
+    if (sharedGlowTexture) return sharedGlowTexture;
+    const c = document.createElement('canvas');
+    c.width = 128;
+    c.height = 128;
+    const ctx = c.getContext('2d')!;
+    const g = ctx.createRadialGradient(64, 64, 2, 64, 64, 64);
+    g.addColorStop(0, 'rgba(255, 250, 220, 1)');
+    g.addColorStop(0.25, 'rgba(251, 191, 36, 0.78)');
+    g.addColorStop(0.58, 'rgba(234, 88, 12, 0.24)');
+    g.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 128, 128);
+    sharedGlowTexture = new THREE.CanvasTexture(c);
+    return sharedGlowTexture;
+  }
+
   function computeCandleMetrics(createdAtIso: string) {
     const createdTime = new Date(createdAtIso).getTime();
     const now = Date.now();
@@ -513,11 +264,7 @@
 
     const remainingRatio = Math.max(0, Math.min(1, 1 - elapsedMs / THIRTY_DAYS_MS));
     const isAlive = remainingRatio > 0;
-
-    const waxHeightPx = Math.round(
-      MIN_WAX_HEIGHT + remainingRatio * (MAX_WAX_HEIGHT - MIN_WAX_HEIGHT)
-    );
-
+    const waxScaleY = 0.16 + remainingRatio * 0.84;
     const remainingDays = Math.ceil((THIRTY_DAYS_MS - elapsedMs) / (1000 * 60 * 60 * 24));
     const lifePercent = Math.round(remainingRatio * 100);
 
@@ -529,7 +276,7 @@
     return {
       isAlive,
       remainingRatio,
-      waxHeightPx,
+      waxScaleY,
       remainingDays: Math.max(0, remainingDays),
       lifePercent,
       formattedDate,
@@ -546,44 +293,408 @@
     }[m] || m));
   }
 
-  // فعال‌سازی افکت چرخش سه‌بعدی (3D Tilt) با حرکت موس روی هر شمع
-  function attach3DTiltInteractions() {
-    if (!gridEl) return;
-    const pods = gridEl.querySelectorAll<HTMLElement>('.candle-pod-3d');
+  // ساخت صحنه سه‌بعدی کامل و مستقل برای یک کارت شمع
+  function buildDedicatedCandleSlot(
+    viewportEl: HTMLElement,
+    canvasEl: HTMLCanvasElement,
+    metrics: ReturnType<typeof computeCandleMetrics>,
+    index: number
+  ): CandleSlot {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvasEl.width = RENDER_W * dpr;
+    canvasEl.height = RENDER_H * dpr;
+    const ctx2d = canvasEl.getContext('2d')!;
 
-    pods.forEach((pod) => {
-      const inner = pod.querySelector<HTMLElement>('.candle-scene-inner');
-      if (!inner) return;
+    const scene = new THREE.Scene();
 
-      pod.addEventListener('pointermove', (e) => {
-        const rect = pod.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / rect.width - 0.5;
-        const y = (e.clientY - rect.top) / rect.height - 0.5;
-        const rotateY = (x * 18).toFixed(2);
-        const rotateX = (-y * 14).toFixed(2);
-        inner.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px)`;
-      });
+    const camera = new THREE.PerspectiveCamera(36, RENDER_W / RENDER_H, 0.1, 30);
+    camera.position.set(0, 1.85, 4.35);
+    camera.lookAt(0, 0.92, 0);
 
-      pod.addEventListener('pointerleave', () => {
-        inner.style.transform = 'rotateX(0deg) rotateY(0deg) translateY(0px)';
-      });
+    // نورپردازی سه‌بعدی استودیویی برای برجستگی حجم استوانه و اشک‌های موم
+    const ambient = new THREE.AmbientLight(0x453528, metrics.isAlive ? 1.5 : 0.9);
+    scene.add(ambient);
+
+    const keyLight = new THREE.DirectionalLight(0xffe6b8, 1.35);
+    keyLight.position.set(3, 4.5, 3.5);
+    scene.add(keyLight);
+
+    const rimLight = new THREE.DirectionalLight(0xf59e0b, 0.85);
+    rimLight.position.set(-3, 2.5, -3);
+    scene.add(rimLight);
+
+    const candleGroup = new THREE.Group();
+    candleGroup.position.y = -0.08;
+    candleGroup.scale.set(0.75, 0.75, 0.75);
+    scene.add(candleGroup);
+
+    // ۱. شمعدان برنزی چندلایه (چرخنده ۳۶۰ درجه)
+    const bronzeMat = new THREE.MeshStandardMaterial({
+      color: 0x42352c,
+      metalness: 0.85,
+      roughness: 0.24,
     });
+    const darkBronzeMat = new THREE.MeshStandardMaterial({
+      color: 0x261e19,
+      metalness: 0.78,
+      roughness: 0.35,
+    });
+
+    const pedBase = new THREE.Mesh(baseGeometries.pedestalBase, darkBronzeMat);
+    pedBase.position.y = 0.06;
+    candleGroup.add(pedBase);
+
+    const pedRim = new THREE.Mesh(baseGeometries.pedestalRim, bronzeMat);
+    pedRim.position.y = 0.14;
+    candleGroup.add(pedRim);
+
+    const pedBowl = new THREE.Mesh(baseGeometries.pedestalBowl, bronzeMat);
+    pedBowl.position.y = 0.16;
+    candleGroup.add(pedBowl);
+
+    // ۲. بدنه موم شمع با شیدر Subsurface Scattering (نفوذ نور گرم شعله در موم)
+    const waxHeight = 1.55 * metrics.waxScaleY;
+    const waxMat = new THREE.MeshStandardMaterial({
+      color: metrics.isAlive ? 0xfcf6ec : 0x78716c,
+      roughness: 0.32,
+      metalness: 0.04,
+    });
+
+    if (metrics.isAlive) {
+      waxMat.onBeforeCompile = (shader) => {
+        shader.vertexShader = `
+          varying float vLocalY;
+        ` + shader.vertexShader.replace(
+          '#include <begin_vertex>',
+          `
+          #include <begin_vertex>
+          vLocalY = clamp(position.y / 1.55, 0.0, 1.0);
+          `
+        );
+        shader.fragmentShader = `
+          varying float vLocalY;
+        ` + shader.fragmentShader.replace(
+          '#include <emissivemap_fragment>',
+          `
+          #include <emissivemap_fragment>
+          float sss = pow(vLocalY, 1.85);
+          totalEmissiveRadiance += vec3(1.0, 0.46, 0.07) * sss * 1.05;
+          `
+        );
+      };
+    }
+
+    const waxMesh = new THREE.Mesh(baseGeometries.waxCylinder, waxMat);
+    waxMesh.position.y = 0.18;
+    waxMesh.scale.y = metrics.waxScaleY;
+    candleGroup.add(waxMesh);
+
+    const topOfWaxY = 0.18 + waxHeight;
+
+    // لبه برجسته دهانه شمع و حوضچه موم مذاب
+    const waxRimMesh = new THREE.Mesh(baseGeometries.waxRim, waxMat);
+    waxRimMesh.position.y = topOfWaxY;
+    candleGroup.add(waxRimMesh);
+
+    const poolMat = new THREE.MeshStandardMaterial({
+      color: metrics.isAlive ? 0xfbbf24 : 0x3f3a36,
+      emissive: metrics.isAlive ? new THREE.Color(0xd97706) : new THREE.Color(0x000000),
+      emissiveIntensity: metrics.isAlive ? 0.55 : 0,
+      roughness: 0.12,
+      metalness: 0.1,
+    });
+    const poolMesh = new THREE.Mesh(baseGeometries.waxPool, poolMat);
+    poolMesh.rotation.x = -Math.PI / 2;
+    poolMesh.position.y = topOfWaxY + 0.005;
+    candleGroup.add(poolMesh);
+
+    // ۳. اشک‌های موم سه‌بعدی دورتادور استوانه (وقتی کاربر ۳۶۰ درجه می‌چرخاند کاملاً مشخص است)
+    const dripConfigs = [
+      { angle: 0.3, lenFactor: 0.68 },
+      { angle: 1.35, lenFactor: 0.42 },
+      { angle: 2.4, lenFactor: 0.78 },
+      { angle: 3.6, lenFactor: 0.52 },
+      { angle: 4.65, lenFactor: 0.85 },
+      { angle: 5.5, lenFactor: 0.38 },
+    ];
+
+    dripConfigs.forEach((cfg) => {
+      const meltProgress = 1 - metrics.remainingRatio * 0.55;
+      const dripLen = Math.max(0.14, Math.min(waxHeight * 0.85, waxHeight * cfg.lenFactor * meltProgress));
+      const r = 0.442;
+      const dx = Math.cos(cfg.angle) * r;
+      const dz = Math.sin(cfg.angle) * r;
+
+      const streamMesh = new THREE.Mesh(baseGeometries.dripCylinder, waxMat);
+      streamMesh.position.set(dx, topOfWaxY, dz);
+      streamMesh.scale.set(1, dripLen, 1);
+      candleGroup.add(streamMesh);
+
+      const dropMesh = new THREE.Mesh(baseGeometries.dripDrop, waxMat);
+      dropMesh.position.set(dx, topOfWaxY - dripLen, dz);
+      dropMesh.scale.set(1.1, 1.35, 1.1);
+      candleGroup.add(dropMesh);
+    });
+
+    // ۴. فتیله شمع + نوک گداخته نارنجی
+    const wickMat = new THREE.MeshBasicMaterial({ color: 0x181512 });
+    const wickMesh = new THREE.Mesh(baseGeometries.wick, wickMat);
+    wickMesh.position.y = topOfWaxY - 0.01;
+    if (!metrics.isAlive) {
+      wickMesh.rotation.z = 0.35;
+    }
+    candleGroup.add(wickMesh);
+
+    if (metrics.isAlive) {
+      const emberTipMat = new THREE.MeshBasicMaterial({ color: 0xff6b00 });
+      const emberTip = new THREE.Mesh(baseGeometries.wickEmber, emberTipMat);
+      emberTip.position.set(0, topOfWaxY + 0.16, 0);
+      candleGroup.add(emberTip);
+    }
+
+    // ۵. سیستم شعله، هاله و ذرات معلق
+    const flameUniforms = {
+      uTime: { value: 0 },
+      uWind: { value: new THREE.Vector2(0, 0) },
+      uPhase: { value: (index * 2.17) % 6.28 },
+    };
+
+    let flameLight: THREE.PointLight | null = null;
+    let haloSprite: THREE.Sprite | null = null;
+    let innerGlowSprite: THREE.Sprite | null = null;
+    let emberPoints: THREE.Points | null = null;
+    let smokeParticles: THREE.Points | null = null;
+
+    if (metrics.isAlive) {
+      flameLight = new THREE.PointLight(0xff991f, 3.6, 5.5, 1.5);
+      flameLight.position.set(0, topOfWaxY + 0.42, 0);
+      candleGroup.add(flameLight);
+
+      const flameMat = new THREE.ShaderMaterial({
+        uniforms: flameUniforms,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        vertexShader: `
+          uniform float uTime;
+          uniform vec2 uWind;
+          uniform float uPhase;
+          varying float vY;
+
+          void main() {
+            vY = clamp(position.y / 0.42, 0.0, 1.0);
+            vec3 pos = position;
+            pos.y *= 1.95;
+
+            // فرم اشکی شعله
+            float taper = mix(1.0, 0.04, pow(vY, 1.3));
+            pos.x *= taper;
+            pos.z *= taper;
+
+            // فیزیک رقص شعله و تلاطم حرارتی
+            float t = uTime * 4.8 + uPhase;
+            float waveX = (sin(t) * 0.055 + sin(t * 2.3 - vY * 4.0) * 0.025) * pow(vY, 1.5);
+            float waveZ = (cos(t * 0.9) * 0.055 + cos(t * 1.9 - vY * 3.5) * 0.025) * pow(vY, 1.5);
+            float stretchY = 1.0 + sin(t * 2.1) * 0.07 * vY;
+            pos.y *= stretchY;
+
+            // خم شدن فیزیکی شعله در اثر چرخاندن شمع یا حرکت موس
+            pos.x += waveX + uWind.x * 0.28 * pow(vY, 1.45);
+            pos.z += waveZ + uWind.y * 0.28 * pow(vY, 1.45);
+
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+          }
+        `,
+        fragmentShader: `
+          varying float vY;
+          void main() {
+            vec3 blueBase = vec3(0.2, 0.55, 1.0);
+            vec3 whiteHot = vec3(1.0, 0.99, 0.92);
+            vec3 goldMid = vec3(1.0, 0.72, 0.14);
+            vec3 orangeTip = vec3(0.96, 0.24, 0.02);
+
+            vec3 col = mix(blueBase, whiteHot, smoothstep(0.0, 0.2, vY));
+            col = mix(col, goldMid, smoothstep(0.2, 0.65, vY));
+            col = mix(col, orangeTip, smoothstep(0.65, 1.0, vY));
+
+            float alpha = sin(vY * 3.14159) * 0.96;
+            gl_FragColor = vec4(col * 1.4, alpha);
+          }
+        `,
+      });
+
+      const flameMesh = new THREE.Mesh(baseGeometries.flame, flameMat);
+      flameMesh.position.y = topOfWaxY + 0.11;
+      const fScale = 0.85 + metrics.remainingRatio * 0.25;
+      flameMesh.scale.set(fScale, fScale, fScale);
+      candleGroup.add(flameMesh);
+
+      // هاله بیرونی بزرگ
+      const outerHaloMat = new THREE.SpriteMaterial({
+        map: getGlowTexture(),
+        color: 0xf59e0b,
+        transparent: true,
+        opacity: 0.58,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      haloSprite = new THREE.Sprite(outerHaloMat);
+      haloSprite.position.set(0, topOfWaxY + 0.38, 0);
+      haloSprite.scale.set(1.75, 1.75, 1);
+      candleGroup.add(haloSprite);
+
+      // هسته نورانی درخشان
+      const innerHaloMat = new THREE.SpriteMaterial({
+        map: getGlowTexture(),
+        color: 0xfffbeb,
+        transparent: true,
+        opacity: 0.8,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      innerGlowSprite = new THREE.Sprite(innerHaloMat);
+      innerGlowSprite.position.set(0, topOfWaxY + 0.28, 0);
+      innerGlowSprite.scale.set(0.68, 0.68, 1);
+      candleGroup.add(innerGlowSprite);
+
+      // ذرات نورانی معلق دور شمع (Rising Sparks)
+      const sparkCount = 14;
+      const sparkPositions = new Float32Array(sparkCount * 3);
+      for (let i = 0; i < sparkCount; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const r = 0.15 + Math.random() * 0.55;
+        sparkPositions[i * 3] = Math.cos(a) * r;
+        sparkPositions[i * 3 + 1] = topOfWaxY + Math.random() * 1.1;
+        sparkPositions[i * 3 + 2] = Math.sin(a) * r;
+      }
+      const sparkGeo = new THREE.BufferGeometry();
+      sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPositions, 3));
+      const sparkMat = new THREE.PointsMaterial({
+        color: 0xfde68a,
+        size: 0.11,
+        map: getGlowTexture(),
+        transparent: true,
+        opacity: 0.75,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      emberPoints = new THREE.Points(sparkGeo, sparkMat);
+      candleGroup.add(emberPoints);
+    } else {
+      // دود ملایم برای شمع‌های آب‌شده (بیش از ۳۰ روز)
+      const smokeCount = 18;
+      const positions = new Float32Array(smokeCount * 3);
+      for (let i = 0; i < smokeCount; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 0.12;
+        positions[i * 3 + 1] = topOfWaxY + 0.12 + (i / smokeCount) * 0.85;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 0.12;
+      }
+      const smokeGeo = new THREE.BufferGeometry();
+      smokeGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const smokeMat = new THREE.PointsMaterial({
+        color: 0xa8a29e,
+        size: 0.18,
+        map: getGlowTexture(),
+        transparent: true,
+        opacity: 0.25,
+        depthWrite: false,
+      });
+      smokeParticles = new THREE.Points(smokeGeo, smokeMat);
+      candleGroup.add(smokeParticles);
+    }
+
+    const slot: CandleSlot = {
+      viewportEl,
+      canvasEl,
+      ctx2d,
+      scene,
+      camera,
+      candleGroup,
+      flameLight,
+      flameUniforms,
+      haloSprite,
+      innerGlowSprite,
+      emberPoints,
+      smokeParticles,
+      isAlive: metrics.isAlive,
+      remainingRatio: metrics.remainingRatio,
+      rotY: (index * 0.8) % (Math.PI * 2),
+      rotX: 0.08,
+      velY: 0,
+      velX: 0,
+      autoSpinSpeed: 0.0055, // چرخش ملایم و دائمی ۳۶۰ درجه
+      windVelocity: new THREE.Vector2(0, 0),
+      isDragging: false,
+      isVisible: true,
+      lastPointerX: 0,
+      lastPointerY: 0,
+    };
+
+    // تعامل چرخش ۳۶۰ درجه با کشیدن موس یا لمس + فیزیک باد روی شعله
+    viewportEl.addEventListener('pointerdown', (e) => {
+      slot.isDragging = true;
+      slot.lastPointerX = e.clientX;
+      slot.lastPointerY = e.clientY;
+      viewportEl.setPointerCapture(e.pointerId);
+    });
+
+    viewportEl.addEventListener('pointermove', (e) => {
+      const rect = viewportEl.getBoundingClientRect();
+      const nx = (e.clientX - rect.left) / rect.width - 0.5;
+
+      if (slot.isDragging) {
+        const dx = e.clientX - slot.lastPointerX;
+        const dy = e.clientY - slot.lastPointerY;
+
+        // چرخش آزادانه ۳۶۰ درجه افقی با اینرسی
+        slot.velY = dx * 0.022;
+        slot.rotY += slot.velY;
+
+        // تغییر زاویه دید عمودی در محدوده مجاز
+        slot.velX = dy * 0.012;
+        slot.rotX = THREE.MathUtils.clamp(slot.rotX + slot.velX, -0.25, 0.48);
+
+        // ایجاد باد فیزیکی متناسب با سرعت چرخاندن شمع
+        slot.windVelocity.x = THREE.MathUtils.clamp(-dx * 0.065, -1.8, 1.8);
+        slot.windVelocity.y = THREE.MathUtils.clamp(-dy * 0.04, -1.2, 1.2);
+
+        slot.lastPointerX = e.clientX;
+        slot.lastPointerY = e.clientY;
+      } else {
+        // واکنش ملایم شعله به عبور موس از روی کارت
+        slot.windVelocity.x = THREE.MathUtils.clamp(slot.windVelocity.x - nx * 0.12, -0.9, 0.9);
+      }
+    });
+
+    const stopDragging = () => {
+      slot.isDragging = false;
+    };
+
+    viewportEl.addEventListener('pointerup', stopDragging);
+    viewportEl.addEventListener('pointercancel', stopDragging);
+    viewportEl.addEventListener('pointerleave', stopDragging);
+
+    return slot;
   }
 
-  function renderCandles() {
+  function renderCandlesDOMAndScenes() {
     if (!gridEl || !loadingEl) return;
 
     loadingEl.classList.add('hidden');
     gridEl.classList.remove('hidden');
     gridEl.classList.add('grid');
 
+    if (visibilityObserver) {
+      visibilityObserver.disconnect();
+    }
+    activeSlots = [];
     let activeCount = 0;
 
     if (candlesList.length === 0) {
       gridEl.innerHTML = `
         <div class="col-span-full text-center py-20 px-4">
           <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 text-2xl mb-3">🕯️</div>
-          <p class="text-stone-300 font-semibold text-base mb-1">هنوز شمعی در این تالار روشن نشده است</p>
+          <p class="text-stone-300 font-bold text-base mb-1">هنوز شمعی در این تالار روشن نشده است</p>
           <p class="text-stone-500 text-xs">اولین نفری باشید که به یاد و احترام ایشان شمعی روشن می‌کند.</p>
         </div>
       `;
@@ -592,96 +703,175 @@
       return;
     }
 
-    gridEl.innerHTML = candlesList.map((candle, index) => {
-      const metrics = computeCandleMetrics(candle.created_at);
-      if (metrics.isAlive) activeCount++;
+    // ساخت کارت‌های مجزا با بوم اختصاصی داخل هر کارت (ثابت هنگام اسکرول)
+    gridEl.innerHTML = candlesList
+      .map((candle, index) => {
+        const metrics = computeCandleMetrics(candle.created_at);
+        if (metrics.isAlive) activeCount++;
 
-      // تنوع طبیعی در رقص نور هر شمع
-      const animDelay = ((index * 0.43) % 2.8).toFixed(2);
-      const flickerSpeed = (2.4 + ((index * 0.29) % 1.1)).toFixed(2);
-      const flameScale = (0.78 + metrics.remainingRatio * 0.24).toFixed(2);
-      const haloOpacity = (0.45 + metrics.remainingRatio * 0.55).toFixed(2);
-
-      // ارتفاع اشک‌های موم متناسب با میزان آب شدن شمع
-      const drip1 = Math.min(metrics.waxHeightPx - 6, Math.round((1 - metrics.remainingRatio) * 38 + 10));
-      const drip2 = Math.min(metrics.waxHeightPx - 8, Math.round((1 - metrics.remainingRatio) * 26 + 7));
-      const drip3 = Math.min(metrics.waxHeightPx - 10, Math.round((1 - metrics.remainingRatio) * 18 + 5));
-
-      return `
-        <div class="candle-pod-3d ${metrics.isAlive ? '' : 'opacity-75 hover:opacity-100 transition-opacity'}">
-          <div class="candle-scene-inner">
-            
-            <!-- بخش سه‌بعدی شمع و پایه -->
-            <div class="candle-visual-box">
-              ${metrics.isAlive ? `
-                <div class="flame-system-3d" style="--flicker-speed: ${flickerSpeed}s;">
-                  <div class="flame-ambient-halo" style="animation-delay: -${animDelay}s; opacity:${haloOpacity};"></div>
-                  <div class="flame-main-body" style="animation-delay: -${animDelay}s; transform: scale(${flameScale});"></div>
-                  <div class="flame-inner-bright"></div>
-                  <div class="flame-blue-base"></div>
-                  <div class="flame-spark" style="animation-delay: -${animDelay}s;"></div>
-                </div>
-              ` : `
-                <div class="smoke-plume">
-                  <span class="smoke-wisp w-1"></span>
-                  <span class="smoke-wisp w-2"></span>
-                </div>
-              `}
-
-              <div class="candle-wick-3d ${metrics.isAlive ? '' : 'is-melted'}"></div>
-
-              <div class="candle-cylinder-3d ${metrics.isAlive ? '' : 'is-melted'}" style="height: ${metrics.waxHeightPx}px;">
-                <div class="candle-top-rim"></div>
-                <span class="wax-stream" style="left: 7px; height: ${drip1}px;"></span>
-                <span class="wax-stream" style="left: 21px; height: ${drip3}px;"></span>
-                <span class="wax-stream" style="right: 8px; height: ${drip2}px;"></span>
-              </div>
-
-              <div class="candle-pedestal-3d"></div>
-              ${metrics.isAlive ? `<div class="floor-light-pool" style="opacity: ${haloOpacity};"></div>` : ''}
+        return `
+          <article class="candle-dedicated-card ${metrics.isAlive ? '' : 'opacity-80 hover:opacity-100'}">
+            <div class="candle-3d-viewport" data-slot-index="${index}" title="برای چرخش ۳۶۰ درجه بکشید">
+              <canvas class="candle-card-canvas"></canvas>
+              <span class="rotate-360-badge">↻ ۳۶۰°</span>
             </div>
 
-            <!-- پلاک مشخصات و نوار عمر شمع -->
-            <div class="candle-plaque-3d">
-              <p class="text-amber-50 font-bold text-xs sm:text-sm truncate" title="${escapeHtml(candle.name)}">
+            <div class="relative z-10 px-4 pb-5 pt-3 text-center border-t border-stone-800/80 bg-stone-950/85 backdrop-blur-md">
+              <h3 class="text-amber-50 font-extrabold text-sm sm:text-base truncate" title="${escapeHtml(candle.name)}">
                 ${escapeHtml(candle.name)}
-              </p>
+              </h3>
 
-              <div class="mt-2 flex items-center justify-center gap-1.5">
-                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium ${
+              <div class="mt-2 flex items-center justify-center">
+                <span class="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-[11px] font-semibold ${
                   metrics.isAlive
                     ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
                     : 'bg-stone-800/90 text-stone-400 border border-stone-700/60'
                 }">
-                  ${metrics.isAlive
-                    ? `🔥 ${metrics.remainingDays.toLocaleString('fa-IR')} روز باقی‌مانده`
-                    : `خاموش‌شده (${metrics.formattedDate})`
+                  ${
+                    metrics.isAlive
+                      ? `🔥 ${metrics.remainingDays.toLocaleString('fa-IR')} روز باقی‌مانده`
+                      : `آب‌شده به یادگار (${metrics.formattedDate})`
                   }
                 </span>
               </div>
 
-              ${metrics.isAlive ? `
-                <div class="mt-2 w-full h-1 rounded-full bg-stone-800 overflow-hidden" title="${metrics.lifePercent}% از عمر شمع باقی مانده">
+              ${
+                metrics.isAlive
+                  ? `
+                <div class="mt-2.5 w-full h-1.5 rounded-full bg-stone-800/90 overflow-hidden" title="${metrics.lifePercent}% از عمر ۳۰ روزه شمع باقی مانده">
                   <div class="h-full rounded-full bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-200 transition-all duration-700" style="width: ${metrics.lifePercent}%;"></div>
                 </div>
-              ` : ''}
+              `
+                  : `
+                <div class="mt-2.5 w-full h-1.5 rounded-full bg-stone-900 overflow-hidden">
+                  <div class="h-full w-full bg-stone-700/40"></div>
+                </div>
+              `
+              }
             </div>
-
-          </div>
-        </div>
-      `;
-    }).join('');
+          </article>
+        `;
+      })
+      .join('');
 
     if (activeCountEl) activeCountEl.textContent = activeCount.toLocaleString('fa-IR');
     if (totalCountEl) totalCountEl.textContent = candlesList.length.toLocaleString('fa-IR');
 
-    attach3DTiltInteractions();
+    // مشاهده‌گر هوشمند تا فقط شمع‌های داخل دید صفحه رندر شوند (پشتیبانی از تعداد نامحدود شمع)
+    visibilityObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const idx = Number((entry.target as HTMLElement).dataset.slotIndex);
+          if (activeSlots[idx]) {
+            activeSlots[idx].isVisible = entry.isIntersecting;
+          }
+        });
+      },
+      { rootMargin: '150px' }
+    );
+
+    const viewports = gridEl.querySelectorAll<HTMLElement>('.candle-3d-viewport');
+    viewports.forEach((vpEl, idx) => {
+      const candle = candlesList[idx];
+      const canvasEl = vpEl.querySelector<HTMLCanvasElement>('.candle-card-canvas');
+      if (!candle || !canvasEl) return;
+
+      const metrics = computeCandleMetrics(candle.created_at);
+      const slot = buildDedicatedCandleSlot(vpEl, canvasEl, metrics, idx);
+      activeSlots.push(slot);
+      visibilityObserver?.observe(vpEl);
+    });
+  }
+
+  function initVirtualWebGLEngine() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    offscreenRenderer = new THREE.WebGLRenderer({
+      alpha: true,
+      antialias: true,
+      powerPreference: 'high-performance',
+    });
+    offscreenRenderer.setPixelRatio(dpr);
+    offscreenRenderer.setSize(RENDER_W, RENDER_H, false);
+    offscreenRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+    offscreenRenderer.toneMappingExposure = 1.2;
+
+    const clock = new THREE.Clock();
+
+    function animateLoop() {
+      requestAnimationFrame(animateLoop);
+      if (!offscreenRenderer || !gridEl) return;
+
+      // اگر پنل تب شمع مخفی است، مصرف پردازنده صفر شود
+      const tabPanel = gridEl.closest('[data-tab-panel]');
+      if (tabPanel && tabPanel.hasAttribute('hidden')) return;
+
+      const elapsed = clock.getElapsedTime();
+
+      for (let i = 0; i < activeSlots.length; i++) {
+        const slot = activeSlots[i];
+        if (!slot.isVisible) continue;
+
+        // ۱. فیزیک چرخش ۳۶۰ درجه آزادانه + اینرسی پس از رها کردن موس
+        if (!slot.isDragging) {
+          slot.rotY += slot.autoSpinSpeed + slot.velY;
+          slot.velY *= 0.94; // اصطکاک نرم اینرسی
+          slot.rotX += (0.08 - slot.rotX) * 0.08;
+        }
+        slot.candleGroup.rotation.y = slot.rotY;
+        slot.candleGroup.rotation.x = slot.rotX;
+
+        // ۲. بروزرسانی زمان و باد در شیدر شعله
+        slot.windVelocity.multiplyScalar(0.91);
+        slot.flameUniforms.uTime.value = elapsed;
+        slot.flameUniforms.uWind.value.copy(slot.windVelocity);
+
+        // ۳. تپش زنده نور و هاله شعله
+        if (slot.haloSprite && slot.innerGlowSprite && slot.flameLight) {
+          const flicker = Math.sin(elapsed * 5.2 + i * 1.3) * 0.08 + Math.cos(elapsed * 8.7 + i) * 0.04;
+          const baseScale = 1.55 + slot.remainingRatio * 0.35;
+          slot.haloSprite.scale.set(baseScale + flicker, baseScale + flicker, 1);
+          slot.innerGlowSprite.scale.set(0.65 + flicker * 0.5, 0.65 + flicker * 0.5, 1);
+          slot.flameLight.intensity = 3.4 + flicker * 4.0;
+        }
+
+        // ۴. حرکت ذرات نورانی معلق دور شمع روشن
+        if (slot.emberPoints) {
+          const posAttr = slot.emberPoints.geometry.getAttribute('position') as THREE.BufferAttribute;
+          const baseTopY = 0.18 + 1.55 * (0.16 + slot.remainingRatio * 0.84);
+          for (let p = 0; p < posAttr.count; p++) {
+            let y = posAttr.getY(p) + 0.007;
+            if (y > baseTopY + 1.15) y = baseTopY + 0.05;
+            posAttr.setY(p, y);
+          }
+          posAttr.needsUpdate = true;
+        }
+
+        // ۵. حرکت دود ملایم برای شمع‌های آب‌شده
+        if (slot.smokeParticles) {
+          const posAttr = slot.smokeParticles.geometry.getAttribute('position') as THREE.BufferAttribute;
+          const baseTopY = 0.18 + 1.55 * (0.16 + slot.remainingRatio * 0.84) + 0.12;
+          for (let p = 0; p < posAttr.count; p++) {
+            let y = posAttr.getY(p) + 0.005;
+            if (y > baseTopY + 0.85) y = baseTopY;
+            posAttr.setY(p, y);
+          }
+          posAttr.needsUpdate = true;
+        }
+
+        // رندر صحنه سه‌بعدی و کپی مستقیم به بوم اختصاصی داخل همان کارت
+        offscreenRenderer.render(slot.scene, slot.camera);
+        slot.ctx2d.clearRect(0, 0, slot.canvasEl.width, slot.canvasEl.height);
+        slot.ctx2d.drawImage(offscreenRenderer.domElement, 0, 0);
+      }
+    }
+
+    animateLoop();
   }
 
   async function fetchAllCandles() {
     if (!supabase) {
-      if (loadingEl) {
-        loadingEl.innerHTML = `<p class="text-amber-400/90 text-sm">متغیرهای اتصال به Supabase تنظیم نشده‌اند.</p>`;
+      if (loadingTextEl) {
+        loadingTextEl.textContent = 'متغیرهای اتصال به Supabase تنظیم نشده‌اند.';
       }
       return;
     }
@@ -693,14 +883,14 @@
 
     if (error) {
       console.error('Supabase fetch error:', error);
-      if (loadingEl) {
-        loadingEl.innerHTML = `<p class="text-red-400 text-sm">خطا در دریافت اطلاعات شمع‌ها. لطفاً اتصال اینترنت را بررسی کنید.</p>`;
+      if (loadingTextEl) {
+        loadingTextEl.textContent = 'خطا در دریافت اطلاعات شمع‌ها. لطفاً اتصال اینترنت را بررسی کنید.';
       }
       return;
     }
 
     candlesList = data || [];
-    renderCandles();
+    renderCandlesDOMAndScenes();
   }
 
   form?.addEventListener('submit', async (e) => {
@@ -714,7 +904,7 @@
     submitBtn.classList.add('opacity-60', 'pointer-events-none');
     if (submitText) submitText.textContent = 'در حال روشن کردن شمع...';
     if (statusEl) {
-      statusEl.textContent = 'در حال ثبت در تالار یادبود...';
+      statusEl.textContent = 'در حال ثبت شمع در جایگاه اختصاصی...';
       statusEl.className = 'text-xs sm:text-sm text-amber-300 min-h-[1.25rem]';
     }
 
@@ -739,15 +929,16 @@
 
     if (data) {
       candlesList.unshift(data);
-      renderCandles();
+      renderCandlesDOMAndScenes();
       form.reset();
       if (statusEl) {
-        statusEl.textContent = '✨ شمع شما با موفقیت روشن شد و تا ۳۰ روز آینده در این تالار می‌درخشد.';
+        statusEl.textContent = '✨ شمع شما با موفقیت روشن شد و تا ۳۰ روز آینده می‌درخشد.';
         statusEl.className = 'text-xs sm:text-sm text-emerald-400 min-h-[1.25rem]';
       }
     }
   });
 
+  initVirtualWebGLEngine();
   fetchAllCandles();
-  setInterval(renderCandles, 60 * 1000);
+  setInterval(renderCandlesDOMAndScenes, 60 * 1000);
 </script>
