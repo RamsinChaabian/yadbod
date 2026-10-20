@@ -21,7 +21,7 @@
       
       <p class="text-stone-300/90 text-xs sm:text-sm md:text-base leading-relaxed mb-7">
         به یاد و احترام عزیزمان، شمعی روشن کنید. هر شمع به مدت
-        <span class="text-amber-400 font-bold underline decoration-amber-500/40 underline-offset-4"> ۳۰ روز </span>
+        <span class="text-amber-400 font-bold underline decoration-amber-500/40 underline-offset-4"> ۷ روز </span>
         روشن می‌ماند و به آرامی ذوب می‌شود، اما نام و یاد شما برای همیشه در این تالار جاودانه خواهد ماند.
       </p>
 
@@ -162,8 +162,8 @@
   import * as THREE from 'three';
   import { supabase, type CandleRecord } from '../../utils/supabase';
 
-  // طول عمر دقیق هر شمع: ۳۰ روز به میلی‌ثانیه
-  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+  // طول عمر دقیق هر شمع: ۷ روز (هفتگی) به میلی‌ثانیه
+  const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
   interface CandleSlot {
     viewportEl: HTMLElement;
@@ -262,10 +262,10 @@
     const now = Date.now();
     const elapsedMs = Math.max(0, now - createdTime);
 
-    const remainingRatio = Math.max(0, Math.min(1, 1 - elapsedMs / THIRTY_DAYS_MS));
+    const remainingRatio = Math.max(0, Math.min(1, 1 - elapsedMs / SEVEN_DAYS_MS));
     const isAlive = remainingRatio > 0;
     const waxScaleY = 0.16 + remainingRatio * 0.84;
-    const remainingDays = Math.ceil((THIRTY_DAYS_MS - elapsedMs) / (1000 * 60 * 60 * 24));
+    const remainingDays = Math.ceil((SEVEN_DAYS_MS - elapsedMs) / (1000 * 60 * 60 * 24));
     const lifePercent = Math.round(remainingRatio * 100);
 
     const formattedDate = new Intl.DateTimeFormat('fa-IR', {
@@ -581,7 +581,7 @@
       emberPoints = new THREE.Points(sparkGeo, sparkMat);
       candleGroup.add(emberPoints);
     } else {
-      // دود ملایم برای شمع‌های آب‌شده (بیش از ۳۰ روز)
+      // دود ملایم برای شمع‌های آب‌شده (بیش از ۷ روز)
       const smokeCount = 18;
       const positions = new Float32Array(smokeCount * 3);
       for (let i = 0; i < smokeCount; i++) {
@@ -716,7 +716,7 @@
               <span class="rotate-360-badge">↻ ۳۶۰°</span>
             </div>
 
-            <div class="relative z-10 px-4 pb-5 pt-3 text-center border-t border-stone-800/80 bg-stone-950/85 backdrop-blur-md">
+            <div class="relative z-10 mx-2.5 mb-2.5 px-4 pb-4 pt-3 text-center rounded-2xl border border-stone-800/80 bg-stone-950/85 backdrop-blur-md shadow-lg">
               <h3 class="text-amber-50 font-extrabold text-sm sm:text-base truncate" title="${escapeHtml(candle.name)}">
                 ${escapeHtml(candle.name)}
               </h3>
@@ -738,7 +738,7 @@
               ${
                 metrics.isAlive
                   ? `
-                <div class="mt-2.5 w-full h-1.5 rounded-full bg-stone-800/90 overflow-hidden" title="${metrics.lifePercent}% از عمر ۳۰ روزه شمع باقی مانده">
+                <div class="mt-2.5 w-full h-1.5 rounded-full bg-stone-800/90 overflow-hidden" title="${metrics.lifePercent}% از عمر ۷ روزه شمع باقی مانده">
                   <div class="h-full rounded-full bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-200 transition-all duration-700" style="width: ${metrics.lifePercent}%;"></div>
                 </div>
               `
@@ -932,7 +932,7 @@
       renderCandlesDOMAndScenes();
       form.reset();
       if (statusEl) {
-        statusEl.textContent = '✨ شمع شما با موفقیت روشن شد و تا ۳۰ روز آینده می‌درخشد.';
+        statusEl.textContent = '✨ شمع شما با موفقیت روشن شد و تا ۷ روز آینده می‌درخشد.';
         statusEl.className = 'text-xs sm:text-sm text-emerald-400 min-h-[1.25rem]';
       }
     }
