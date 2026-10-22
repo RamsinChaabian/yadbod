@@ -1,656 +1,653 @@
 ---
-// ============================================================
-// گالری هوشمند با بهینه‌سازی خودکار تصاویر (Astro Image)
-// ============================================================
-import { Image, getImage } from 'astro:assets';
+/**
+ * GalleryModule.astro
+ * ماژول گالری خاطرات با پشتیبانی از تامنیل اختصاصی هم‌نام برای ویدیوها،
+ * بارگذاری تنبل (Lazy Loading) بدون دانلود خودکار ویدیو و پخش استریم در پاپ‌آپ
+ */
 
-const photoMetadata = import.meta.glob<any>(
-  '/src/assets/gallery/*.{jpg,jpeg,png,webp,avif}',
-  { eager: true, import: 'default' }
-);
+const mediaFiles = import.meta.glob('/src/assets/gallery/*.{jpg,jpeg,png,webp,mp4,webm,mov}', {
+  eager: true,
+});
 
-const photoOriginals = import.meta.glob<string>(
-  '/src/assets/gallery/*.{jpg,jpeg,png,webp,avif}',
-  { eager: true, query: '?url', import: 'default' }
-);
-
-const videoUrls = import.meta.glob<string>(
-  '/src/assets/gallery/*.{mp4,webm,mov,m4v}',
-  { eager: true, query: '?url', import: 'default' }
-);
-
-const videoBasenames = new Set<string>();
-for (const path of Object.keys(videoUrls)) {
-  videoBasenames.add(path.split('/').pop()!.replace(/\.[^.]+$/, ''));
+interface RawFile {
+  src: string;
+  ext: string;
+  baseName: string;
+  isVideo: boolean;
 }
 
-const videoThumbs: Record<string, any> = {};
-const standalonePhotos: [string, any][] = [];
+interface MediaItem {
+  id: string;
+  src: string;
+  thumbnail: string;
+  title: string;
+  type: 'image' | 'video';
+  ext: string;
+}
 
-for (const [path, metadata] of Object.entries(photoMetadata)) {
-  const basename = path.split('/').pop()!.replace(/\.[^.]+$/, '');
-  if (videoBasenames.has(basename)) {
-    videoThumbs[basename] = metadata;
+// ۱. استخراج اطلاعات اولیه تمام فایل‌ها
+const parsedFiles: RawFile[] = Object.entries(mediaFiles).map(([filePath, module]: [string, any]) => {
+  const fileNameWithExt = filePath.split('/').pop() || '';
+  const lastDotIndex = fileNameWithExt.lastIndexOf('.');
+  const baseName = lastDotIndex !== -1 ? fileNameWithExt.slice(0, lastDotIndex) : fileNameWithExt;
+  const ext = lastDotIndex !== -1 ? fileNameWithExt.slice(lastDotIndex + 1).toLowerCase() : '';
+  const isVideo = ['mp4', 'webm', 'mov'].includes(ext);
+
+  let src = '';
+  if (typeof module.default === 'string') {
+    src = module.default;
+  } else if (module.default && typeof module.default.src === 'string') {
+    src = module.default.src;
+  }
+
+  return { src, ext, baseName, isVideo };
+});
+
+// ۲. تفکیک ویدیوها و تصاویر برای اتصال تامنیل‌های هم‌نام به ویدیوها
+const videoMap = new Map<string, RawFile>();
+const imageMap = new Map<string, RawFile>();
+
+for (const file of parsedFiles) {
+  if (file.isVideo) {
+    videoMap.set(file.baseName, file);
   } else {
-    standalonePhotos.push([path, metadata]);
+    imageMap.set(file.baseName, file);
   }
 }
 
-type MediaItem = {
-  type: 'image' | 'video';
-  lightboxSrc: string;
-  originalSrc: string;
-  metadata: any | null;
-  filename: string;
-  sortKey: string;
-};
+const galleryItems: MediaItem[] = [];
+const usedThumbnails = new Set<string>();
 
-const photoItems: MediaItem[] = await Promise.all(
-  standalonePhotos.map(async ([path, metadata]) => {
-    const file = path.split('/').pop()!;
-    const basename = file.replace(/\.[^.]+$/, '');
-    const ext = file.split('.').pop()!.toLowerCase();
-    const originalSrc = photoOriginals[path] ?? metadata.src;
+// ابتدا پردازش ویدیوها و اتصال تامنیل هم‌نام به آن‌ها
+videoMap.forEach((videoFile, baseName) => {
+  const matchingThumb = imageMap.get(baseName);
+  if (matchingThumb) {
+    usedThumbnails.add(baseName);
+  }
 
-    const optimized = await getImage({
-      src: metadata,
-      width: 1400,
-      format: 'webp',
-      quality: 82,
-    });
+  const cleanTitle = baseName.startsWith('image_') ? 'ویدیوی خاطره' : baseName;
 
-    return {
-      type: 'image' as const,
-      lightboxSrc: optimized.src,
-      originalSrc,
-      metadata,
-      filename: `${basename}.${ext}`,
-      sortKey: file,
-    };
-  })
-);
-
-const videoItems: MediaItem[] = Object.entries(videoUrls).map(([path, url]) => {
-  const file = path.split('/').pop()!;
-  const basename = file.replace(/\.[^.]+$/, '');
-  const ext = file.split('.').pop()!.toLowerCase();
-
-  return {
-    type: 'video' as const,
-    lightboxSrc: url,
-    originalSrc: url,
-    metadata: videoThumbs[basename] ?? null,
-    filename: `${basename}.${ext}`,
-    sortKey: file,
-  };
+  galleryItems.push({
+    id: `video-${galleryItems.length}`,
+    src: videoFile.src,
+    thumbnail: matchingThumb ? matchingThumb.src : '',
+    title: cleanTitle,
+    type: 'video',
+    ext: videoFile.ext,
+  });
 });
 
-const items: MediaItem[] = [...photoItems, ...videoItems];
-items.sort((a, b) =>
-  a.sortKey.localeCompare(b.sortKey, undefined, { numeric: true, sensitivity: 'base' })
-);
+// سپس اضافه کردن عکس‌های مستقلی که تامنیلِ ویدیو نیستند
+imageMap.forEach((imageFile, baseName) => {
+  if (usedThumbnails.has(baseName)) return; // جلوگیری از نمایش تکراری تامنیل ویدیو به عنوان عکس مجزا
 
-const photoCount = items.filter((i) => i.type === 'image').length;
-const videoCount = items.filter((i) => i.type === 'video').length;
+  const cleanTitle = baseName.startsWith('image_') ? 'تصویر خاطره' : baseName;
 
-const mediaData = items.map((item) => ({
-  type: item.type,
-  src: item.lightboxSrc,
-  originalSrc: item.originalSrc,
-  filename: item.filename,
-}));
+  galleryItems.push({
+    id: `image-${galleryItems.length}`,
+    src: imageFile.src,
+    thumbnail: imageFile.src,
+    title: cleanTitle,
+    type: 'image',
+    ext: imageFile.ext,
+  });
+});
+
+// مرتب‌سازی بر اساس نام فایل تا چیدمان منظمی داشته باشند
+galleryItems.sort((a, b) => a.title.localeCompare(b.title, 'fa'));
+
+const totalCount = galleryItems.length;
+const imageCount = galleryItems.filter((item) => item.type === 'image').length;
+const videoCount = galleryItems.filter((item) => item.type === 'video').length;
 ---
 
-<div class="px-4 py-8 max-w-6xl mx-auto">
-  <!-- سربرگ شیشه‌ای -->
-  <header class="lg-card p-6 sm:p-8 text-center mb-6">
-    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 text-3xl mb-4 shadow-glass">
-      🖼️
-    </div>
-    <h2 class="text-2xl font-bold text-stone-800 mb-2">گالری</h2>
-    {items.length > 0 && (
-      <p class="text-sm text-stone-500">
-        {photoCount > 0 && `${photoCount} تصویر`}
-        {photoCount > 0 && videoCount > 0 && ' • '}
-        {videoCount > 0 && `${videoCount} ویدیو`}
+<section id="gallery-module" class="w-full py-4 select-none" dir="rtl">
+  <!-- هدر و فیلترهای دسته‌بندی گالری -->
+  <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 px-2">
+    <div class="text-center sm:text-right">
+      <h2 class="text-xl sm:text-2xl font-bold text-stone-800 dark:text-stone-100 flex items-center justify-center sm:justify-start gap-2.5">
+        <span class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
+            <circle cx="9" cy="9" r="2"/>
+            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>
+          </svg>
+        </span>
+        <span>قاب‌های ماندگار و خاطرات</span>
+      </h2>
+      <p class="text-xs sm:text-sm text-stone-500 dark:text-stone-400 mt-1">
+        برای تماشای آنلاین ویدیوها یا مشاهده تصاویر در ابعاد اصلی، بر روی هر قاب کلیک کنید
       </p>
-    )}
-  </header>
+    </div>
 
-  {items.length === 0 ? (
-    <div class="lg-card p-12 text-center border-2 border-dashed border-amber-300/60">
-      <div class="text-6xl mb-4">🖼️</div>
-      <p class="text-stone-600 text-sm font-medium mb-2">هنوز رسانه‌ای اضافه نشده است</p>
-      <p class="text-stone-400 text-xs">
-        عکس‌ها و ویدیوهای خود را در پوشه‌ی
-        <code dir="ltr" class="bg-white/60 px-2 py-1 rounded text-[11px]">src/assets/gallery/</code>
-        قرار دهید
-      </p>
-    </div>
-  ) : (
-    <div data-gallery-masonry class="gallery-masonry">
-      {items.map((item, index) => (
+    <!-- تب‌های فیلتر -->
+    <div class="inline-flex items-center p-1 rounded-2xl bg-stone-200/70 dark:bg-stone-800/80 backdrop-blur-md border border-stone-300/50 dark:border-stone-700/50 shadow-inner">
+      <button
+        type="button"
+        data-filter="all"
+        class="gallery-filter-btn active px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 flex items-center gap-1.5 cursor-pointer"
+      >
+        <span>همه</span>
+        <span class="px-1.5 py-0.5 text-[11px] rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold">{totalCount}</span>
+      </button>
+      <button
+        type="button"
+        data-filter="image"
+        class="gallery-filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 flex items-center gap-1.5 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 cursor-pointer"
+      >
+        <span>تصاویر</span>
+        <span class="px-1.5 py-0.5 text-[11px] rounded-full bg-stone-300/60 dark:bg-stone-700 text-stone-600 dark:text-stone-300">{imageCount}</span>
+      </button>
+      {videoCount > 0 && (
         <button
           type="button"
-          class="gallery-item group"
-          data-gallery-index={index}
-          aria-label={item.type === 'video' ? 'پخش ویدیو' : 'مشاهده تصویر'}
+          data-filter="video"
+          class="gallery-filter-btn px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 flex items-center gap-1.5 text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 cursor-pointer"
         >
-          {item.type === 'video' ? (
-            item.metadata ? (
-              <Image
-                src={item.metadata}
-                alt=""
-                widths={[280, 420, 560]}
-                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                format="webp"
-                quality={75}
-                loading="lazy"
-                decoding="async"
-                class="gallery-thumb"
-              />
-            ) : (
-              <div class="gallery-thumb gallery-thumb-placeholder">
-                <div class="gallery-thumb-gradient"></div>
-              </div>
-            )
-          ) : (
-            <Image
-              src={item.metadata}
-              alt=""
-              widths={[280, 420, 560]}
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              format="webp"
-              quality={75}
+          <span>ویدیوها</span>
+          <span class="px-1.5 py-0.5 text-[11px] rounded-full bg-stone-300/60 dark:bg-stone-700 text-stone-600 dark:text-stone-300">{videoCount}</span>
+        </button>
+      )}
+    </div>
+  </div>
+
+  <!-- شبکه Masonry برای چیدمان خودکار آیتم‌های عمودی و افقی -->
+  {totalCount === 0 ? (
+    <div class="text-center py-16 rounded-3xl bg-stone-100/50 dark:bg-stone-900/40 border border-dashed border-stone-300 dark:border-stone-700">
+      <p class="text-stone-500 dark:text-stone-400 text-sm">هنوز خاطره‌ای ثبت نشده است.</p>
+    </div>
+  ) : (
+    <div
+      id="gallery-masonry"
+      class="columns-1 xs:columns-2 sm:columns-2 md:columns-3 lg:columns-4 gap-3.5 space-y-3.5 px-1"
+    >
+      {galleryItems.map((item, idx) => (
+        <article
+          class="gallery-card group relative break-inside-avoid rounded-2xl overflow-hidden bg-stone-200 dark:bg-stone-800/90 border border-stone-200/80 dark:border-stone-700/60 shadow-sm hover:shadow-xl transition-all duration-500 cursor-pointer"
+          data-index={idx}
+          data-type={item.type}
+          data-src={item.src}
+          data-poster={item.thumbnail}
+          data-title={item.title}
+          data-ext={item.ext}
+          tabindex="0"
+          role="button"
+          aria-label={`مشاهده ${item.title}`}
+        >
+          <!-- لایه اسکلتون لودینگ (Shimmer) تا زمان لود شدن تصویر تامنیل -->
+          <div class="skeleton-loader absolute inset-0 bg-gradient-to-r from-stone-200 via-stone-100 to-stone-200 dark:from-stone-800 dark:via-stone-700 dark:to-stone-800 animate-pulse z-0 min-h-[180px]" />
+
+          {/* رندر تامنیل برای هر دو نوع عکس و ویدیو (هیچ ویدیویی در گرید لود نمی‌شود) */}
+          {item.thumbnail ? (
+            <img
+              data-src={item.thumbnail}
+              src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+              alt={item.title}
               loading="lazy"
               decoding="async"
-              class="gallery-thumb"
+              class="gallery-thumb relative z-10 w-full h-auto object-cover block opacity-0 scale-[1.02] group-hover:scale-105 transition-all duration-700 ease-out min-h-[160px]"
             />
-          )}
-
-          {item.type === 'video' && (
-            <div class="gallery-play-overlay" aria-hidden="true">
-              <div class="gallery-play-btn">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-              </div>
+          ) : (
+            <div class="relative z-10 w-full aspect-video bg-stone-800 flex items-center justify-center text-stone-400">
+              <span class="text-xs">پیش‌نمایش ویدیو</span>
             </div>
           )}
 
-          <div class="gallery-hover-overlay" aria-hidden="true">
-            <div class="gallery-download-btn">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
+          {/* نشانگر اختصاصی روی کارت‌های ویدیو */}
+          {item.type === 'video' && (
+            <>
+              <div class="absolute top-3 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/65 backdrop-blur-md text-white text-xs font-medium border border-white/15 shadow-lg">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                <span>ویدیو</span>
+              </div>
+
+              <!-- آیکون Play مرکزی برای دعوت به کلیک و پخش استریم -->
+              <div class="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+                <div class="w-14 h-14 rounded-full bg-black/55 backdrop-blur-md border border-white/30 flex items-center justify-center text-white shadow-2xl group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-stone-950 group-hover:border-amber-300 transition-all duration-300">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 fill-current mr-[-3px]" viewBox="0 0 24 24">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                  </svg>
+                </div>
+              </div>
+            </>
+          )}
+
+          <!-- لایه گرادینت و عنوان در پایین کارت -->
+          <div class="sets-overlay absolute inset-0 z-20 bg-gradient-to-t from-black/80 via-black/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3.5">
+            <div class="flex items-center justify-between gap-2 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+              <span class="text-white text-xs sm:text-sm font-medium truncate drop-shadow">
+                {item.title}
+              </span>
+              <span class="shrink-0 w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-amber-500 hover:text-stone-950 transition-colors">
+                {item.type === 'video' ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 3 21 3 21 9"/>
+                    <polyline points="9 21 3 21 3 15"/>
+                    <line x1="21" x2="14" y1="3" y2="10"/>
+                    <line x1="3" x2="10" y1="21" y2="14"/>
+                  </svg>
+                )}
+              </span>
             </div>
           </div>
-        </button>
+        </article>
       ))}
     </div>
   )}
-</div>
 
-<!-- ============================================================ -->
-<!-- Lightbox با شیشه‌ی ضخیم -->
-<!-- ============================================================ -->
-<div
-  data-lightbox
-  hidden
-  role="dialog"
-  aria-modal="true"
-  aria-label="نمایش رسانه"
-  class="fixed inset-0 z-[300] lg-overlay"
->
-  <!-- دکمه بستن — شیشه‌ای -->
-  <button
-    type="button"
-    data-lightbox-close
-    aria-label="بستن"
-    class="lg-thin absolute top-4 end-4 z-30 w-12 h-12 rounded-full text-white flex items-center justify-center transition-all active:scale-95 hover:bg-white/35"
-  >
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-      <line x1="18" y1="6" x2="6" y2="18"/>
-      <line x1="6" y1="6" x2="18" y2="18"/>
-    </svg>
-  </button>
-
-  <!-- دکمه دانلود — شیشه‌ی طلایی -->
-  <a
-    data-lightbox-download
-    href="#"
-    download
-    aria-label="دانلود کیفیت اصلی"
-    class="lg-button-primary absolute top-4 end-20 z-30 h-12 px-5 flex items-center gap-2 font-bold text-xs"
-  >
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-      <polyline points="7 10 12 15 17 10"/>
-      <line x1="12" y1="15" x2="12" y2="3"/>
-    </svg>
-    <span>دانلود</span>
-  </a>
-
-  <!-- قبلی -->
-  <button
-    type="button"
-    data-lightbox-prev
-    aria-label="قبلی"
-    class="lg-thin absolute start-2 sm:start-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full text-white flex items-center justify-center transition-all active:scale-95 hover:bg-white/35"
-  >
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="15 18 9 12 15 6"/>
-    </svg>
-  </button>
-
-  <!-- بعدی -->
-  <button
-    type="button"
-    data-lightbox-next
-    aria-label="بعدی"
-    class="lg-thin absolute end-2 sm:end-4 top-1/2 -translate-y-1/2 z-30 w-12 h-12 rounded-full text-white flex items-center justify-center transition-all active:scale-95 hover:bg-white/35"
-  >
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="9 18 15 12 9 6"/>
-    </svg>
-  </button>
-
-  <!-- محتوا -->
+  <!-- پاپ‌آپ (Lightbox Modal) تمام‌صفحه با پخش استریم و دانلود -->
   <div
-    data-lightbox-content
-    class="absolute inset-0 flex items-center justify-center p-4 sm:p-16"
-  ></div>
-
-  <!-- شمارنده — شیشه‌ای -->
-  <div
-    data-lightbox-counter
-    class="absolute bottom-6 inset-x-0 flex justify-center pointer-events-none"
+    id="gallery-lightbox"
+    class="fixed inset-0 z-[9999] hidden opacity-0 transition-opacity duration-300 bg-stone-950/92 backdrop-blur-xl flex-col justify-between select-none"
+    role="dialog"
+    aria-modal="true"
+    aria-hidden="true"
   >
-    <div class="lg-thin px-4 py-2 text-xs font-medium text-white tabular-nums">
-      1 / 1
+    <!-- هدر پاپ‌آپ: شمارنده، عنوان، دکمه دانلود و دکمه بستن -->
+    <header class="relative z-30 flex items-center justify-between px-4 sm:px-6 py-3.5 bg-gradient-to-b from-black/80 to-transparent text-white">
+      <div class="flex items-center gap-3 min-w-0">
+        <span
+          id="lightbox-counter"
+          class="px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs sm:text-sm font-semibold text-amber-400 shrink-0"
+          dir="ltr"
+        >
+          1 / {totalCount}
+        </span>
+        <h3 id="lightbox-title" class="text-sm sm:text-base font-medium text-stone-100 truncate">
+          عنوان خاطره
+        </h3>
+      </div>
+
+      <div class="flex items-center gap-2.5 shrink-0">
+        <!-- دکمه دانلود مستقیم عکس یا ویدیو -->
+        <a
+          id="lightbox-download"
+          href="#"
+          download
+          class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-stone-950 font-semibold text-xs sm:text-sm shadow-lg shadow-amber-500/20 transition-all duration-200"
+          aria-label="دانلود فایل"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" x2="12" y1="15" y2="3"/>
+          </svg>
+          <span>دانلود</span>
+        </a>
+
+        <!-- دکمه بستن -->
+        <button
+          type="button"
+          id="lightbox-close"
+          class="w-10 h-10 rounded-xl bg-white/10 hover:bg-rose-500/90 text-white flex items-center justify-center border border-white/15 transition-all duration-200 active:scale-95 cursor-pointer"
+          aria-label="بستن پنجره"
+          title="بستن (Esc)"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- بخش میانی: نمایشگر رسانه عمودی یا افقی -->
+    <div id="lightbox-backdrop" class="relative flex-1 flex items-center justify-center w-full h-full overflow-hidden px-2 sm:px-14 py-2">
+      <!-- دکمه قبلی -->
+      <button
+        type="button"
+        id="lightbox-prev"
+        class="hidden sm:flex absolute right-4 z-30 w-11 h-11 rounded-full bg-white/10 hover:bg-white/25 backdrop-blur-md border border-white/15 text-white items-center justify-center transition-all duration-200 active:scale-90 cursor-pointer shadow-lg"
+        aria-label="خاطره قبلی"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+
+      <!-- ظرف اصلی تصویر و پلیر استریم ویدیو -->
+      <div id="lightbox-content-wrapper" class="relative z-20 flex items-center justify-center max-w-full max-h-full">
+        <!-- اسپینر لودینگ استریم -->
+        <div id="lightbox-spinner" class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+          <div class="w-10 h-10 border-3 border-amber-500/30 border-t-amber-500 rounded-full animate-spin"></div>
+        </div>
+
+        <img
+          id="lightbox-img"
+          src=""
+          alt=""
+          class="hidden max-h-[82vh] max-w-[94vw] sm:max-w-[85vw] w-auto h-auto object-contain rounded-xl shadow-2xl transition-all duration-300 scale-95 opacity-0 select-none"
+        />
+
+        <!-- پلیر ویدیو: فقط در زمان کلیک مقداردهی و استریم می‌شود -->
+        <video
+          id="lightbox-video"
+          controls
+          playsinline
+          preload="metadata"
+          controlslist="nodownload"
+          class="hidden max-h-[82vh] max-w-[94vw] sm:max-w-[85vw] w-auto h-auto object-contain rounded-xl shadow-2xl bg-black transition-all duration-300 scale-95 opacity-0"
+        />
+      </div>
+
+      <!-- دکمه بعدی -->
+      <button
+        type="button"
+        id="lightbox-next"
+        class="hidden sm:flex absolute left-4 z-30 w-11 h-11 rounded-full bg-white/10 hover:bg-white/25 backdrop-blur-md border border-white/15 text-white items-center justify-center transition-all duration-200 active:scale-90 cursor-pointer shadow-lg"
+        aria-label="خاطره بعدی"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
     </div>
+
+    <!-- نوار پایین موبایل برای ورق زدن -->
+    <footer class="relative z-30 flex sm:hidden items-center justify-between px-6 py-3 bg-gradient-to-t from-black/80 to-transparent text-stone-300 text-xs">
+      <button type="button" id="lightbox-prev-mobile" class="flex items-center gap-1 py-1.5 px-3 rounded-lg bg-white/10 active:bg-white/20">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        <span>قبلی</span>
+      </button>
+      <span class="text-[11px] text-stone-400">برای ورق زدن به چپ یا راست بکشید</span>
+      <button type="button" id="lightbox-next-mobile" class="flex items-center gap-1 py-1.5 px-3 rounded-lg bg-white/10 active:bg-white/20">
+        <span>بعدی</span>
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+    </footer>
   </div>
-</div>
+</section>
 
-<script type="application/json" data-gallery-data set:html={JSON.stringify(mediaData)} />
-
-<style is:global>
-  /* ============================================================
-     Masonry
-     ============================================================ */
-  .gallery-masonry {
-    column-count: 2;
-    column-gap: 0.75rem;
+<style>
+  .gallery-filter-btn.active {
+    background-color: rgb(255 255 255);
+    color: rgb(28 25 23);
+    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.12);
   }
-  @media (min-width: 640px) {
-    .gallery-masonry {
-      column-count: 3;
-    }
-  }
-  @media (min-width: 1024px) {
-    .gallery-masonry {
-      column-count: 4;
-    }
+  :global(.dark) .gallery-filter-btn.active {
+    background-color: rgb(41 37 36);
+    color: rgb(245 245 244);
   }
 
-  .gallery-item {
-    display: block;
-    position: relative;
-    width: 100%;
-    margin: 0 0 0.75rem 0;
-    break-inside: avoid;
-    border-radius: 24px;
-    overflow: hidden;
-    background: rgba(255, 255, 255, 0.5);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.7),
-      0 4px 16px rgba(74, 63, 53, 0.06);
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
-                box-shadow 0.4s ease;
-    padding: 0;
-    text-align: inherit;
-  }
-
-  .gallery-item:active {
-    transform: scale(0.97);
-  }
-
-  @media (hover: hover) {
-    .gallery-item:hover {
-      transform: translateY(-3px);
-      box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.85),
-        0 12px 32px rgba(74, 63, 53, 0.15),
-        0 4px 12px rgba(74, 63, 53, 0.08);
-    }
-    .gallery-item:hover .gallery-hover-overlay {
-      opacity: 1;
-    }
-    .gallery-item:hover .gallery-thumb {
-      transform: scale(1.05);
-    }
-  }
-
-  .gallery-thumb {
-    display: block;
-    width: 100%;
-    height: auto;
-    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    will-change: transform;
-  }
-
-  .gallery-thumb-placeholder {
-    aspect-ratio: 16 / 9;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .gallery-thumb-gradient {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, #1E1E24 0%, #2C2C36 50%, #1E1E24 100%);
-  }
-  .gallery-thumb-gradient::after {
-    content: '🎬';
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
-    opacity: 0.5;
-  }
-
-  /* ============================================================
-     Play overlay
-     ============================================================ */
-  .gallery-play-overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-  }
-
-  .gallery-play-btn {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.5);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.7);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.9),
-      0 8px 24px rgba(0, 0, 0, 0.25),
-      0 0 0 0 rgba(255, 255, 255, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #E8833A;
-    animation: gallery-play-pulse 2.5s ease-in-out infinite;
-  }
-
-  @keyframes gallery-play-pulse {
-    0%, 100% {
-      box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.9),
-        0 8px 24px rgba(0, 0, 0, 0.25),
-        0 0 0 0 rgba(255, 255, 255, 0.4);
-    }
-    50% {
-      box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 1),
-        0 8px 24px rgba(0, 0, 0, 0.3),
-        0 0 0 12px rgba(255, 255, 255, 0);
-    }
-  }
-
-  /* ============================================================
-     Hover overlay (download button)
-     ============================================================ */
-  .gallery-hover-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.35), transparent 40%);
-    opacity: 0;
-    transition: opacity 0.3s;
-    pointer-events: none;
-    display: flex;
-    align-items: flex-end;
-    justify-content: flex-end;
-    padding: 0.75rem;
-  }
-
-  .gallery-download-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.55);
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.7);
-    color: #E8833A;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.9),
-      0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-
-  /* ============================================================
-     Lightbox
-     ============================================================ */
-  [data-lightbox] {
-    animation: lightbox-fade 0.3s ease-out;
-  }
-
-  @keyframes lightbox-fade {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  [data-lightbox-content] img,
-  [data-lightbox-content] video {
-    max-width: 100%;
-    max-height: 100%;
-    border-radius: 24px;
-    box-shadow:
-      0 25px 60px -12px rgba(0, 0, 0, 0.5),
-      0 8px 24px -4px rgba(0, 0, 0, 0.3);
-    animation: lightbox-zoom 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  @keyframes lightbox-zoom {
-    from { opacity: 0; transform: scale(0.92); }
-    to { opacity: 1; transform: scale(1); }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .gallery-item,
-    .gallery-thumb,
-    .gallery-play-btn,
-    [data-lightbox],
-    [data-lightbox-content] img,
-    [data-lightbox-content] video {
-      animation: none !important;
-      transition: none !important;
-    }
+  .gallery-card {
+    transform: translateZ(0);
+    will-change: transform, opacity;
   }
 </style>
 
 <script>
-  function initGallery() {
-    const dataEl = document.querySelector<HTMLScriptElement>('[data-gallery-data]');
-    const masonry = document.querySelector<HTMLElement>('[data-gallery-masonry]');
-    const lightbox = document.querySelector<HTMLElement>('[data-lightbox]');
-    const content = document.querySelector<HTMLElement>('[data-lightbox-content]');
-    const counter = document.querySelector<HTMLElement>('[data-lightbox-counter]');
-    const closeBtn = document.querySelector<HTMLButtonElement>('[data-lightbox-close]');
-    const prevBtn = document.querySelector<HTMLButtonElement>('[data-lightbox-prev]');
-    const nextBtn = document.querySelector<HTMLButtonElement>('[data-lightbox-next]');
-    const downloadBtn = document.querySelector<HTMLAnchorElement>('[data-lightbox-download]');
+  function initGalleryModule() {
+    const cards = Array.from(document.querySelectorAll<HTMLElement>('.gallery-card'));
+    const filterBtns = document.querySelectorAll<HTMLButtonElement>('.gallery-filter-btn');
 
-    if (!dataEl || !masonry || !lightbox || !content) return;
+    const lightbox = document.getElementById('gallery-lightbox');
+    const lightboxBackdrop = document.getElementById('lightbox-backdrop');
+    const lightboxImg = document.getElementById('lightbox-img') as HTMLImageElement | null;
+    const lightboxVideo = document.getElementById('lightbox-video') as HTMLVideoElement | null;
+    const lightboxTitle = document.getElementById('lightbox-title');
+    const lightboxCounter = document.getElementById('lightbox-counter');
+    const lightboxDownload = document.getElementById('lightbox-download') as HTMLAnchorElement | null;
+    const lightboxSpinner = document.getElementById('lightbox-spinner');
+    const closeBtn = document.getElementById('lightbox-close');
+    const prevBtn = document.getElementById('lightbox-prev');
+    const nextBtn = document.getElementById('lightbox-next');
+    const prevBtnMobile = document.getElementById('lightbox-prev-mobile');
+    const nextBtnMobile = document.getElementById('lightbox-next-mobile');
 
-    const dataElSafe: HTMLScriptElement = dataEl;
-    const masonrySafe: HTMLElement = masonry;
-    const lightboxSafe: HTMLElement = lightbox;
-    const contentSafe: HTMLElement = content;
+    if (!cards.length || !lightbox || !lightboxImg || !lightboxVideo) return;
 
-    type MediaItem = {
-      type: 'image' | 'video';
-      src: string;
-      originalSrc: string;
-      filename: string;
+    let activeItems: HTMLElement[] = [...cards];
+    let currentIndex = 0;
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    // ۱. Lazy Loading واقعی برای تمام تامنیل‌ها (تصاویر و کاور ویدیوها) با IntersectionObserver
+    const lazyThumbs = document.querySelectorAll<HTMLImageElement>('img.gallery-thumb');
+
+    const revealThumb = (img: HTMLImageElement) => {
+      const card = img.closest('.gallery-card');
+      const skeleton = card?.querySelector<HTMLElement>('.skeleton-loader');
+      img.classList.remove('opacity-0', 'scale-[1.02]', 'min-h-[160px]');
+      img.classList.add('opacity-100', 'scale-100');
+      if (skeleton) skeleton.style.display = 'none';
     };
 
-    let media: MediaItem[] = [];
-    try {
-      media = JSON.parse(dataElSafe.textContent || '[]');
-    } catch {
-      media = [];
+    if ('IntersectionObserver' in window) {
+      const thumbObserver = new IntersectionObserver(
+        (entries, observer) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const img = entry.target as HTMLImageElement;
+              const realSrc = img.getAttribute('data-src');
+              if (realSrc) {
+                img.src = realSrc;
+                img.onload = () => revealThumb(img);
+                img.onerror = () => {
+                  const skeleton = img.closest('.gallery-card')?.querySelector<HTMLElement>('.skeleton-loader');
+                  if (skeleton) skeleton.style.display = 'none';
+                };
+              }
+              observer.unobserve(img);
+            }
+          });
+        },
+        { rootMargin: '200px 0px', threshold: 0.01 }
+      );
+
+      lazyThumbs.forEach((img) => thumbObserver.observe(img));
+    } else {
+      // Fallback برای مرورگرهای قدیمی
+      lazyThumbs.forEach((img) => {
+        const realSrc = img.getAttribute('data-src');
+        if (realSrc) {
+          img.src = realSrc;
+          img.onload = () => revealThumb(img);
+        }
+      });
     }
 
-    if (media.length === 0) return;
+    // ۲. فیلتر دسته‌بندی (همه / تصاویر / ویدیوها)
+    filterBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const filter = btn.dataset.filter || 'all';
 
-    let currentIndex = -1;
-    let touchStartX = 0;
-    let touchStartY = 0;
+        filterBtns.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
 
-    function openLightbox(index: number) {
-      if (index < 0 || index >= media.length) return;
-      currentIndex = index;
+        activeItems = [];
+        cards.forEach((card) => {
+          const itemType = card.dataset.type;
+          if (filter === 'all' || itemType === filter) {
+            card.classList.remove('hidden');
+            activeItems.push(card);
+          } else {
+            card.classList.add('hidden');
+          }
+        });
+      });
+    });
 
-      const item = media[index];
-      contentSafe.innerHTML = '';
+    // ۳. توقف کامل استریم ویدیو و آزادسازی پهنای باند هنگام بستن یا تعویض اسلاید
+    function stopVideoStream() {
+      if (!lightboxVideo) return;
+      lightboxVideo.pause();
+      lightboxVideo.removeAttribute('src');
+      lightboxVideo.removeAttribute('poster');
+      lightboxVideo.load();
+    }
 
-      if (item.type === 'video') {
-        const video = document.createElement('video');
-        video.src = item.src;
-        video.controls = true;
-        video.autoplay = true;
-        video.playsInline = true;
-        video.preload = 'metadata';
-        contentSafe.appendChild(video);
+    // ۴. نمایش محتوا در پاپ‌آپ (عکس یا استریم ویدیو)
+    function updateLightboxContent(index: number) {
+      if (!activeItems.length || !lightboxImg || !lightboxVideo) return;
+
+      currentIndex = (index + activeItems.length) % activeItems.length;
+      const targetCard = activeItems[currentIndex];
+
+      const src = targetCard.dataset.src || '';
+      const poster = targetCard.dataset.poster || '';
+      const title = targetCard.dataset.title || 'خاطره';
+      const type = targetCard.dataset.type || 'image';
+      const ext = targetCard.dataset.ext || (type === 'video' ? 'mp4' : 'jpg');
+
+      // قطع استریم قبلی
+      stopVideoStream();
+
+      if (lightboxSpinner) lightboxSpinner.classList.remove('hidden');
+      lightboxImg.classList.add('hidden', 'scale-95', 'opacity-0');
+      lightboxVideo.classList.add('hidden', 'scale-95', 'opacity-0');
+
+      // تنظیم عنوان و دکمه دانلود
+      if (lightboxTitle) lightboxTitle.textContent = title;
+      if (lightboxCounter) lightboxCounter.textContent = `${currentIndex + 1} / ${activeItems.length}`;
+      if (lightboxDownload) {
+        lightboxDownload.href = src;
+        lightboxDownload.setAttribute('download', `${title}.${ext}`);
+      }
+
+      if (type === 'image') {
+        lightboxImg.src = src;
+        lightboxImg.alt = title;
+        lightboxImg.classList.remove('hidden');
+
+        lightboxImg.onload = () => {
+          if (lightboxSpinner) lightboxSpinner.classList.add('hidden');
+          requestAnimationFrame(() => {
+            lightboxImg.classList.remove('scale-95', 'opacity-0');
+            lightboxImg.classList.add('scale-100', 'opacity-100');
+          });
+        };
       } else {
-        const img = document.createElement('img');
-        img.src = item.src;
-        img.alt = '';
-        img.decoding = 'async';
-        contentSafe.appendChild(img);
-      }
+        // تنظیم تامنیل هم‌نام به عنوان پوستر پلیر تا لحظه شروع استریم
+        if (poster) {
+          lightboxVideo.poster = poster;
+        }
+        lightboxVideo.src = src;
+        lightboxVideo.classList.remove('hidden');
 
-      if (downloadBtn) {
-        downloadBtn.href = item.originalSrc;
-        downloadBtn.download = item.filename;
-      }
+        // نمایش سریع پلیر به همراه پوستر و شروع پخش استریم
+        requestAnimationFrame(() => {
+          lightboxVideo.classList.remove('scale-95', 'opacity-0');
+          lightboxVideo.classList.add('scale-100', 'opacity-100');
+        });
 
-      if (counter) {
-        counter.innerHTML = `
-          <div class="lg-thin px-4 py-2 text-xs font-medium text-white tabular-nums">
-            ${index + 1} / ${media.length}
-          </div>
-        `;
-      }
+        lightboxVideo.oncanplay = () => {
+          if (lightboxSpinner) lightboxSpinner.classList.add('hidden');
+        };
 
-      lightboxSafe.hidden = false;
+        lightboxVideo.play().catch(() => {
+          // اگر مرورگر اجازه Autoplay با صدا نداد، اسپینر مخفی شود تا کاربر دکمه Play را بزند
+          if (lightboxSpinner) lightboxSpinner.classList.add('hidden');
+        });
+      }
+    }
+
+    function openLightbox(cardElement: HTMLElement) {
+      const idxInActive = activeItems.indexOf(cardElement);
+      if (idxInActive === -1) return;
+
+      updateLightboxContent(idxInActive);
+
+      lightbox?.classList.remove('hidden');
+      lightbox?.classList.add('flex');
+      lightbox?.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
-      closeBtn?.focus();
+
+      requestAnimationFrame(() => {
+        lightbox?.classList.remove('opacity-0');
+        lightbox?.classList.add('opacity-100');
+      });
     }
 
     function closeLightbox() {
-      const video = contentSafe.querySelector('video');
-      if (video) {
-        video.pause();
-        video.src = '';
-      }
-      contentSafe.innerHTML = '';
-      lightboxSafe.hidden = true;
+      if (!lightbox) return;
+
+      stopVideoStream();
+      lightbox.classList.remove('opacity-100');
+      lightbox.classList.add('opacity-0');
+      lightbox.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
-      currentIndex = -1;
+
+      setTimeout(() => {
+        lightbox.classList.remove('flex');
+        lightbox.classList.add('hidden');
+      }, 280);
     }
 
-    function goNext() {
-      if (media.length === 0) return;
-      const next = (currentIndex + 1) % media.length;
-      openLightbox(next);
-    }
-
-    function goPrev() {
-      if (media.length === 0) return;
-      const prev = (currentIndex - 1 + media.length) % media.length;
-      openLightbox(prev);
-    }
-
-    masonrySafe.querySelectorAll<HTMLButtonElement>('[data-gallery-index]').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        const idx = parseInt(btn.dataset.galleryIndex ?? '-1', 10);
-        if (idx >= 0) openLightbox(idx);
+    // رویداد کلیک روی هر کارت
+    cards.forEach((card) => {
+      card.addEventListener('click', () => openLightbox(card));
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openLightbox(card);
+        }
       });
     });
 
     closeBtn?.addEventListener('click', closeLightbox);
-    nextBtn?.addEventListener('click', goNext);
-    prevBtn?.addEventListener('click', goPrev);
+    prevBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      updateLightboxContent(currentIndex - 1);
+    });
+    nextBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      updateLightboxContent(currentIndex + 1);
+    });
+    prevBtnMobile?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      updateLightboxContent(currentIndex - 1);
+    });
+    nextBtnMobile?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      updateLightboxContent(currentIndex + 1);
+    });
 
-    lightboxSafe.addEventListener('click', (e) => {
-      const target = e.target as HTMLElement;
-      if (target === lightboxSafe) {
+    // بستن با کلیک روی فضای خالی اطراف
+    lightboxBackdrop?.addEventListener('click', (e) => {
+      if (e.target === lightboxBackdrop || e.target === document.getElementById('lightbox-content-wrapper')) {
         closeLightbox();
       }
     });
 
-    document.addEventListener('keydown', (e) => {
-      if (lightboxSafe.hidden) return;
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        closeLightbox();
-      } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-        e.preventDefault();
-        if (e.key === 'ArrowLeft') goNext();
-        else goPrev();
-      }
+    // کلیدهای کیبورد
+    window.addEventListener('keydown', (e) => {
+      if (lightbox.classList.contains('hidden')) return;
+
+      if (e.key === 'Escape') closeLightbox();
+      else if (e.key === 'ArrowLeft') updateLightboxContent(currentIndex + 1);
+      else if (e.key === 'ArrowRight') updateLightboxContent(currentIndex - 1);
     });
 
-    lightboxSafe.addEventListener(
+    // ورق زدن لمسی (Swipe) در موبایل
+    lightboxBackdrop?.addEventListener(
       'touchstart',
       (e) => {
-        if (e.touches.length !== 1) return;
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
+        touchStartX = e.changedTouches[0].screenX;
       },
       { passive: true }
     );
 
-    lightboxSafe.addEventListener(
+    lightboxBackdrop?.addEventListener(
       'touchend',
       (e) => {
-        if (e.changedTouches.length !== 1) return;
-        const dx = e.changedTouches[0].clientX - touchStartX;
-        const dy = e.changedTouches[0].clientY - touchStartY;
-
-        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 60) {
-          if (dx < 0) goNext();
-          else goPrev();
+        touchEndX = e.changedTouches[0].screenX;
+        const diff = touchStartX - touchEndX;
+        if (Math.abs(diff) > 50) {
+          if (diff > 0) {
+            updateLightboxContent(currentIndex - 1);
+          } else {
+            updateLightboxContent(currentIndex + 1);
+          }
         }
       },
       { passive: true }
     );
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initGallery);
-  } else {
-    initGallery();
-  }
+  document.addEventListener('DOMContentLoaded', initGalleryModule);
+  document.addEventListener('astro:page-load', initGalleryModule);
 </script>
