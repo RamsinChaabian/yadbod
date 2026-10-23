@@ -268,10 +268,23 @@
     const remainingDays = Math.ceil((SEVEN_DAYS_MS - elapsedMs) / (1000 * 60 * 60 * 24));
     const lifePercent = Math.round(remainingRatio * 100);
 
-    const formattedDate = new Intl.DateTimeFormat('fa-IR', {
-      month: 'short',
+    const meltTime = createdTime + SEVEN_DAYS_MS;
+    const meltDate = new Date(meltTime);
+    
+    const parts = new Intl.DateTimeFormat('fa-IR', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
       day: 'numeric',
-    }).format(new Date(createdAtIso));
+    }).formatToParts(meltDate);
+
+    const getPart = (type: string) => parts.find(p => p.type === type)?.value || '';
+    const weekday = getPart('weekday');
+    const day = getPart('day');
+    const month = getPart('month');
+    const year = getPart('year');
+
+    const formattedDate = `${weekday} ${day} ${month} ${year}`;
 
     return {
       isAlive,
@@ -722,7 +735,9 @@
               </h3>
 
               <div class="mt-2 flex items-center justify-center">
-                <span class="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-[11px] font-semibold ${
+                <span class="inline-flex ${
+                  metrics.isAlive ? 'items-center flex-row gap-1' : 'flex-col gap-0.5'
+                } px-3 py-1 rounded-full text-[11px] font-semibold ${
                   metrics.isAlive
                     ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
                     : 'bg-stone-800/90 text-stone-400 border border-stone-700/60'
@@ -730,7 +745,8 @@
                   ${
                     metrics.isAlive
                       ? `🔥 ${metrics.remainingDays.toLocaleString('fa-IR')} روز باقی‌مانده`
-                      : `آب‌شده به یادگار (${metrics.formattedDate})`
+                      : `<span class="leading-tight">آب‌شده به یادگار</span>
+                         <span class="text-[10px] leading-tight opacity-80" dir="rtl">${metrics.formattedDate}</span>`
                   }
                 </span>
               </div>
