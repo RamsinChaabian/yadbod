@@ -26,7 +26,7 @@ export const familyConfig = {
 
   // خواهران و برادران — به ترتیب سن
   siblings: [
-    { id: 'holeh', name: 'هوله', gender: 'female' as const },
+    { id: 'hoveyle', name: 'هویله', gender: 'female' as const },
     { id: 'oleh', name: 'عوله', gender: 'female' as const },
     { id: 'goosheh', name: 'گوشه', gender: 'female' as const },
     { id: 'najiyeh', name: 'نجیه', gender: 'female' as const, isMain: true },
