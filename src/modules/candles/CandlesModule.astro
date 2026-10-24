@@ -161,6 +161,7 @@
 <script>
   import * as THREE from 'three';
   import { supabase, type CandleRecord } from '../../utils/supabase';
+  import { getCandlesFromCache, saveCandlesToCache } from '../../utils/candleOfflineCache';
 
   // طول عمر دقیق هر شمع: ۷ روز (هفتگی) به میلی‌ثانیه
   const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
@@ -184,7 +185,6 @@
     smokeParticles: THREE.Points | null;
     isAlive: boolean;
     remainingRatio: number;
-    // متغیرهای چرخش ۳۶۰ درجه و فیزیک اینرسی
     rotY: number;
     rotX: number;
     velY: number;
@@ -214,11 +214,9 @@
   let sharedGlowTexture: THREE.CanvasTexture | null = null;
   let visibilityObserver: IntersectionObserver | null = null;
 
-  // ابعاد رندر اختصاصی هر کارت شمع
   const RENDER_W = 300;
   const RENDER_H = 260;
 
-  // هندسه‌های سه‌بعدی اشتراکی با جزئیات بالا
   const baseGeometries = {
     pedestalBase: new THREE.CylinderGeometry(0.76, 0.88, 0.12, 36),
     pedestalRim: new THREE.TorusGeometry(0.72, 0.055, 16, 40),
@@ -306,7 +304,6 @@
     }[m] || m));
   }
 
-  // ساخت صحنه سه‌بعدی کامل و مستقل برای یک کارت شمع
   function buildDedicatedCandleSlot(
     viewportEl: HTMLElement,
     canvasEl: HTMLCanvasElement,
@@ -324,7 +321,6 @@
     camera.position.set(0, 1.85, 4.35);
     camera.lookAt(0, 0.92, 0);
 
-    // نورپردازی سه‌بعدی استودیویی برای برجستگی حجم استوانه و اشک‌های موم
     const ambient = new THREE.AmbientLight(0x453528, metrics.isAlive ? 1.5 : 0.9);
     scene.add(ambient);
 
@@ -341,7 +337,6 @@
     candleGroup.scale.set(0.75, 0.75, 0.75);
     scene.add(candleGroup);
 
-    // ۱. شمعدان برنزی چندلایه (چرخنده ۳۶۰ درجه)
     const bronzeMat = new THREE.MeshStandardMaterial({
       color: 0x42352c,
       metalness: 0.85,
@@ -365,7 +360,6 @@
     pedBowl.position.y = 0.16;
     candleGroup.add(pedBowl);
 
-    // ۲. بدنه موم شمع با شیدر Subsurface Scattering (نفوذ نور گرم شعله در موم)
     const waxHeight = 1.55 * metrics.waxScaleY;
     const waxMat = new THREE.MeshStandardMaterial({
       color: metrics.isAlive ? 0xfcf6ec : 0x78716c,
@@ -404,7 +398,6 @@
 
     const topOfWaxY = 0.18 + waxHeight;
 
-    // لبه برجسته دهانه شمع و حوضچه موم مذاب
     const waxRimMesh = new THREE.Mesh(baseGeometries.waxRim, waxMat);
     waxRimMesh.position.y = topOfWaxY;
     candleGroup.add(waxRimMesh);
@@ -421,7 +414,6 @@
     poolMesh.position.y = topOfWaxY + 0.005;
     candleGroup.add(poolMesh);
 
-    // ۳. اشک‌های موم سه‌بعدی دورتادور استوانه (وقتی کاربر ۳۶۰ درجه می‌چرخاند کاملاً مشخص است)
     const dripConfigs = [
       { angle: 0.3, lenFactor: 0.68 },
       { angle: 1.35, lenFactor: 0.42 },
@@ -449,7 +441,6 @@
       candleGroup.add(dropMesh);
     });
 
-    // ۴. فتیله شمع + نوک گداخته نارنجی
     const wickMat = new THREE.MeshBasicMaterial({ color: 0x181512 });
     const wickMesh = new THREE.Mesh(baseGeometries.wick, wickMat);
     wickMesh.position.y = topOfWaxY - 0.01;
@@ -465,7 +456,6 @@
       candleGroup.add(emberTip);
     }
 
-    // ۵. سیستم شعله، هاله و ذرات معلق
     const flameUniforms = {
       uTime: { value: 0 },
       uWind: { value: new THREE.Vector2(0, 0) },
@@ -499,19 +489,16 @@
             vec3 pos = position;
             pos.y *= 1.95;
 
-            // فرم اشکی شعله
             float taper = mix(1.0, 0.04, pow(vY, 1.3));
             pos.x *= taper;
             pos.z *= taper;
 
-            // فیزیک رقص شعله و تلاطم حرارتی
             float t = uTime * 4.8 + uPhase;
             float waveX = (sin(t) * 0.055 + sin(t * 2.3 - vY * 4.0) * 0.025) * pow(vY, 1.5);
             float waveZ = (cos(t * 0.9) * 0.055 + cos(t * 1.9 - vY * 3.5) * 0.025) * pow(vY, 1.5);
             float stretchY = 1.0 + sin(t * 2.1) * 0.07 * vY;
             pos.y *= stretchY;
 
-            // خم شدن فیزیکی شعله در اثر چرخاندن شمع یا حرکت موس
             pos.x += waveX + uWind.x * 0.28 * pow(vY, 1.45);
             pos.z += waveZ + uWind.y * 0.28 * pow(vY, 1.45);
 
@@ -542,7 +529,6 @@
       flameMesh.scale.set(fScale, fScale, fScale);
       candleGroup.add(flameMesh);
 
-      // هاله بیرونی بزرگ
       const outerHaloMat = new THREE.SpriteMaterial({
         map: getGlowTexture(),
         color: 0xf59e0b,
@@ -556,7 +542,6 @@
       haloSprite.scale.set(1.75, 1.75, 1);
       candleGroup.add(haloSprite);
 
-      // هسته نورانی درخشان
       const innerHaloMat = new THREE.SpriteMaterial({
         map: getGlowTexture(),
         color: 0xfffbeb,
@@ -570,7 +555,6 @@
       innerGlowSprite.scale.set(0.68, 0.68, 1);
       candleGroup.add(innerGlowSprite);
 
-      // ذرات نورانی معلق دور شمع (Rising Sparks)
       const sparkCount = 14;
       const sparkPositions = new Float32Array(sparkCount * 3);
       for (let i = 0; i < sparkCount; i++) {
@@ -594,7 +578,6 @@
       emberPoints = new THREE.Points(sparkGeo, sparkMat);
       candleGroup.add(emberPoints);
     } else {
-      // دود ملایم برای شمع‌های آب‌شده (بیش از ۷ روز)
       const smokeCount = 18;
       const positions = new Float32Array(smokeCount * 3);
       for (let i = 0; i < smokeCount; i++) {
@@ -635,7 +618,7 @@
       rotX: 0.08,
       velY: 0,
       velX: 0,
-      autoSpinSpeed: 0.0055, // چرخش ملایم و دائمی ۳۶۰ درجه
+      autoSpinSpeed: 0.0055,
       windVelocity: new THREE.Vector2(0, 0),
       isDragging: false,
       isVisible: true,
@@ -643,7 +626,6 @@
       lastPointerY: 0,
     };
 
-    // تعامل چرخش ۳۶۰ درجه با کشیدن موس یا لمس + فیزیک باد روی شعله
     viewportEl.addEventListener('pointerdown', (e) => {
       slot.isDragging = true;
       slot.lastPointerX = e.clientX;
@@ -659,22 +641,18 @@
         const dx = e.clientX - slot.lastPointerX;
         const dy = e.clientY - slot.lastPointerY;
 
-        // چرخش آزادانه ۳۶۰ درجه افقی با اینرسی
         slot.velY = dx * 0.022;
         slot.rotY += slot.velY;
 
-        // تغییر زاویه دید عمودی در محدوده مجاز
         slot.velX = dy * 0.012;
         slot.rotX = THREE.MathUtils.clamp(slot.rotX + slot.velX, -0.25, 0.48);
 
-        // ایجاد باد فیزیکی متناسب با سرعت چرخاندن شمع
         slot.windVelocity.x = THREE.MathUtils.clamp(-dx * 0.065, -1.8, 1.8);
         slot.windVelocity.y = THREE.MathUtils.clamp(-dy * 0.04, -1.2, 1.2);
 
         slot.lastPointerX = e.clientX;
         slot.lastPointerY = e.clientY;
       } else {
-        // واکنش ملایم شعله به عبور موس از روی کارت
         slot.windVelocity.x = THREE.MathUtils.clamp(slot.windVelocity.x - nx * 0.12, -0.9, 0.9);
       }
     });
@@ -716,7 +694,6 @@
       return;
     }
 
-    // ساخت کارت‌های مجزا با بوم اختصاصی داخل هر کارت (ثابت هنگام اسکرول)
     gridEl.innerHTML = candlesList
       .map((candle, index) => {
         const metrics = computeCandleMetrics(candle.created_at);
@@ -773,7 +750,6 @@
     if (activeCountEl) activeCountEl.textContent = activeCount.toLocaleString('fa-IR');
     if (totalCountEl) totalCountEl.textContent = candlesList.length.toLocaleString('fa-IR');
 
-    // مشاهده‌گر هوشمند تا فقط شمع‌های داخل دید صفحه رندر شوند (پشتیبانی از تعداد نامحدود شمع)
     visibilityObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -800,6 +776,8 @@
   }
 
   function initVirtualWebGLEngine() {
+    if (offscreenRenderer) return; // جلوگیری از ایجاد چندباره رندرر
+
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     offscreenRenderer = new THREE.WebGLRenderer({
       alpha: true,
@@ -817,7 +795,6 @@
       requestAnimationFrame(animateLoop);
       if (!offscreenRenderer || !gridEl) return;
 
-      // اگر پنل تب شمع مخفی است، مصرف پردازنده صفر شود
       const tabPanel = gridEl.closest('[data-tab-panel]');
       if (tabPanel && tabPanel.hasAttribute('hidden')) return;
 
@@ -827,21 +804,18 @@
         const slot = activeSlots[i];
         if (!slot.isVisible) continue;
 
-        // ۱. فیزیک چرخش ۳۶۰ درجه آزادانه + اینرسی پس از رها کردن موس
         if (!slot.isDragging) {
           slot.rotY += slot.autoSpinSpeed + slot.velY;
-          slot.velY *= 0.94; // اصطکاک نرم اینرسی
+          slot.velY *= 0.94;
           slot.rotX += (0.08 - slot.rotX) * 0.08;
         }
         slot.candleGroup.rotation.y = slot.rotY;
         slot.candleGroup.rotation.x = slot.rotX;
 
-        // ۲. بروزرسانی زمان و باد در شیدر شعله
         slot.windVelocity.multiplyScalar(0.91);
         slot.flameUniforms.uTime.value = elapsed;
         slot.flameUniforms.uWind.value.copy(slot.windVelocity);
 
-        // ۳. تپش زنده نور و هاله شعله
         if (slot.haloSprite && slot.innerGlowSprite && slot.flameLight) {
           const flicker = Math.sin(elapsed * 5.2 + i * 1.3) * 0.08 + Math.cos(elapsed * 8.7 + i) * 0.04;
           const baseScale = 1.55 + slot.remainingRatio * 0.35;
@@ -850,7 +824,6 @@
           slot.flameLight.intensity = 3.4 + flicker * 4.0;
         }
 
-        // ۴. حرکت ذرات نورانی معلق دور شمع روشن
         if (slot.emberPoints) {
           const posAttr = slot.emberPoints.geometry.getAttribute('position') as THREE.BufferAttribute;
           const baseTopY = 0.18 + 1.55 * (0.16 + slot.remainingRatio * 0.84);
@@ -862,7 +835,6 @@
           posAttr.needsUpdate = true;
         }
 
-        // ۵. حرکت دود ملایم برای شمع‌های آب‌شده
         if (slot.smokeParticles) {
           const posAttr = slot.smokeParticles.geometry.getAttribute('position') as THREE.BufferAttribute;
           const baseTopY = 0.18 + 1.55 * (0.16 + slot.remainingRatio * 0.84) + 0.12;
@@ -874,7 +846,6 @@
           posAttr.needsUpdate = true;
         }
 
-        // رندر صحنه سه‌بعدی و کپی مستقیم به بوم اختصاصی داخل همان کارت
         offscreenRenderer.render(slot.scene, slot.camera);
         slot.ctx2d.clearRect(0, 0, slot.canvasEl.width, slot.canvasEl.height);
         slot.ctx2d.drawImage(offscreenRenderer.domElement, 0, 0);
@@ -884,34 +855,69 @@
     animateLoop();
   }
 
+  // ==========================================
+  // به‌روزرسانی دیتا (آنلاین + آفلاین)
+  // ==========================================
   async function fetchAllCandles() {
-    if (!supabase) {
-      if (loadingTextEl) {
-        loadingTextEl.textContent = 'متغیرهای اتصال به Supabase تنظیم نشده‌اند.';
-      }
-      return;
+    // ۱. نمایش سریع داده‌های کش شده (آفلاین)
+    const cachedData = await getCandlesFromCache();
+    if (cachedData.length > 0) {
+      candlesList = cachedData;
+      renderCandlesDOMAndScenes();
     }
 
-    const { data, error } = await supabase
-      .from('candles')
-      .select('id, name, created_at')
-      .order('created_at', { ascending: false });
+    // ۲. اگر آنلاین هستیم، دریافت داده‌های جدید از Supabase
+    if (navigator.onLine && supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('candles')
+          .select('id, name, created_at')
+          .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Supabase fetch error:', error);
-      if (loadingTextEl) {
-        loadingTextEl.textContent = 'خطا در دریافت اطلاعات شمع‌ها. لطفاً اتصال اینترنت را بررسی کنید.';
+        if (error) throw error;
+
+        if (data) {
+          candlesList = data;
+          renderCandlesDOMAndScenes();
+          // ذخیره در حافظه مرورگر برای دفعه بعد (آفلاین)
+          await saveCandlesToCache(data);
+        }
+      } catch (err) {
+        console.error('Supabase fetch error:', err);
+        // اگر خطا رخ داد اما کش خالی بود، پیام خطا نشان بده
+        if (candlesList.length === 0 && loadingTextEl) {
+          loadingTextEl.textContent = 'خطا در دریافت اطلاعات. لطفاً اتصال اینترنت را بررسی کنید.';
+        }
       }
-      return;
+    } else if (candlesList.length === 0 && loadingTextEl) {
+      // آفلاین هستیم و هیچ کشی هم وجود ندارد
+      loadingTextEl.textContent = 'شما آفلاین هستید و شمعی ذخیره نشده است.';
+      if (loadingEl) loadingEl.classList.add('hidden');
+      if (gridEl) {
+        gridEl.classList.remove('hidden');
+        gridEl.innerHTML = `
+          <div class="col-span-full text-center py-20 px-4">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-stone-800 text-2xl mb-3">📡</div>
+            <p class="text-stone-300 font-bold text-base mb-1">اتصال به اینترنت برقرار نیست</p>
+            <p class="text-stone-500 text-xs">برای مشاهده شمع‌ها لطفاً اتصال خود را بررسی کنید.</p>
+          </div>
+        `;
+      }
     }
-
-    candlesList = data || [];
-    renderCandlesDOMAndScenes();
   }
 
+  // ثبت شمع جدید
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!supabase || !nameInput || !submitBtn) return;
+    
+    if (!navigator.onLine) {
+      if (statusEl) {
+        statusEl.textContent = 'برای روشن کردن شمع باید به اینترنت متصل باشید.';
+        statusEl.className = 'text-xs sm:text-sm text-red-400 min-h-[1.25rem]';
+      }
+      return;
+    }
 
     const name = nameInput.value.trim();
     if (!name) return;
@@ -944,8 +950,12 @@
     }
 
     if (data) {
+      // Realtime خودش این رو هندل میکنه، ولی برای تجربه کاربری بهتر (Optimistic UI) بلافاصله اضافه میکنیم
+      // نکته: در Realtime با آپدیت دوباره همگام میشویم
       candlesList.unshift(data);
       renderCandlesDOMAndScenes();
+      await saveCandlesToCache(candlesList); // آپدیت کش با شمع جدید
+      
       form.reset();
       if (statusEl) {
         statusEl.textContent = '✨ شمع شما با موفقیت روشن شد و تا ۷ روز آینده می‌درخشد.';
@@ -954,7 +964,36 @@
     }
   });
 
+  // ==========================================
+  // راه‌اندازی و همگام‌سازی زنده (Realtime)
+  // ==========================================
+  
+  // ۱. راه‌اندازی اولیه موتور ۳بعدی و دریافت داده‌ها
   initVirtualWebGLEngine();
   fetchAllCandles();
+  
+  // بروزرسانی دوره‌ای برای شمع‌هایی که آب می‌شوند (هر دقیقه یکبار)
   setInterval(renderCandlesDOMAndScenes, 60 * 1000);
+
+  // ۲. گوش دادن به رویداد آنلاین شدن مرورگر
+  window.addEventListener('online', () => {
+    console.log('Network restored. Syncing candles...');
+    fetchAllCandles();
+  });
+
+  // ۳. اتصال به Supabase Realtime برای آپدیت زنده بدون رفرش
+  if (supabase) {
+    supabase
+      .channel('candles-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'candles' },
+        (payload) => {
+          console.log('Realtime update:', payload);
+          // به محض هر تغییری (درج/حذف)، لیست را از نو می‌خوانیم
+          fetchAllCandles();
+        }
+      )
+      .subscribe();
+  }
 </script>
