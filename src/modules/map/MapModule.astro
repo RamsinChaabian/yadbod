@@ -7,7 +7,7 @@ const { location } = config;
 <div class="py-2">
   <!-- سربرگ شیشه‌ای -->
   <header class="lg-card p-5 mb-4">
-    <h2 class="text-xl font-bold text-stone-800 mb-1">مسیریابی به محل قبر</h2>
+    <h2 class="text-xl font-bold text-stone-800 mb-1">مسیریابی به محل آرامگاه</h2>
     <p class="text-sm text-stone-500">
       {location.cemeteryName} — {location.city}، {location.province}
     </p>
@@ -25,7 +25,7 @@ const { location } = config;
       <div
         data-map
         class="w-full h-[60vh] min-h-[340px] sm:min-h-[420px] rounded-[24px] overflow-hidden bg-stone-100"
-        aria-label="نقشه محل قبر"
+        aria-label="نقشه محل آرامگاه"
       >
         <div class="w-full h-full flex items-center justify-center text-stone-400 text-sm" data-map-loading>
           <span>در حال بارگذاری نقشه…</span>
@@ -243,8 +243,8 @@ const { location } = config;
       popupAnchor: [0, -52],
     });
 
-    const graveMarker = L.marker([lat, lng], { icon: graveIcon, title: 'محل قبر' }).addTo(map);
-    graveMarker.bindPopup(`<strong>قبرستان صاحب‌الزمان</strong><br/>شوشتر، خوزستان`);
+    const graveMarker = L.marker([lat, lng], { icon: graveIcon, title: 'محل آرامگاه' }).addTo(map);
+    graveMarker.bindPopup(`<strong>آرامگاهستان صاحب‌الزمان</strong><br/>شوشتر، خوزستان`);
 
     let routeGlow: L.Polyline | null = null;
     let routeCore: L.Polyline | null = null;
