@@ -5,7 +5,7 @@
 <section class="candles-module relative py-6 sm:py-10 px-3 sm:px-6 max-w-6xl mx-auto select-none" dir="rtl">
   
   <!-- ۱. کارت شیشه‌ای هدر و فرم روشن کردن شمع -->
-  <div class="relative z-10 rounded-[2rem] bg-gradient-to-b from-stone-900/90 via-stone-950/95 to-stone-950 border border-amber-500/25 p-6 sm:p-10 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.75),0_0_40px_rgba(245,158,11,0.08)] backdrop-blur-2xl mb-10 overflow-hidden">
+  <div class="relative z-10 rounded-[2rem] bg-gradient-to-b from-stone-900/90 via-stone-950/95 to-stone-950 border border-amber-500/25 p-5 sm:p-10 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.75),0_0_40px_rgba(245,158,11,0.08)] backdrop-blur-2xl mb-10 overflow-hidden">
     
     <div class="pointer-events-none absolute -top-28 left-1/2 -translate-x-1/2 w-[28rem] h-56 bg-gradient-to-b from-amber-500/20 via-orange-500/10 to-transparent blur-3xl rounded-full"></div>
     <div class="pointer-events-none absolute -bottom-24 -right-24 w-72 h-72 bg-amber-600/10 blur-3xl rounded-full"></div>
@@ -19,13 +19,20 @@
         تالار شمع‌های یادبود
       </h2>
       
-      <p class="text-stone-300/90 text-xs sm:text-sm md:text-base leading-relaxed mb-7">
+      <p class="text-stone-300/90 text-xs sm:text-sm md:text-base leading-relaxed mb-5">
         به یاد و احترام عزیزمان، شمعی روشن کنید. هر شمع به مدت
         <span class="text-amber-400 font-bold underline decoration-amber-500/40 underline-offset-4"> ۷ روز </span>
         روشن می‌ماند و به آرامی ذوب می‌شود، اما نام و یاد شما برای همیشه در این تالار جاودانه خواهد ماند.
       </p>
 
-      <form id="light-candle-form" class="max-w-md mx-auto space-y-4">
+      <!-- بج اطلاع‌رسانی اضافه شدن قابلیت به درخواست کاربران -->
+      <div class="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-400/30 text-amber-200/95 text-[11px] sm:text-xs font-medium mb-6 shadow-[0_0_25px_rgba(245,158,11,0.12)] backdrop-blur-md">
+        <span class="text-sm animate-pulse shrink-0">✨</span>
+        <span>به درخواست شما عزیزان، امکان ثبت دل‌نوشته کوتاه در کنار نام فراهم شد.</span>
+      </div>
+
+      <form id="light-candle-form" class="max-w-md mx-auto space-y-3.5">
+        <!-- فیلد نام و نام خانوادگی (اجباری) -->
         <div class="relative group">
           <div class="absolute -inset-0.5 bg-gradient-to-r from-amber-500/40 via-orange-500/40 to-amber-500/40 rounded-2xl blur opacity-30 group-focus-within:opacity-80 transition duration-500"></div>
           <input
@@ -35,8 +42,30 @@
             maxlength="50"
             autocomplete="name"
             placeholder="نام و نام خانوادگی خود را وارد کنید..."
-            class="relative w-full px-5 py-4 rounded-2xl bg-stone-950/90 border border-amber-500/25 text-amber-50 placeholder-stone-500 text-sm sm:text-base text-center focus:outline-none focus:border-amber-400 transition-all shadow-inner"
+            class="relative w-full px-4 py-3.5 sm:px-5 sm:py-4 rounded-2xl bg-stone-950/90 border border-amber-500/25 text-amber-50 placeholder-stone-500 text-sm sm:text-base text-center focus:outline-none focus:border-amber-400 transition-all shadow-inner"
           />
+        </div>
+
+        <!-- فیلد متن کوتاه / دل‌نوشته (اختیاری - حداکثر ۱۲۰ کاراکتر) -->
+        <div class="relative group text-right">
+          <div class="absolute -inset-0.5 bg-gradient-to-r from-amber-500/30 via-orange-500/30 to-amber-500/30 rounded-2xl blur opacity-20 group-focus-within:opacity-75 transition duration-500"></div>
+          <div class="relative rounded-2xl bg-stone-950/90 border border-amber-500/20 focus-within:border-amber-400/80 transition-all shadow-inner overflow-hidden">
+            <div class="flex items-center justify-between px-3.5 pt-2.5 pb-1 text-[11px] text-stone-400">
+              <label for="candle-user-message" class="flex items-center gap-1.5 font-medium text-amber-200/80 cursor-pointer">
+                <span>🕊️</span>
+                <span>دل‌نوشته یا پیام کوتاه</span>
+                <span class="text-[10px] text-stone-500 font-normal">(اختیاری)</span>
+              </label>
+              <span id="candle-message-counter" class="text-[10px] font-mono text-stone-500 transition-colors" dir="ltr">۰ / ۱۲۰</span>
+            </div>
+            <textarea
+              id="candle-user-message"
+              rows="2"
+              maxlength="120"
+              placeholder="اگر جمله‌ای به یادگار در دل دارید، اینجا بنویسید..."
+              class="w-full px-3.5 pb-3 pt-1 bg-transparent text-amber-50/95 placeholder-stone-500/80 text-xs sm:text-sm leading-relaxed text-right focus:outline-none resize-none"
+            ></textarea>
+          </div>
         </div>
 
         <button
@@ -53,7 +82,7 @@
       </form>
 
       <!-- نوار آمار زنده تالار -->
-      <div class="mt-7 pt-5 border-t border-stone-800/80 flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-xs sm:text-sm">
+      <div class="mt-7 pt-5 border-t border-stone-800/80 flex flex-wrap items-center justify-center gap-3 sm:gap-8 text-xs sm:text-sm">
         <div class="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-3.5 py-1.5 rounded-full">
           <span class="relative flex h-2.5 w-2.5">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
@@ -156,6 +185,20 @@
   .candle-dedicated-card:hover .rotate-360-badge {
     opacity: 1;
   }
+
+  .candle-message-box {
+    position: relative;
+    margin-top: 0.625rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: 0.875rem;
+    background: rgba(28, 25, 23, 0.75);
+    border: 1px solid rgba(245, 158, 11, 0.15);
+    color: rgba(254, 243, 199, 0.88);
+    font-size: 0.75rem;
+    line-height: 1.65;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
 </style>
 
 <script>
@@ -165,6 +208,7 @@
 
   // طول عمر دقیق هر شمع: ۷ روز (هفتگی) به میلی‌ثانیه
   const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+  const MAX_MESSAGE_LENGTH = 120;
 
   interface CandleSlot {
     viewportEl: HTMLElement;
@@ -199,6 +243,8 @@
 
   const form = document.getElementById('light-candle-form') as HTMLFormElement | null;
   const nameInput = document.getElementById('candle-user-name') as HTMLInputElement | null;
+  const messageInput = document.getElementById('candle-user-message') as HTMLTextAreaElement | null;
+  const messageCounterEl = document.getElementById('candle-message-counter');
   const submitBtn = document.getElementById('submit-candle-btn') as HTMLButtonElement | null;
   const submitText = document.getElementById('submit-candle-text');
   const statusEl = document.getElementById('candle-form-status');
@@ -216,6 +262,28 @@
 
   const RENDER_W = 300;
   const RENDER_H = 260;
+
+  // مدیریت شمارنده کاراکتر و جلوگیری از اینترهای چندگانه در موبایل
+  function updateMessageCounter() {
+    if (!messageInput || !messageCounterEl) return;
+    // تبدیل اینترهای متوالی به فاصله برای حفظ زیبایی کارت در موبایل
+    const cleaned = messageInput.value.replace(/[\r\n]+/g, ' ');
+    if (cleaned !== messageInput.value) {
+      messageInput.value = cleaned;
+    }
+    const len = messageInput.value.length;
+    messageCounterEl.textContent = `${len.toLocaleString('fa-IR')} / ${(MAX_MESSAGE_LENGTH).toLocaleString('fa-IR')}`;
+    
+    if (len >= MAX_MESSAGE_LENGTH) {
+      messageCounterEl.className = 'text-[10px] font-mono text-amber-400 font-bold transition-colors';
+    } else if (len > 95) {
+      messageCounterEl.className = 'text-[10px] font-mono text-amber-200/90 transition-colors';
+    } else {
+      messageCounterEl.className = 'text-[10px] font-mono text-stone-500 transition-colors';
+    }
+  }
+
+  messageInput?.addEventListener('input', updateMessageCounter);
 
   const baseGeometries = {
     pedestalBase: new THREE.CylinderGeometry(0.76, 0.88, 0.12, 36),
@@ -699,6 +767,8 @@
         const metrics = computeCandleMetrics(candle.created_at);
         if (metrics.isAlive) activeCount++;
 
+        const cleanMessage = candle.message ? candle.message.trim() : '';
+
         return `
           <article class="candle-dedicated-card ${metrics.isAlive ? '' : 'opacity-80 hover:opacity-100'}">
             <div class="candle-3d-viewport" data-slot-index="${index}" title="برای چرخش ۳۶۰ درجه بکشید">
@@ -706,41 +776,51 @@
               <span class="rotate-360-badge">↻ ۳۶۰°</span>
             </div>
 
-            <div class="relative z-10 mx-2.5 mb-2.5 px-4 pb-4 pt-3 text-center rounded-2xl border border-stone-800/80 bg-stone-950/85 backdrop-blur-md shadow-lg">
-              <h3 class="text-amber-50 font-extrabold text-sm sm:text-base truncate" title="${escapeHtml(candle.name)}">
-                ${escapeHtml(candle.name)}
-              </h3>
+            <div class="relative z-10 mx-2.5 mb-2.5 px-3.5 pb-4 pt-3 text-center rounded-2xl border border-stone-800/80 bg-stone-950/85 backdrop-blur-md shadow-lg flex-1 flex flex-col justify-between">
+              <div>
+                <h3 class="text-amber-50 font-extrabold text-sm sm:text-base truncate" title="${escapeHtml(candle.name)}">
+                  ${escapeHtml(candle.name)}
+                </h3>
 
-              <div class="mt-2 flex items-center justify-center">
-                <span class="inline-flex ${
-                  metrics.isAlive ? 'items-center flex-row gap-1' : 'flex-col gap-0.5'
-                } px-3 py-1 rounded-full text-[11px] font-semibold ${
-                  metrics.isAlive
-                    ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
-                    : 'bg-stone-800/90 text-stone-400 border border-stone-700/60'
-                }">
-                  ${
-                    metrics.isAlive
-                      ? `🔥 ${metrics.remainingDays.toLocaleString('fa-IR')} روز باقی‌مانده`
-                      : `<span class="leading-tight">آب‌شده به یادگار</span>
-                         <span class="text-[10px] leading-tight opacity-80" dir="rtl">${metrics.formattedDate}</span>`
-                  }
-                </span>
+                ${
+                  cleanMessage
+                    ? `<p class="candle-message-box">«${escapeHtml(cleanMessage)}»</p>`
+                    : ''
+                }
               </div>
 
-              ${
-                metrics.isAlive
-                  ? `
-                <div class="mt-2.5 w-full h-1.5 rounded-full bg-stone-800/90 overflow-hidden" title="${metrics.lifePercent}% از عمر ۷ روزه شمع باقی مانده">
-                  <div class="h-full rounded-full bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-200 transition-all duration-700" style="width: ${metrics.lifePercent}%;"></div>
+              <div class="mt-2.5">
+                <div class="flex items-center justify-center">
+                  <span class="inline-flex ${
+                    metrics.isAlive ? 'items-center flex-row gap-1' : 'flex-col gap-0.5'
+                  } px-3 py-1 rounded-full text-[11px] font-semibold ${
+                    metrics.isAlive
+                      ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                      : 'bg-stone-800/90 text-stone-400 border border-stone-700/60'
+                  }">
+                    ${
+                      metrics.isAlive
+                        ? `🔥 ${metrics.remainingDays.toLocaleString('fa-IR')} روز باقی‌مانده`
+                        : `<span class="leading-tight">آب‌شده به یادگار</span>
+                           <span class="text-[10px] leading-tight opacity-80" dir="rtl">${metrics.formattedDate}</span>`
+                    }
+                  </span>
                 </div>
-              `
-                  : `
-                <div class="mt-2.5 w-full h-1.5 rounded-full bg-stone-900 overflow-hidden">
-                  <div class="h-full w-full bg-stone-700/40"></div>
-                </div>
-              `
-              }
+
+                ${
+                  metrics.isAlive
+                    ? `
+                  <div class="mt-2.5 w-full h-1.5 rounded-full bg-stone-800/90 overflow-hidden" title="${metrics.lifePercent}% از عمر ۷ روزه شمع باقی مانده">
+                    <div class="h-full rounded-full bg-gradient-to-r from-orange-500 via-amber-400 to-yellow-200 transition-all duration-700" style="width: ${metrics.lifePercent}%;"></div>
+                  </div>
+                `
+                    : `
+                  <div class="mt-2.5 w-full h-1.5 rounded-full bg-stone-900 overflow-hidden">
+                    <div class="h-full w-full bg-stone-700/40"></div>
+                  </div>
+                `
+                }
+              </div>
             </div>
           </article>
         `;
@@ -871,7 +951,7 @@
       try {
         const { data, error } = await supabase
           .from('candles')
-          .select('id, name, created_at')
+          .select('id, name, message, created_at')
           .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -922,6 +1002,9 @@
     const name = nameInput.value.trim();
     if (!name) return;
 
+    const rawMessage = messageInput ? messageInput.value.replace(/[\r\n]+/g, ' ').trim().slice(0, MAX_MESSAGE_LENGTH) : '';
+    const message = rawMessage.length > 0 ? rawMessage : null;
+
     submitBtn.disabled = true;
     submitBtn.classList.add('opacity-60', 'pointer-events-none');
     if (submitText) submitText.textContent = 'در حال روشن کردن شمع...';
@@ -932,8 +1015,8 @@
 
     const { data, error } = await supabase
       .from('candles')
-      .insert([{ name }])
-      .select('id, name, created_at')
+      .insert([{ name, message }])
+      .select('id, name, message, created_at')
       .single();
 
     submitBtn.disabled = false;
@@ -951,12 +1034,12 @@
 
     if (data) {
       // Realtime خودش این رو هندل میکنه، ولی برای تجربه کاربری بهتر (Optimistic UI) بلافاصله اضافه میکنیم
-      // نکته: در Realtime با آپدیت دوباره همگام میشویم
       candlesList.unshift(data);
       renderCandlesDOMAndScenes();
       await saveCandlesToCache(candlesList); // آپدیت کش با شمع جدید
       
       form.reset();
+      updateMessageCounter();
       if (statusEl) {
         statusEl.textContent = '✨ شمع شما با موفقیت روشن شد و تا ۷ روز آینده می‌درخشد.';
         statusEl.className = 'text-xs sm:text-sm text-emerald-400 min-h-[1.25rem]';

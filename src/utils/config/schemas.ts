@@ -106,6 +106,7 @@ export const featuresConfigSchema = z.object({
   analytics: z.boolean(),
   floatingTabBar: z.boolean(),
   googleMapsFallback: z.boolean(),
+  candles: z.boolean(),
 });
 
 export const seoConfigSchema = z.object({
