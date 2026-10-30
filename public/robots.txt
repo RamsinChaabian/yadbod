@@ -1,6 +1,7 @@
 User-agent: *
 Allow: /
-Disallow: /qr
-Disallow: /offline
+Disallow: /og-preview/
+Disallow: /qr/
+Disallow: /offline/
 
 Sitemap: https://najiye.ir/sitemap-index.xml

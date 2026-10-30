@@ -20,7 +20,7 @@ export default defineConfig({
     // Sitemap
     // ============================================================
     sitemap({
-      filter: (page) => !page.includes('/qr') && !page.includes('/offline'),
+    filter: (page) => !page.includes('/qr') && !page.includes('/offline') && !page.includes('/og-preview'),
     }),
 
     // ============================================================
