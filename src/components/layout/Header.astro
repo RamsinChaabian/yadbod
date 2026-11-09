@@ -3,7 +3,7 @@ import { config } from '../../utils/config';
 import { withBase } from '../../utils/paths';
 import MusicPlayer from './MusicPlayer.astro';
 import ShareButton from './ShareButton.astro';
-
+import LiveShrineAvatar from './LiveShrineAvatar.astro';
 
 const { person } = config;
 ---
@@ -31,27 +31,12 @@ const { person } = config;
        <ShareButton />
        <MusicPlayer />
        
-      <!-- ⭐ آواتار — absolute و بیرون از لایه‌ی overflow -->
+      <!-- ⭐ آواتار زنده و محراب (جایگزین شده) -->
       <div class="absolute inset-x-0 -bottom-16 sm:-bottom-20 flex justify-center pointer-events-none">
-        <div class="pointer-events-auto" data-anim-avatar>
-          <div class="relative">
-            <!-- هاله‌ی نورانی -->
-            <div class="absolute inset-0 rounded-full bg-white/40 backdrop-blur-lg scale-110 opacity-80"></div>
-            <!-- آواتار -->
-            <div class="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden ring-4 ring-white shadow-glass-lg bg-white/40 backdrop-blur-md">
-              <img
-                src={withBase(person.profileImage)}
-                alt={person.imageAlt}
-                class="w-full h-full object-cover"
-                loading="eager"
-                fetchpriority="high"
-                decoding="async"
-                width="400"
-                height="400"
-              />
-            </div>
-          </div>
-        </div>
+        <LiveShrineAvatar 
+          profileImage={person.profileImage} 
+          imageAlt={person.imageAlt} 
+        />
       </div>
     </div>
 
