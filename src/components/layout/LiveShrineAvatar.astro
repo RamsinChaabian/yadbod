@@ -50,15 +50,30 @@ const { profileImage, imageAlt } = Astro.props;
 
 <!-- مدال محراب -->
 <div id="shrine-modal" class="fixed inset-0 z-[99999] hidden opacity-0 transition-opacity duration-500 bg-black">
-  <!-- دکمه بستن -->
-  <button id="close-shrine-modal" class="absolute top-6 right-6 z-[100000] w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white flex items-center justify-center transition-all cursor-pointer">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-  </button>
+  <!-- نوار بالایی مدال: دکمه بستن + شمارنده زنده کاربران در داخل محراب -->
+  <div class="absolute top-6 left-6 right-6 z-[100000] flex items-center justify-between pointer-events-none">
+    <!-- نشانگر بلادرنگ کاربران حاضر در محراب -->
+    <div class="pointer-events-auto bg-stone-950/75 border border-amber-500/35 text-amber-200 text-xs sm:text-sm font-bold px-4 py-2 rounded-full flex items-center gap-2 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.6)] transition-transform duration-300" id="modal-live-badge">
+      <span class="relative flex h-2.5 w-2.5">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+      </span>
+      <span><strong id="modal-live-user-count" class="text-amber-300 font-extrabold mx-0.5">۱</strong> زائر آنلاین در محراب</span>
+    </div>
+
+    <!-- دکمه بستن -->
+    <button id="close-shrine-modal" class="pointer-events-auto w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white flex items-center justify-center transition-all cursor-pointer border border-white/15 shadow-lg">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
 
   <!-- کانتینر Three.js -->
   <div id="three-container" class="w-full h-full relative cursor-grab active:cursor-grabbing">
+    <!-- ویگنت سینمایی ملایم برای عمق دادن به تصویر -->
+    <div class="pointer-events-none absolute inset-0 z-[5] bg-[radial-gradient(circle_at_center,transparent_55%,rgba(0,0,0,0.6)_100%)]"></div>
+
     <!-- راهنما -->
-    <div class="absolute bottom-10 left-0 right-0 text-center text-white/70 text-sm animate-pulse pointer-events-none z-10 transition-opacity duration-300" id="shrine-hint">
+    <div class="absolute bottom-10 left-0 right-0 text-center text-white/85 text-sm animate-pulse pointer-events-none z-10 transition-opacity duration-300 drop-shadow-md" id="shrine-hint">
       برای گل‌باران، روی سنگ قبر کلیک کنید 🌸
     </div>
   </div>
@@ -74,10 +89,68 @@ const { profileImage, imageAlt } = Astro.props;
   }
 
   // ==========================================
-  // ۱. راه‌اندازی Trystero
+  // ۱. راه‌اندازی Trystero (با سینتکس دقیق Property Assignment)
   // ==========================================
   let sendFlowerClick: any = null;
   let room: any = null;
+  let lastDisplayedCount = 1;
+
+  const countEl = document.getElementById('live-user-count');
+  const modalCountEl = document.getElementById('modal-live-user-count');
+  const modalBadgeEl = document.getElementById('modal-live-badge');
+
+  // همگام‌سازی فوری بین تب‌های مرورگر روی یک سیستم + P2P شبکه
+  const tabId = Math.random().toString(36).substring(2, 10);
+  const activeLocalTabs = new Map<string, number>();
+  let bc: BroadcastChannel | null = null;
+
+  if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+    bc = new BroadcastChannel('yadbod-shrine-live-sync');
+    bc.onmessage = (ev) => {
+      const msg = ev.data;
+      if (!msg || msg.sender === tabId) return;
+
+      if (msg.type === 'heartbeat') {
+        activeLocalTabs.set(msg.sender, Date.now());
+        updatePeerCount();
+      } else if (msg.type === 'leave') {
+        activeLocalTabs.delete(msg.sender);
+        updatePeerCount();
+      } else if (msg.type === 'flower-click') {
+        if ((window as any).triggerFlowerRain) {
+          (window as any).triggerFlowerRain(msg.amount || 10);
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', () => {
+      bc?.postMessage({ type: 'leave', sender: tabId });
+    });
+  }
+
+  const updatePeerCount = () => {
+    const now = Date.now();
+    for (const [id, lastSeen] of activeLocalTabs.entries()) {
+      if (now - lastSeen > 6000) activeLocalTabs.delete(id);
+    }
+
+    const trysteroPeers = room && typeof room.getPeers === 'function'
+      ? Object.keys(room.getPeers()).length
+      : 0;
+
+    // بیشترین مقدار بین همتاهای WebRTC و تب‌های فعال مرورگر + ۱ (خود کاربر)
+    const totalOnline = Math.max(trysteroPeers, activeLocalTabs.size) + 1;
+    const formatted = totalOnline.toLocaleString('fa-IR');
+
+    if (countEl) countEl.textContent = formatted;
+    if (modalCountEl) modalCountEl.textContent = formatted;
+
+    if (totalOnline !== lastDisplayedCount && modalBadgeEl) {
+      lastDisplayedCount = totalOnline;
+      modalBadgeEl.classList.add('scale-105');
+      setTimeout(() => modalBadgeEl.classList.remove('scale-105'), 300);
+    }
+  };
 
   try {
     room = joinRoom(
@@ -86,7 +159,6 @@ const { profileImage, imageAlt } = Astro.props;
         relayConfig: {
           urls: [
             'wss://broker.emqx.io:8084/mqtt',
-            'wss://broker.hivemq.com:8884/mqtt',
             'wss://test.mosquitto.org:8081/mqtt'
           ]
         }
@@ -94,12 +166,7 @@ const { profileImage, imageAlt } = Astro.props;
       'main-room'
     );
 
-    const countEl = document.getElementById('live-user-count');
-    const updatePeerCount = () => {
-      const peers = Object.keys(room.getPeers()).length;
-      if (countEl) countEl.textContent = (peers + 1).toLocaleString('fa-IR');
-    };
-
+    // ✅ دقیقاً مطابق ساختار @trystero-p2p/mqtt شما (انتساب مستقیم پراپرتی، نه فراخوانی تابع)
     room.onPeerJoin = () => updatePeerCount();
     room.onPeerLeave = () => updatePeerCount();
     updatePeerCount();
@@ -110,6 +177,7 @@ const { profileImage, imageAlt } = Astro.props;
     // ارسال سیگنال کلیک به بقیه کاربران
     sendFlowerClick = (payload: { amount: number }) => {
       flowerAction.send(payload);
+      bc?.postMessage({ type: 'flower-click', sender: tabId, amount: payload.amount });
     };
 
     // دریافت سیگنال کلیک از بقیه کاربران
@@ -123,64 +191,221 @@ const { profileImage, imageAlt } = Astro.props;
     console.error('Trystero initialization failed:', err);
   }
 
+  // ضربان قلب (Heartbeat) برای به‌روزرسانی بلادرنگ تعداد کاربران آنلاین
+  setInterval(() => {
+    bc?.postMessage({ type: 'heartbeat', sender: tabId });
+    updatePeerCount();
+  }, 2000);
+  bc?.postMessage({ type: 'heartbeat', sender: tabId });
+
   // ==========================================
   // ۲. متغیرهای محیط سه‌بعدی
   // ==========================================
   let scene: THREE.Scene;
   let camera: THREE.PerspectiveCamera;
   let renderer: THREE.WebGLRenderer;
+  let warmTopLight: THREE.PointLight;
+
+  const MAX_PARTICLES = 800;
   let flowerParticles: THREE.Points;
   let particleVelocities: Float32Array;
+  let particleTargetVy: Float32Array;
+  let particleAngles: Float32Array;
+  let particleRotSpeeds: Float32Array;
+  let particlePhases: Float32Array;
+  let globalClickMultiplier = 1;
+
+  const FIREFLY_COUNT = 110;
+  let firefliesPoints: THREE.Points;
+  let fireflyBaseY: Float32Array;
+  let fireflyPhases: Float32Array;
+
   let isThreeInitialized = false;
   let isRendering = false;
   let animationFrameId: number;
   let clock = new THREE.Clock();
 
-  const MAX_PARTICLES = 800;
-  let globalClickMultiplier = 1;
-
   let isUserDragging = false;
   let previousMousePosition = { x: 0, y: 0 };
   let lon = 0;
   let lat = 0;
+  let smoothLon = 0;
+  let smoothLat = 0;
+  let lastInteractionTime = 0;
   const phi = new THREE.Vector3();
 
+  let cachedFlowerAtlas: THREE.CanvasTexture | null = null;
+  let cachedGlowTex: THREE.CanvasTexture | null = null;
+
   // ==========================================
-  // ۳. بافت گل
+  // ۳. ساخت اطلس بافت ۴ گلبرگ طبیعی (۲×۲) و بافت نور
   // ==========================================
-  function getFlowerTexture() {
+  function getFlowerAtlasTexture(): THREE.CanvasTexture {
+    if (cachedFlowerAtlas) return cachedFlowerAtlas;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+
+    const drawPetal = (cx: number, cy: number, type: number) => {
+      ctx.save();
+      ctx.translate(cx, cy);
+
+      if (type === 0) {
+        // ۱. گلبرگ رز سرخ مخملی
+        const grad = ctx.createRadialGradient(0, -6, 4, 0, 0, 52);
+        grad.addColorStop(0, '#ff4d6d');
+        grad.addColorStop(0.6, '#e11d48');
+        grad.addColorStop(0.92, '#881337');
+        grad.addColorStop(1, 'rgba(136, 19, 55, 0)');
+        ctx.fillStyle = grad;
+
+        ctx.beginPath();
+        ctx.moveTo(0, 46);
+        ctx.bezierCurveTo(-48, 22, -46, -42, -8, -46);
+        ctx.bezierCurveTo(0, -38, 0, -38, 8, -46);
+        ctx.bezierCurveTo(46, -42, 48, 22, 0, 46);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(255, 204, 213, 0.35)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(0, 36);
+        ctx.quadraticCurveTo(-10, 0, -15, -30);
+        ctx.moveTo(0, 36);
+        ctx.quadraticCurveTo(10, 0, 15, -30);
+        ctx.stroke();
+
+      } else if (type === 1) {
+        // ۲. گلبرگ لاله صورتی
+        const grad = ctx.createLinearGradient(0, -48, 0, 48);
+        grad.addColorStop(0, '#ffe4e6');
+        grad.addColorStop(0.5, '#fb7185');
+        grad.addColorStop(0.92, '#f43f5e');
+        grad.addColorStop(1, 'rgba(244, 63, 94, 0)');
+        ctx.fillStyle = grad;
+
+        ctx.beginPath();
+        ctx.moveTo(0, 48);
+        ctx.bezierCurveTo(-36, 18, -34, -36, 0, -48);
+        ctx.bezierCurveTo(34, -36, 36, 18, 0, 48);
+        ctx.closePath();
+        ctx.fill();
+
+      } else if (type === 2) {
+        // ۳. گلبرگ یاس سفید با پایه طلایی
+        const grad = ctx.createRadialGradient(0, 14, 3, 0, 0, 48);
+        grad.addColorStop(0, '#fef08a');
+        grad.addColorStop(0.35, '#ffffff');
+        grad.addColorStop(0.88, '#e2e8f0');
+        grad.addColorStop(1, 'rgba(226, 232, 240, 0)');
+        ctx.fillStyle = grad;
+
+        ctx.beginPath();
+        ctx.moveTo(0, 46);
+        ctx.bezierCurveTo(-32, 24, -40, -24, 0, -48);
+        ctx.bezierCurveTo(40, -24, 32, 24, 0, 46);
+        ctx.closePath();
+        ctx.fill();
+
+      } else {
+        // ۴. گلبرگ نرگس طلایی/زعفرانی
+        const grad = ctx.createRadialGradient(0, 0, 4, 0, 0, 46);
+        grad.addColorStop(0, '#fef9c3');
+        grad.addColorStop(0.55, '#fbbf24');
+        grad.addColorStop(0.92, '#d97706');
+        grad.addColorStop(1, 'rgba(217, 119, 6, 0)');
+        ctx.fillStyle = grad;
+
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 28, 44, Math.PI / 8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    };
+
+    drawPetal(64, 64, 0);
+    drawPetal(192, 64, 1);
+    drawPetal(64, 192, 2);
+    drawPetal(192, 192, 3);
+
+    cachedFlowerAtlas = new THREE.CanvasTexture(canvas);
+    cachedFlowerAtlas.colorSpace = THREE.SRGBColorSpace;
+    cachedFlowerAtlas.needsUpdate = true;
+    return cachedFlowerAtlas;
+  }
+
+  function createGlowTexture(): THREE.CanvasTexture {
+    if (cachedGlowTex) return cachedGlowTex;
+
     const canvas = document.createElement('canvas');
     canvas.width = 64;
     canvas.height = 64;
     const ctx = canvas.getContext('2d')!;
 
-    ctx.beginPath();
-    ctx.ellipse(32, 32, 20, 32, Math.PI / 4, 0, Math.PI * 2);
-    ctx.fillStyle = '#f43f5e';
-    ctx.fill();
+    const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, 'rgba(255, 251, 235, 1)');
+    grad.addColorStop(0.35, 'rgba(252, 211, 77, 0.85)');
+    grad.addColorStop(0.7, 'rgba(245, 158, 11, 0.25)');
+    grad.addColorStop(1, 'rgba(245, 158, 11, 0)');
 
-    ctx.shadowColor = 'rgba(255,255,255,0.5)';
-    ctx.shadowBlur = 5;
-    ctx.fill();
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 64, 64);
 
-    return new THREE.CanvasTexture(canvas);
+    cachedGlowTex = new THREE.CanvasTexture(canvas);
+    return cachedGlowTex;
   }
 
   // ==========================================
   // ۴. مقداردهی اولیه Three.js
   // ==========================================
   function initThreeJS() {
+    if (isThreeInitialized) return;
     const container = document.getElementById('three-container');
     if (!container) return;
 
     scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x0c0a09, 0.0035);
+
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(0, 0, 0);
 
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
     container.appendChild(renderer.domElement);
+
+    const ambientLight = new THREE.AmbientLight(0xfff1e6, 1.35);
+    scene.add(ambientLight);
+
+    const hemiLight = new THREE.HemisphereLight(0xfde68a, 0x1c1917, 0.85);
+    hemiLight.position.set(0, 50, 0);
+    scene.add(hemiLight);
+
+    warmTopLight = new THREE.PointLight(0xffedd5, 3.2, 140, 1.2);
+    warmTopLight.position.set(0, 38, 0);
+    scene.add(warmTopLight);
+
+    const glowSpriteMat = new THREE.SpriteMaterial({
+      map: createGlowTexture(),
+      color: 0xfde68a,
+      transparent: true,
+      opacity: 0.35,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const lightHalo = new THREE.Sprite(glowSpriteMat);
+    lightHalo.position.set(0, 42, 0);
+    lightHalo.scale.set(60, 60, 1);
+    scene.add(lightHalo);
+
+    initFlowerParticles();
+    initFireflies();
 
     const geometry = new THREE.SphereGeometry(50, 64, 32);
     geometry.scale(-1, 1, 1);
@@ -190,14 +415,13 @@ const { profileImage, imageAlt } = Astro.props;
 
     textureLoader.load(imageUrl, (texture) => {
       texture.colorSpace = THREE.SRGBColorSpace;
-      const material = new THREE.MeshBasicMaterial({ map: texture });
+      const material = new THREE.MeshStandardMaterial({
+        map: texture,
+        roughness: 0.85,
+        metalness: 0.05,
+      });
       const sphere = new THREE.Mesh(geometry, material);
       scene.add(sphere);
-
-      initFlowerParticles();
-      isRendering = true;
-      clock.start();
-      animate();
     });
 
     window.addEventListener('resize', onWindowResize, false);
@@ -206,56 +430,179 @@ const { profileImage, imageAlt } = Astro.props;
   }
 
   // ==========================================
-  // ۵. سیستم ذرات گل
+  // ۵. سیستم ذرات گل (THREE.Points با چرخش، پرسپکتیو و ۴ نوع گلبرگ)
   // ==========================================
   function initFlowerParticles() {
     const particleGeo = new THREE.BufferGeometry();
     const positions = new Float32Array(MAX_PARTICLES * 3);
+    const scales = new Float32Array(MAX_PARTICLES);
+    const types = new Float32Array(MAX_PARTICLES);
+    particleAngles = new Float32Array(MAX_PARTICLES);
     particleVelocities = new Float32Array(MAX_PARTICLES);
+    particleTargetVy = new Float32Array(MAX_PARTICLES);
+    particleRotSpeeds = new Float32Array(MAX_PARTICLES);
+    particlePhases = new Float32Array(MAX_PARTICLES);
 
     for (let i = 0; i < MAX_PARTICLES; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 100;
+      positions[i * 3] = (Math.random() - 0.5) * 80;
       positions[i * 3 + 1] = -100;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 100;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 80;
+
+      scales[i] = 2.8 + Math.random() * 2.2;
+      types[i] = i % 4;
+      particleAngles[i] = Math.random() * Math.PI * 2;
       particleVelocities[i] = 0;
+      particleTargetVy[i] = 0;
+      particleRotSpeeds[i] = (Math.random() - 0.5) * 3.0;
+      particlePhases[i] = Math.random() * Math.PI * 2;
     }
 
     particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    particleGeo.setAttribute('aScale', new THREE.BufferAttribute(scales, 1));
+    particleGeo.setAttribute('aType', new THREE.BufferAttribute(types, 1));
+    particleGeo.setAttribute('aAngle', new THREE.BufferAttribute(particleAngles, 1));
 
-    const particleMat = new THREE.PointsMaterial({
-      size: 2.5,
-      map: getFlowerTexture(),
+    const particleMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uTexture: { value: getFlowerAtlasTexture() },
+        uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) },
+      },
+      vertexShader: `
+        attribute float aScale;
+        attribute float aType;
+        attribute float aAngle;
+        varying float vType;
+        varying float vAngle;
+        varying float vAlpha;
+        uniform float uPixelRatio;
+
+        void main() {
+          vType = aType;
+          vAngle = aAngle;
+          vAlpha = smoothstep(-32.0, -18.0, position.y);
+
+          vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+          gl_Position = projectionMatrix * mvPosition;
+          gl_PointSize = aScale * uPixelRatio * (130.0 / max(1.0, -mvPosition.z));
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D uTexture;
+        varying float vType;
+        varying float vAngle;
+        varying float vAlpha;
+
+        void main() {
+          if (vAlpha <= 0.01) discard;
+
+          vec2 centered = gl_PointCoord - vec2(0.5);
+          float c = cos(vAngle);
+          float s = sin(vAngle);
+          vec2 rotated = vec2(
+            centered.x * c - centered.y * s,
+            centered.x * s + centered.y * c
+          );
+
+          rotated.x /= (0.65 + 0.35 * abs(cos(vAngle * 0.7)));
+
+          vec2 uv = rotated + vec2(0.5);
+          if (uv.x < 0.02 || uv.x > 0.98 || uv.y < 0.02 || uv.y > 0.98) discard;
+
+          float col = mod(vType, 2.0);
+          float row = floor(vType / 2.0);
+          vec2 atlasUV = (uv * 0.5) + vec2(col * 0.5, row * 0.5);
+
+          vec4 texColor = texture2D(uTexture, atlasUV);
+          if (texColor.a < 0.05) discard;
+
+          gl_FragColor = vec4(texColor.rgb, texColor.a * vAlpha * 0.95);
+        }
+      `,
       transparent: true,
-      opacity: 0.9,
       depthWrite: false,
       blending: THREE.NormalBlending,
     });
 
     flowerParticles = new THREE.Points(particleGeo, particleMat);
+    flowerParticles.frustumCulled = false;
     scene.add(flowerParticles);
+  }
+
+  function initFireflies() {
+    const geo = new THREE.BufferGeometry();
+    const positions = new Float32Array(FIREFLY_COUNT * 3);
+    fireflyBaseY = new Float32Array(FIREFLY_COUNT);
+    fireflyPhases = new Float32Array(FIREFLY_COUNT);
+
+    for (let i = 0; i < FIREFLY_COUNT; i++) {
+      const radius = 10 + Math.random() * 35;
+      const theta = Math.random() * Math.PI * 2;
+      const y = (Math.random() - 0.35) * 48;
+
+      positions[i * 3] = Math.cos(theta) * radius;
+      positions[i * 3 + 1] = y;
+      positions[i * 3 + 2] = Math.sin(theta) * radius;
+
+      fireflyBaseY[i] = y;
+      fireflyPhases[i] = Math.random() * Math.PI * 2;
+    }
+
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    const mat = new THREE.PointsMaterial({
+      size: 0.95,
+      map: createGlowTexture(),
+      color: 0xfde68a,
+      transparent: true,
+      opacity: 0.55,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      sizeAttenuation: true,
+    });
+
+    firefliesPoints = new THREE.Points(geo, mat);
+    firefliesPoints.frustumCulled = false;
+    scene.add(firefliesPoints);
   }
 
   (window as any).triggerFlowerRain = (amount: number) => {
     if (!flowerParticles) return;
 
     const positions = flowerParticles.geometry.attributes.position.array as Float32Array;
-    globalClickMultiplier = Math.min(5, globalClickMultiplier + 0.05);
+    globalClickMultiplier = Math.min(5, globalClickMultiplier + 0.08);
+
+    const viewRad = THREE.MathUtils.degToRad(smoothLon);
 
     let spawned = 0;
-    for (let i = 0; i < MAX_PARTICLES && spawned < amount * globalClickMultiplier; i++) {
+    const totalToSpawn = Math.ceil(amount * globalClickMultiplier * 1.8);
+
+    for (let i = 0; i < MAX_PARTICLES && spawned < totalToSpawn; i++) {
       if (particleVelocities[i] === 0) {
-        positions[i * 3] = (Math.random() - 0.5) * 90;
-        positions[i * 3 + 1] = 35 + Math.random() * 10;
-        positions[i * 3 + 2] = (Math.random() - 0.5) * 90;
-        particleVelocities[i] = 1.5 + Math.random() * 2.5;
+        const inFront = Math.random() < 0.7;
+        const angle = inFront
+          ? viewRad + (Math.random() - 0.5) * 1.5
+          : Math.random() * Math.PI * 2;
+        const radius = inFront
+          ? 7 + Math.random() * 18
+          : 10 + Math.random() * 28;
+
+        positions[i * 3] = Math.cos(angle) * radius;
+        positions[i * 3 + 1] = 14 + Math.random() * 18;
+        positions[i * 3 + 2] = Math.sin(angle) * radius;
+
+        particleVelocities[i] = 0.15;
+        particleTargetVy[i] = 1.2 + Math.random() * 1.8;
+        particleAngles[i] = Math.random() * Math.PI * 2;
+
         spawned++;
       }
     }
     flowerParticles.geometry.attributes.position.needsUpdate = true;
+    flowerParticles.geometry.attributes.aAngle.needsUpdate = true;
   };
 
   // ==========================================
-  // ۶. تعاملات (چرخش + کلیک)
+  // ۶. تعاملات (چرخش + کلیک با حفظ منطق hasMoved)
   // ==========================================
   function setupInteraction(container: HTMLElement) {
     let hasMoved = false;
@@ -263,6 +610,7 @@ const { profileImage, imageAlt } = Astro.props;
     container.addEventListener('mousedown', (e) => {
       isUserDragging = true;
       hasMoved = false;
+      lastInteractionTime = clock.getElapsedTime();
       previousMousePosition = { x: e.clientX, y: e.clientY };
     });
 
@@ -277,18 +625,21 @@ const { profileImage, imageAlt } = Astro.props;
       lon -= deltaX * 0.1;
       lat += deltaY * 0.1;
       lat = Math.max(-85, Math.min(85, lat));
+      lastInteractionTime = clock.getElapsedTime();
 
       previousMousePosition = { x: e.clientX, y: e.clientY };
     });
 
     container.addEventListener('mouseup', () => {
       isUserDragging = false;
+      lastInteractionTime = clock.getElapsedTime();
       if (!hasMoved) handleShrineClick();
     });
 
     container.addEventListener('touchstart', (e) => {
       isUserDragging = true;
       hasMoved = false;
+      lastInteractionTime = clock.getElapsedTime();
       previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     }, { passive: true });
 
@@ -303,12 +654,14 @@ const { profileImage, imageAlt } = Astro.props;
       lon -= deltaX * 0.2;
       lat += deltaY * 0.2;
       lat = Math.max(-85, Math.min(85, lat));
+      lastInteractionTime = clock.getElapsedTime();
 
       previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
     }, { passive: true });
 
     container.addEventListener('touchend', () => {
       isUserDragging = false;
+      lastInteractionTime = clock.getElapsedTime();
       if (!hasMoved) handleShrineClick();
     });
   }
@@ -321,33 +674,50 @@ const { profileImage, imageAlt } = Astro.props;
       navigator.vibrate([60, 40, 60]);
     }
 
-    // بارش محلی
     (window as any).triggerFlowerRain(10);
 
-    // ارسال به بقیه کاربران
     if (sendFlowerClick) {
       sendFlowerClick({ amount: 10 });
     }
   }
 
   // ==========================================
-  // ۸. انیمیشن
+  // ۸. انیمیشن و فیزیک سینمایی
   // ==========================================
   function animate() {
     if (!isRendering) return;
     animationFrameId = requestAnimationFrame(animate);
 
-    const delta = clock.getDelta();
+    const delta = Math.min(clock.getDelta(), 0.1);
     const elapsed = clock.getElapsedTime();
 
+    if (!isUserDragging) {
+      const idleTime = elapsed - lastInteractionTime;
+      const driftFactor = Math.min(1, idleTime * 0.4);
+      lon += Math.sin(elapsed * 0.35) * 0.035 * driftFactor;
+      lat += Math.cos(elapsed * 0.25) * 0.015 * driftFactor;
+    }
+
     lat = Math.max(-85, Math.min(85, lat));
-    phi.set(THREE.MathUtils.degToRad(90 - lat), THREE.MathUtils.degToRad(lon), 0);
+
+    smoothLon += (lon - smoothLon) * Math.min(1, delta * 10);
+    smoothLat += (lat - smoothLat) * Math.min(1, delta * 10);
+
+    phi.set(
+      THREE.MathUtils.degToRad(90 - smoothLat),
+      THREE.MathUtils.degToRad(smoothLon),
+      0
+    );
 
     camera.lookAt(
       Math.sin(phi.x) * Math.cos(phi.y),
       Math.cos(phi.x),
       Math.sin(phi.x) * Math.sin(phi.y)
     );
+
+    if (warmTopLight) {
+      warmTopLight.intensity = 3.1 + Math.sin(elapsed * 1.4) * 0.35;
+    }
 
     if (flowerParticles) {
       const positions = flowerParticles.geometry.attributes.position.array as Float32Array;
@@ -356,12 +726,19 @@ const { profileImage, imageAlt } = Astro.props;
       for (let i = 0; i < MAX_PARTICLES; i++) {
         if (particleVelocities[i] > 0) {
           needsUpdate = true;
+          const phase = particlePhases[i];
 
-          positions[i * 3 + 1] -= particleVelocities[i] * delta * 15;
-          positions[i * 3] += Math.sin(elapsed + i) * 0.05;
-          positions[i * 3 + 2] += Math.cos(elapsed + i * 2) * 0.05;
+          particleVelocities[i] += (particleTargetVy[i] - particleVelocities[i]) * delta * 1.2;
 
-          if (positions[i * 3 + 1] < -30) {
+          const flutterLift = 1.0 - 0.25 * Math.abs(Math.sin(elapsed * 1.5 + phase));
+          positions[i * 3 + 1] -= particleVelocities[i] * flutterLift * delta * 6.5;
+
+          positions[i * 3] += (Math.sin(elapsed * 1.3 + phase) * 2.2 + Math.cos(elapsed * 0.5 + i) * 0.8) * delta;
+          positions[i * 3 + 2] += (Math.cos(elapsed * 1.1 + phase) * 2.2 + Math.sin(elapsed * 0.4 + i) * 0.8) * delta;
+
+          particleAngles[i] += particleRotSpeeds[i] * delta + Math.sin(elapsed + phase) * 0.4 * delta;
+
+          if (positions[i * 3 + 1] < -32) {
             positions[i * 3 + 1] = -100;
             particleVelocities[i] = 0;
           }
@@ -370,14 +747,29 @@ const { profileImage, imageAlt } = Astro.props;
 
       if (needsUpdate) {
         flowerParticles.geometry.attributes.position.needsUpdate = true;
+        flowerParticles.geometry.attributes.aAngle.needsUpdate = true;
       }
+    }
+
+    if (firefliesPoints) {
+      const ffPos = firefliesPoints.geometry.attributes.position.array as Float32Array;
+      for (let i = 0; i < FIREFLY_COUNT; i++) {
+        const phase = fireflyPhases[i];
+        ffPos[i * 3] += Math.sin(elapsed * 0.3 + phase) * 0.012;
+        ffPos[i * 3 + 1] = fireflyBaseY[i] + Math.sin(elapsed * 0.6 + phase) * 1.5;
+        ffPos[i * 3 + 2] += Math.cos(elapsed * 0.25 + phase) * 0.012;
+      }
+      firefliesPoints.geometry.attributes.position.needsUpdate = true;
+
+      const ffMat = firefliesPoints.material as THREE.PointsMaterial;
+      ffMat.opacity = 0.45 + Math.sin(elapsed * 1.8) * 0.2;
     }
 
     renderer.render(scene, camera);
   }
 
   // ==========================================
-  // ۹. مدیریت مدال
+  // ۹. مدیریت مدال و پیش‌بارگذاری بدون لگ
   // ==========================================
   const triggerBtn = document.getElementById('trigger-shrine-modal');
   const modal = document.getElementById('shrine-modal');
@@ -385,21 +777,36 @@ const { profileImage, imageAlt } = Astro.props;
 
   let isModalOpen = false;
 
+  if (typeof window !== 'undefined') {
+    const prewarm = () => {
+      getFlowerAtlasTexture();
+      createGlowTexture();
+    };
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(prewarm);
+    } else {
+      setTimeout(prewarm, 1000);
+    }
+  }
+
   const openModal = () => {
     if (!modal) return;
 
     modal.classList.remove('hidden');
-    setTimeout(() => modal.classList.remove('opacity-0'), 10);
+    requestAnimationFrame(() => {
+      modal.classList.remove('opacity-0');
+    });
     isModalOpen = true;
     document.body.style.overflow = 'hidden';
 
-    if (!isThreeInitialized) {
-      initThreeJS();
-    } else {
+    setTimeout(() => {
+      if (!isThreeInitialized) {
+        initThreeJS();
+      }
       isRendering = true;
       clock.start();
       animate();
-    }
+    }, 30);
   };
 
   const closeModal = () => {
