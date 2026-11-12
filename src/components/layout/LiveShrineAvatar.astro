@@ -13,7 +13,7 @@ const { profileImage, imageAlt } = Astro.props;
 <div class="pointer-events-auto" data-anim-avatar>
   <div class="relative flex flex-col items-center" id="avatar-story-wrapper" data-story-active="false">
     <!-- هاله‌ی نورانی پایه -->
-    <div class=" absolute inset-0 rounded-full bg-white/40 backdrop-blur-lg scale-110 opacity-80 transition-all duration-500"></div>
+    <div class="absolute inset-0 rounded-full bg-white/40 backdrop-blur-lg scale-110 opacity-80 transition-all duration-500"></div>
 
     <!-- موج پالس بیرونی (فقط وقتی بیش از ۱ نفر آنلاین است فعال می‌شود) -->
     <div
@@ -29,7 +29,7 @@ const { profileImage, imageAlt } = Astro.props;
       <!-- لایه گرادینت چرخان -->
       <div
         id="story-spinner"
-        class=" story-conic-gradient absolute inset-0 rounded-full opacity-0 transition-opacity duration-500"
+        class="story-conic-gradient absolute inset-0 rounded-full opacity-0 transition-opacity duration-500"
       ></div>
 
       <!-- آواتار (قابل کلیک) با فاصله سفید داخلی مشابه استوری اینستاگرام -->
@@ -49,7 +49,7 @@ const { profileImage, imageAlt } = Astro.props;
           height="400"
         />
 
-        <!-- افکت درخشش و دعوت به کلیک روی عکس -->
+        <!-- افکت درخشش روی عکس (فقط و فقط در حالت Hover نمایش داده می‌شود) -->
         <div
           id="avatar-overlay-hint"
           class="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-2.5"
@@ -73,7 +73,7 @@ const { profileImage, imageAlt } = Astro.props;
         <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
       </span>
       <span><span id="live-user-count">۱</span> نفر آنلاین</span>
-      <!-- متن دعوت به کلیک که هنگام حضور بیش از ۱ نفر ظاهر می‌شود -->
+      <!-- متن دعوت به کلیک که هنگام حضور بیش از ۱ نفر در بج پایین ظاهر می‌شود -->
       <span
         id="story-cta-pill"
         class="hidden items-center gap-0.5 text-[10px] text-white bg-gradient-to-r from-amber-500 to-rose-500 px-1.5 py-0.5 rounded-full font-extrabold mr-0.5 shadow-sm animate-pulse"
@@ -148,11 +148,6 @@ const { profileImage, imageAlt } = Astro.props;
     border: 2px solid rgba(245, 166, 35, 0.65);
     box-shadow: 0 0 20px rgba(244, 63, 94, 0.4);
     animation: story-ripple 2.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-  }
-
-  /* در حالت چندکاربره، هینت روی عکس کمی نمایان می‌ماند تا کاربر متوجه قابلیت کلیک شود */
-  #avatar-story-wrapper[data-story-active="true"] #avatar-overlay-hint {
-    opacity: 0.88;
   }
 
   @keyframes story-spin {
