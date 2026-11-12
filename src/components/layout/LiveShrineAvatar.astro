@@ -11,40 +11,76 @@ const { profileImage, imageAlt } = Astro.props;
 
 <!-- عکس پروفایل و شمارنده زنده -->
 <div class="pointer-events-auto" data-anim-avatar>
-  <div class="relative">
-    <!-- هاله‌ی نورانی -->
-    <div class="absolute inset-0 rounded-full bg-white/40 backdrop-blur-lg scale-110 opacity-80"></div>
-    
-    <!-- آواتار (قابل کلیک) -->
-    <div 
-      id="trigger-shrine-modal"
-      class="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden ring-4 ring-white shadow-glass-lg bg-white/40 backdrop-blur-md cursor-pointer group transition-transform duration-300 hover:scale-105"
-      title="برای مشاهده محراب کلیک کنید"
+  <div class="relative flex flex-col items-center" id="avatar-story-wrapper" data-story-active="false">
+    <!-- هاله‌ی نورانی پایه -->
+    <div class=" absolute inset-0 rounded-full bg-white/40 backdrop-blur-lg scale-110 opacity-80 transition-all duration-500"></div>
+
+    <!-- موج پالس بیرونی (فقط وقتی بیش از ۱ نفر آنلاین است فعال می‌شود) -->
+    <div
+      id="story-pulse-halo"
+      class="absolute -inset-2 rounded-full opacity-0 pointer-events-none transition-opacity duration-500"
+    ></div>
+
+    <!-- حلقه‌ی چرخان استوری اینستاگرام (فقط وقتی بیش از ۱ نفر آنلاین است فعال می‌شود) -->
+    <div
+      id="story-gradient-ring"
+      class="relative p-[3.5px] sm:p-[4px] rounded-full transition-all duration-500 bg-white/80 shadow-glass-lg"
     >
-      <img
-        src={withBase(profileImage)}
-        alt={imageAlt}
-        class="w-full h-full object-cover transition-opacity group-hover:opacity-90"
-        loading="eager"
-        fetchpriority="high"
-        decoding="async"
-        width="400"
-        height="400"
-      />
-      <!-- افکت درخشش روی عکس -->
-      <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-2">
-        <span class="text-[10px] text-white font-bold drop-shadow-md">مشاهده محراب</span>
+      <!-- لایه گرادینت چرخان -->
+      <div
+        id="story-spinner"
+        class=" story-conic-gradient absolute inset-0 rounded-full opacity-0 transition-opacity duration-500"
+      ></div>
+
+      <!-- آواتار (قابل کلیک) با فاصله سفید داخلی مشابه استوری اینستاگرام -->
+      <div
+        id="trigger-shrine-modal"
+        class="relative z-10 w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden ring-[3px] ring-white bg-white cursor-pointer group transition-transform duration-300 hover:scale-[1.03] active:scale-95"
+        title="برای ورود به محراب زنده کلیک کنید"
+      >
+        <img
+          src={withBase(profileImage)}
+          alt={imageAlt}
+          class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+          width="400"
+          height="400"
+        />
+
+        <!-- افکت درخشش و دعوت به کلیک روی عکس -->
+        <div
+          id="avatar-overlay-hint"
+          class="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-2.5"
+        >
+          <span class="text-[10px] sm:text-[11px] text-white font-bold drop-shadow-md tracking-tight flex items-center gap-1">
+            مشاهده محراب 🌸
+          </span>
+        </div>
       </div>
     </div>
 
     <!-- نشانگر آنلاین زنده (روی عکس پروفایل) -->
-    <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-stone-900/90 border border-amber-500/40 text-amber-300 text-[11px] sm:text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 backdrop-blur-md shadow-lg whitespace-nowrap transition-all duration-300">
+    <button
+      type="button"
+      id="trigger-shrine-badge"
+      class="relative z-20 -mt-3.5 bg-stone-900/92 hover:bg-stone-900 border border-amber-500/45 text-amber-300 text-[11px] sm:text-xs font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 backdrop-blur-md shadow-lg whitespace-nowrap transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95"
+      title="کلیک برای ورود به محراب"
+    >
       <span class="relative flex h-2 w-2">
         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
         <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
       </span>
-      <span id="live-user-count">۱</span> نفر آنلاین
-    </div>
+      <span><span id="live-user-count">۱</span> نفر آنلاین</span>
+      <!-- متن دعوت به کلیک که هنگام حضور بیش از ۱ نفر ظاهر می‌شود -->
+      <span
+        id="story-cta-pill"
+        class="hidden items-center gap-0.5 text-[10px] text-white bg-gradient-to-r from-amber-500 to-rose-500 px-1.5 py-0.5 rounded-full font-extrabold mr-0.5 shadow-sm animate-pulse"
+      >
+        ورود ✦
+      </span>
+    </button>
   </div>
 </div>
 
@@ -79,6 +115,78 @@ const { profileImage, imageAlt } = Astro.props;
   </div>
 </div>
 
+<style>
+  /* گرادینت چرخان مشابه استوری/لایو اینستاگرام هماهنگ با پالت غروب گرم */
+  .story-conic-gradient {
+    background: conic-gradient(
+      from 0deg,
+      #f5a623,
+      #e8833a,
+      #f43f5e,
+      #d95b43,
+      #fbbf24,
+      #f43f5e,
+      #f5a623
+    );
+    animation: story-spin 3.2s linear infinite;
+  }
+
+  /* فعال‌سازی استایل استوری وقتی بیش از ۱ نفر آنلاین است */
+  #avatar-story-wrapper[data-story-active="true"] #story-spinner {
+    opacity: 1;
+  }
+
+  #avatar-story-wrapper[data-story-active="true"] #story-gradient-ring {
+    box-shadow:
+      0 0 25px rgba(244, 63, 94, 0.45),
+      0 0 45px rgba(245, 166, 35, 0.35);
+    transform: scale(1.02);
+  }
+
+  #avatar-story-wrapper[data-story-active="true"] #story-pulse-halo {
+    opacity: 1;
+    border: 2px solid rgba(245, 166, 35, 0.65);
+    box-shadow: 0 0 20px rgba(244, 63, 94, 0.4);
+    animation: story-ripple 2.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  }
+
+  /* در حالت چندکاربره، هینت روی عکس کمی نمایان می‌ماند تا کاربر متوجه قابلیت کلیک شود */
+  #avatar-story-wrapper[data-story-active="true"] #avatar-overlay-hint {
+    opacity: 0.88;
+  }
+
+  @keyframes story-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes story-ripple {
+    0% {
+      transform: scale(0.96);
+      opacity: 0.85;
+    }
+    70% {
+      transform: scale(1.16);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1.16);
+      opacity: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .story-conic-gradient,
+    #avatar-story-wrapper[data-story-active="true"] #story-pulse-halo {
+      animation: none !important;
+    }
+  }
+</style>
+
 <script>
   import { joinRoom } from '@trystero-p2p/mqtt';
   import * as THREE from 'three';
@@ -89,7 +197,7 @@ const { profileImage, imageAlt } = Astro.props;
   }
 
   // ==========================================
-  // ۱. راه‌اندازی Trystero (با سینتکس دقیق Property Assignment)
+  // ۱. راه‌اندازی Trystero و مدیریت حلقه استوری زنده
   // ==========================================
   let sendFlowerClick: any = null;
   let room: any = null;
@@ -98,6 +206,8 @@ const { profileImage, imageAlt } = Astro.props;
   const countEl = document.getElementById('live-user-count');
   const modalCountEl = document.getElementById('modal-live-user-count');
   const modalBadgeEl = document.getElementById('modal-live-badge');
+  const storyWrapper = document.getElementById('avatar-story-wrapper');
+  const storyCtaPill = document.getElementById('story-cta-pill');
 
   // همگام‌سازی فوری بین تب‌های مرورگر روی یک سیستم + P2P شبکه
   const tabId = Math.random().toString(36).substring(2, 10);
@@ -138,12 +248,27 @@ const { profileImage, imageAlt } = Astro.props;
       ? Object.keys(room.getPeers()).length
       : 0;
 
-    // بیشترین مقدار بین همتاهای WebRTC و تب‌های فعال مرورگر + ۱ (خود کاربر)
     const totalOnline = Math.max(trysteroPeers, activeLocalTabs.size) + 1;
     const formatted = totalOnline.toLocaleString('fa-IR');
 
     if (countEl) countEl.textContent = formatted;
     if (modalCountEl) modalCountEl.textContent = formatted;
+
+    // ⭐ فعال یا غیرفعال کردن حلقه استوری اینستاگرام بر اساس تعداد کاربران آنلاین (> 1)
+    if (storyWrapper) {
+      const isMultiUser = totalOnline > 1;
+      storyWrapper.setAttribute('data-story-active', isMultiUser ? 'true' : 'false');
+
+      if (storyCtaPill) {
+        if (isMultiUser) {
+          storyCtaPill.classList.remove('hidden');
+          storyCtaPill.classList.add('inline-flex');
+        } else {
+          storyCtaPill.classList.add('hidden');
+          storyCtaPill.classList.remove('inline-flex');
+        }
+      }
+    }
 
     if (totalOnline !== lastDisplayedCount && modalBadgeEl) {
       lastDisplayedCount = totalOnline;
@@ -166,7 +291,6 @@ const { profileImage, imageAlt } = Astro.props;
       'main-room'
     );
 
-    // ✅ دقیقاً مطابق ساختار @trystero-p2p/mqtt شما (انتساب مستقیم پراپرتی، نه فراخوانی تابع)
     room.onPeerJoin = () => updatePeerCount();
     room.onPeerLeave = () => updatePeerCount();
     updatePeerCount();
@@ -191,7 +315,7 @@ const { profileImage, imageAlt } = Astro.props;
     console.error('Trystero initialization failed:', err);
   }
 
-  // ضربان قلب (Heartbeat) برای به‌روزرسانی بلادرنگ تعداد کاربران آنلاین
+  // ضربان قلب (Heartbeat) برای به‌روزرسانی بلادرنگ تعداد کاربران آنلاین و وضعیت حلقه استوری
   setInterval(() => {
     bc?.postMessage({ type: 'heartbeat', sender: tabId });
     updatePeerCount();
@@ -772,6 +896,7 @@ const { profileImage, imageAlt } = Astro.props;
   // ۹. مدیریت مدال و پیش‌بارگذاری بدون لگ
   // ==========================================
   const triggerBtn = document.getElementById('trigger-shrine-modal');
+  const triggerBadge = document.getElementById('trigger-shrine-badge');
   const modal = document.getElementById('shrine-modal');
   const closeBtn = document.getElementById('close-shrine-modal');
 
@@ -822,6 +947,7 @@ const { profileImage, imageAlt } = Astro.props;
   };
 
   triggerBtn?.addEventListener('click', openModal);
+  triggerBadge?.addEventListener('click', openModal);
   closeBtn?.addEventListener('click', closeModal);
 
   document.addEventListener('keydown', (e) => {
