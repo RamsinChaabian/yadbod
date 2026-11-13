@@ -1,4 +1,5 @@
 ---
+import { config } from '../../utils/config';
 import { withBase } from '../../utils/paths';
 
 interface Props {
@@ -7,6 +8,7 @@ interface Props {
 }
 
 const { profileImage, imageAlt } = Astro.props;
+const { uiStrings, emotionalBadges, panoramaUrl, defaultRainAmount } = config.shrine;
 ---
 
 <!-- عکس پروفایل و شمارنده زنده -->
@@ -36,7 +38,7 @@ const { profileImage, imageAlt } = Astro.props;
       <div
         id="trigger-shrine-modal"
         class="relative z-10 w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden ring-[3px] ring-white bg-white cursor-pointer group transition-transform duration-300 hover:scale-[1.03] active:scale-95"
-        title="برای ورود به محراب زنده کلیک کنید"
+        title={uiStrings.avatarTitle}
       >
         <img
           src={withBase(profileImage)}
@@ -49,13 +51,13 @@ const { profileImage, imageAlt } = Astro.props;
           height="400"
         />
 
-        <!-- افکت درخشش روی عکس (فقط و فقط در حالت Hover نمایش داده می‌شود) -->
+        <!-- افکت درخشش روی عکس (فقط در حالت Hover نمایش داده می‌شود) -->
         <div
           id="avatar-overlay-hint"
           class="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-2.5"
         >
           <span class="text-[10px] sm:text-[11px] text-white font-bold drop-shadow-md tracking-tight flex items-center gap-1">
-            مشاهده محراب 🌸
+            {uiStrings.avatarHoverText}
           </span>
         </div>
       </div>
@@ -66,57 +68,90 @@ const { profileImage, imageAlt } = Astro.props;
       type="button"
       id="trigger-shrine-badge"
       class="relative z-20 -mt-3.5 bg-stone-900/92 hover:bg-stone-900 border border-amber-500/45 text-amber-300 text-[11px] sm:text-xs font-bold px-3.5 py-1.5 rounded-full flex items-center gap-1.5 backdrop-blur-md shadow-lg whitespace-nowrap transition-all duration-300 cursor-pointer hover:scale-105 active:scale-95"
-      title="کلیک برای ورود به محراب"
+      title={uiStrings.badgeTitle}
     >
       <span class="relative flex h-2 w-2">
         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
         <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
       </span>
-      <span><span id="live-user-count">۱</span> نفر آنلاین</span>
-      <!-- متن دعوت به کلیک که هنگام حضور بیش از ۱ نفر در بج پایین ظاهر می‌شود -->
+      <span><span id="live-user-count">۱</span> {uiStrings.onlineSuffix}</span>
       <span
         id="story-cta-pill"
         class="hidden items-center gap-0.5 text-[10px] text-white bg-gradient-to-r from-amber-500 to-rose-500 px-1.5 py-0.5 rounded-full font-extrabold mr-0.5 shadow-sm animate-pulse"
       >
-        ورود ✦
+        {uiStrings.enterCtaText}
       </span>
     </button>
   </div>
 </div>
 
 <!-- مدال محراب -->
-<div id="shrine-modal" class="fixed inset-0 z-[99999] hidden opacity-0 transition-opacity duration-500 bg-black">
+<div
+  id="shrine-modal"
+  class="fixed inset-0 z-[99999] hidden opacity-0 transition-opacity duration-500 bg-black select-none"
+  data-panorama-url={panoramaUrl}
+  data-default-rain={defaultRainAmount}
+  data-default-label={uiStrings.defaultTributeLabel}
+  data-default-emoji={uiStrings.defaultTributeEmoji}
+>
   <!-- نوار بالایی مدال: دکمه بستن + شمارنده زنده کاربران در داخل محراب -->
-  <div class="absolute top-6 left-6 right-6 z-[100000] flex items-center justify-between pointer-events-none">
+  <div class="absolute top-5 sm:top-6 left-5 sm:left-6 right-5 sm:right-6 z-[100000] flex items-center justify-between pointer-events-none">
     <!-- نشانگر بلادرنگ کاربران حاضر در محراب -->
     <div class="pointer-events-auto bg-stone-950/75 border border-amber-500/35 text-amber-200 text-xs sm:text-sm font-bold px-4 py-2 rounded-full flex items-center gap-2 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.6)] transition-transform duration-300" id="modal-live-badge">
       <span class="relative flex h-2.5 w-2.5">
         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
         <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
       </span>
-      <span><strong id="modal-live-user-count" class="text-amber-300 font-extrabold mx-0.5">۱</strong> زائر آنلاین در محراب</span>
+      <span><strong id="modal-live-user-count" class="text-amber-300 font-extrabold mx-0.5">۱</strong> {uiStrings.modalOnlineSuffix}</span>
     </div>
 
     <!-- دکمه بستن -->
-    <button id="close-shrine-modal" class="pointer-events-auto w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white flex items-center justify-center transition-all cursor-pointer border border-white/15 shadow-lg">
+    <button id="close-shrine-modal" class="pointer-events-auto w-11 h-11 sm:w-12 sm:h-12 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white flex items-center justify-center transition-all cursor-pointer border border-white/15 shadow-lg active:scale-90">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>
   </div>
 
+  <!-- کانتینر پیام‌های شناور احساسی -->
+  <div id="floating-tributes-container" class="pointer-events-none absolute inset-0 z-[99999] overflow-hidden"></div>
+
   <!-- کانتینر Three.js -->
   <div id="three-container" class="w-full h-full relative cursor-grab active:cursor-grabbing">
     <!-- ویگنت سینمایی ملایم برای عمق دادن به تصویر -->
-    <div class="pointer-events-none absolute inset-0 z-[5] bg-[radial-gradient(circle_at_center,transparent_55%,rgba(0,0,0,0.6)_100%)]"></div>
+    <div class="pointer-events-none absolute inset-0 z-[5] bg-[radial-gradient(circle_at_center,transparent_50%,rgba(0,0,0,0.68)_100%)]"></div>
 
-    <!-- راهنما -->
-    <div class="absolute bottom-10 left-0 right-0 text-center text-white/85 text-sm animate-pulse pointer-events-none z-10 transition-opacity duration-300 drop-shadow-md" id="shrine-hint">
-      برای گل‌باران، روی سنگ قبر کلیک کنید 🌸
+    <!-- بخش پایینی: راهنما + بج‌های احساسی برای گل‌باران همگانی -->
+    <div class="absolute bottom-5 sm:bottom-8 inset-x-0 z-20 flex flex-col items-center gap-3 px-4 pointer-events-none">
+      <!-- راهنما -->
+      <div class="text-center text-amber-100/80 text-xs sm:text-sm pointer-events-none transition-opacity duration-300 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]" id="shrine-hint">
+        {uiStrings.shrineHint}
+      </div>
+
+      <!-- نوار بج‌های رنگی و احساسی -->
+      <div
+        id="shrine-badges-bar"
+        class="pointer-events-auto flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 max-w-2xl bg-stone-950/60 backdrop-blur-xl border border-white/15 px-3.5 py-2.5 sm:px-5 sm:py-3 rounded-3xl shadow-[0_12px_40px_rgba(0,0,0,0.65)]"
+      >
+        {emotionalBadges.map((badge) => (
+          <button
+            type="button"
+            data-shrine-badge
+            data-label={badge.label}
+            data-emoji={badge.emoji}
+            data-petal-type={badge.petalType}
+            data-amount={badge.amount}
+            class={`group relative overflow-hidden rounded-full bg-gradient-to-r ${badge.gradient} border backdrop-blur-md px-3.5 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:scale-105 active:scale-95 cursor-pointer`}
+          >
+            <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 pointer-events-none"></span>
+            <span class="text-sm sm:text-base transition-transform duration-300 group-hover:scale-125 group-hover:rotate-6">{badge.emoji}</span>
+            <span class="tracking-tight drop-shadow-sm">{badge.label}</span>
+          </button>
+        ))}
+      </div>
     </div>
   </div>
 </div>
 
 <style>
-  /* گرادینت چرخان مشابه استوری/لایو اینستاگرام هماهنگ با پالت غروب گرم */
   .story-conic-gradient {
     background: conic-gradient(
       from 0deg,
@@ -131,7 +166,6 @@ const { profileImage, imageAlt } = Astro.props;
     animation: story-spin 3.2s linear infinite;
   }
 
-  /* فعال‌سازی استایل استوری وقتی بیش از ۱ نفر آنلاین است */
   #avatar-story-wrapper[data-story-active="true"] #story-spinner {
     opacity: 1;
   }
@@ -174,6 +208,51 @@ const { profileImage, imageAlt } = Astro.props;
     }
   }
 
+  :global(.floating-tribute-pill) {
+    position: absolute;
+    bottom: 110px;
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 99999;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, rgba(28, 25, 23, 0.85), rgba(41, 37, 36, 0.72));
+    border: 1px solid rgba(251, 191, 36, 0.45);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5), 0 0 20px rgba(245, 158, 11, 0.25);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #fef3c7;
+    font-size: 0.85rem;
+    font-weight: 700;
+    white-space: nowrap;
+    animation: float-up-tribute 3.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  @keyframes float-up-tribute {
+    0% {
+      opacity: 0;
+      transform: translate(-50%, 16px) scale(0.8);
+    }
+    15% {
+      opacity: 1;
+      transform: translate(-50%, 0px) scale(1.04);
+    }
+    30% {
+      transform: translate(calc(-50% + var(--sway-x, 12px)), -45px) scale(1);
+    }
+    75% {
+      opacity: 0.9;
+      transform: translate(calc(-50% - var(--sway-x, 12px)), -160px) scale(0.98);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(-50%, -230px) scale(0.9);
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .story-conic-gradient,
     #avatar-story-wrapper[data-story-active="true"] #story-pulse-halo {
@@ -191,10 +270,22 @@ const { profileImage, imageAlt } = Astro.props;
     document.body.appendChild(modalElement);
   }
 
+  const PANORAMA_URL = modalElement?.getAttribute('data-panorama-url') || 'https://threejs.org/examples/textures/2294472375_24a3b8ef46_o.jpg';
+  const DEFAULT_RAIN_AMOUNT = parseInt(modalElement?.getAttribute('data-default-rain') || '10', 10);
+  const DEFAULT_LABEL = modalElement?.getAttribute('data-default-label') || 'یادش گرامی';
+  const DEFAULT_EMOJI = modalElement?.getAttribute('data-default-emoji') || '🌸';
+
+  interface FlowerPayload {
+    amount: number;
+    label?: string;
+    emoji?: string;
+    petalType?: number;
+  }
+
   // ==========================================
   // ۱. راه‌اندازی Trystero و مدیریت حلقه استوری زنده
   // ==========================================
-  let sendFlowerClick: any = null;
+  let sendFlowerClick: ((payload: FlowerPayload) => void) | null = null;
   let room: any = null;
   let lastDisplayedCount = 1;
 
@@ -203,8 +294,35 @@ const { profileImage, imageAlt } = Astro.props;
   const modalBadgeEl = document.getElementById('modal-live-badge');
   const storyWrapper = document.getElementById('avatar-story-wrapper');
   const storyCtaPill = document.getElementById('story-cta-pill');
+  const tributesContainer = document.getElementById('floating-tributes-container');
 
-  // همگام‌سازی فوری بین تب‌های مرورگر روی یک سیستم + P2P شبکه
+  function spawnFloatingTribute(label?: string, emoji?: string) {
+    if (!label || !tributesContainer) return;
+
+    const pill = document.createElement('div');
+    pill.className = 'floating-tribute-pill';
+
+    const leftPercent = 28 + Math.random() * 44;
+    const swayX = (Math.random() - 0.5) * 36;
+    pill.style.left = `${leftPercent}%`;
+    pill.style.setProperty('--sway-x', `${swayX}px`);
+
+    const emojiSpan = document.createElement('span');
+    emojiSpan.textContent = emoji || DEFAULT_EMOJI;
+    emojiSpan.style.fontSize = '1.1rem';
+
+    const textSpan = document.createElement('span');
+    textSpan.textContent = label;
+
+    pill.appendChild(emojiSpan);
+    pill.appendChild(textSpan);
+    tributesContainer.appendChild(pill);
+
+    setTimeout(() => {
+      pill.remove();
+    }, 3600);
+  }
+
   const tabId = Math.random().toString(36).substring(2, 10);
   const activeLocalTabs = new Map<string, number>();
   let bc: BroadcastChannel | null = null;
@@ -223,7 +341,10 @@ const { profileImage, imageAlt } = Astro.props;
         updatePeerCount();
       } else if (msg.type === 'flower-click') {
         if ((window as any).triggerFlowerRain) {
-          (window as any).triggerFlowerRain(msg.amount || 10);
+          (window as any).triggerFlowerRain(msg.amount || DEFAULT_RAIN_AMOUNT, msg.petalType);
+        }
+        if (msg.label) {
+          spawnFloatingTribute(msg.label, msg.emoji);
         }
       }
     };
@@ -249,7 +370,6 @@ const { profileImage, imageAlt } = Astro.props;
     if (countEl) countEl.textContent = formatted;
     if (modalCountEl) modalCountEl.textContent = formatted;
 
-    // ⭐ فعال یا غیرفعال کردن حلقه استوری اینستاگرام بر اساس تعداد کاربران آنلاین (> 1)
     if (storyWrapper) {
       const isMultiUser = totalOnline > 1;
       storyWrapper.setAttribute('data-story-active', isMultiUser ? 'true' : 'false');
@@ -290,19 +410,26 @@ const { profileImage, imageAlt } = Astro.props;
     room.onPeerLeave = () => updatePeerCount();
     updatePeerCount();
 
-    // ✅ API جدید Trystero: makeAction یک شیء برمی‌گرداند
     const flowerAction = room.makeAction('flower-click');
 
-    // ارسال سیگنال کلیک به بقیه کاربران
-    sendFlowerClick = (payload: { amount: number }) => {
+    sendFlowerClick = (payload: FlowerPayload) => {
       flowerAction.send(payload);
-      bc?.postMessage({ type: 'flower-click', sender: tabId, amount: payload.amount });
+      bc?.postMessage({
+        type: 'flower-click',
+        sender: tabId,
+        amount: payload.amount,
+        label: payload.label,
+        emoji: payload.emoji,
+        petalType: payload.petalType
+      });
     };
 
-    // دریافت سیگنال کلیک از بقیه کاربران
-    flowerAction.onMessage = (data: { amount: number }) => {
+    flowerAction.onMessage = (data: FlowerPayload) => {
       if (typeof window !== 'undefined' && (window as any).triggerFlowerRain) {
-        (window as any).triggerFlowerRain(data.amount);
+        (window as any).triggerFlowerRain(data.amount, data.petalType);
+      }
+      if (data && data.label) {
+        spawnFloatingTribute(data.label, data.emoji);
       }
     };
 
@@ -310,7 +437,6 @@ const { profileImage, imageAlt } = Astro.props;
     console.error('Trystero initialization failed:', err);
   }
 
-  // ضربان قلب (Heartbeat) برای به‌روزرسانی بلادرنگ تعداد کاربران آنلاین و وضعیت حلقه استوری
   setInterval(() => {
     bc?.postMessage({ type: 'heartbeat', sender: tabId });
     updatePeerCount();
@@ -372,7 +498,6 @@ const { profileImage, imageAlt } = Astro.props;
       ctx.translate(cx, cy);
 
       if (type === 0) {
-        // ۱. گلبرگ رز سرخ مخملی
         const grad = ctx.createRadialGradient(0, -6, 4, 0, 0, 52);
         grad.addColorStop(0, '#ff4d6d');
         grad.addColorStop(0.6, '#e11d48');
@@ -398,7 +523,6 @@ const { profileImage, imageAlt } = Astro.props;
         ctx.stroke();
 
       } else if (type === 1) {
-        // ۲. گلبرگ لاله صورتی
         const grad = ctx.createLinearGradient(0, -48, 0, 48);
         grad.addColorStop(0, '#ffe4e6');
         grad.addColorStop(0.5, '#fb7185');
@@ -414,7 +538,6 @@ const { profileImage, imageAlt } = Astro.props;
         ctx.fill();
 
       } else if (type === 2) {
-        // ۳. گلبرگ یاس سفید با پایه طلایی
         const grad = ctx.createRadialGradient(0, 14, 3, 0, 0, 48);
         grad.addColorStop(0, '#fef08a');
         grad.addColorStop(0.35, '#ffffff');
@@ -430,7 +553,6 @@ const { profileImage, imageAlt } = Astro.props;
         ctx.fill();
 
       } else {
-        // ۴. گلبرگ نرگس طلایی/زعفرانی
         const grad = ctx.createRadialGradient(0, 0, 4, 0, 0, 46);
         grad.addColorStop(0, '#fef9c3');
         grad.addColorStop(0.55, '#fbbf24');
@@ -530,9 +652,8 @@ const { profileImage, imageAlt } = Astro.props;
     geometry.scale(-1, 1, 1);
 
     const textureLoader = new THREE.TextureLoader();
-    const imageUrl = 'https://threejs.org/examples/textures/2294472375_24a3b8ef46_o.jpg';
 
-    textureLoader.load(imageUrl, (texture) => {
+    textureLoader.load(PANORAMA_URL, (texture) => {
       texture.colorSpace = THREE.SRGBColorSpace;
       const material = new THREE.MeshStandardMaterial({
         map: texture,
@@ -684,10 +805,11 @@ const { profileImage, imageAlt } = Astro.props;
     scene.add(firefliesPoints);
   }
 
-  (window as any).triggerFlowerRain = (amount: number) => {
+  (window as any).triggerFlowerRain = (amount: number, preferredPetalType?: number) => {
     if (!flowerParticles) return;
 
     const positions = flowerParticles.geometry.attributes.position.array as Float32Array;
+    const types = flowerParticles.geometry.attributes.aType.array as Float32Array;
     globalClickMultiplier = Math.min(5, globalClickMultiplier + 0.08);
 
     const viewRad = THREE.MathUtils.degToRad(smoothLon);
@@ -697,7 +819,7 @@ const { profileImage, imageAlt } = Astro.props;
 
     for (let i = 0; i < MAX_PARTICLES && spawned < totalToSpawn; i++) {
       if (particleVelocities[i] === 0) {
-        const inFront = Math.random() < 0.7;
+        const inFront = Math.random() < 0.72;
         const angle = inFront
           ? viewRad + (Math.random() - 0.5) * 1.5
           : Math.random() * Math.PI * 2;
@@ -709,6 +831,12 @@ const { profileImage, imageAlt } = Astro.props;
         positions[i * 3 + 1] = 14 + Math.random() * 18;
         positions[i * 3 + 2] = Math.sin(angle) * radius;
 
+        if (typeof preferredPetalType === 'number' && preferredPetalType >= 0 && preferredPetalType <= 3) {
+          types[i] = Math.random() < 0.8 ? preferredPetalType : Math.floor(Math.random() * 4);
+        } else {
+          types[i] = i % 4;
+        }
+
         particleVelocities[i] = 0.15;
         particleTargetVy[i] = 1.2 + Math.random() * 1.8;
         particleAngles[i] = Math.random() * Math.PI * 2;
@@ -718,15 +846,26 @@ const { profileImage, imageAlt } = Astro.props;
     }
     flowerParticles.geometry.attributes.position.needsUpdate = true;
     flowerParticles.geometry.attributes.aAngle.needsUpdate = true;
+    flowerParticles.geometry.attributes.aType.needsUpdate = true;
   };
 
   // ==========================================
-  // ۶. تعاملات (چرخش + کلیک با حفظ منطق hasMoved)
+  // ۶. تعاملات (چرخش + کلیک روی مزار + کلیک روی بج‌های احساسی)
   // ==========================================
   function setupInteraction(container: HTMLElement) {
     let hasMoved = false;
+    let clickedOnUI = false;
+
+    const isUIElement = (target: EventTarget | null) => {
+      return target instanceof HTMLElement && Boolean(target.closest('#shrine-badges-bar'));
+    };
 
     container.addEventListener('mousedown', (e) => {
+      if (isUIElement(e.target)) {
+        clickedOnUI = true;
+        return;
+      }
+      clickedOnUI = false;
       isUserDragging = true;
       hasMoved = false;
       lastInteractionTime = clock.getElapsedTime();
@@ -734,7 +873,7 @@ const { profileImage, imageAlt } = Astro.props;
     });
 
     container.addEventListener('mousemove', (e) => {
-      if (!isUserDragging) return;
+      if (!isUserDragging || clickedOnUI) return;
 
       const deltaX = e.clientX - previousMousePosition.x;
       const deltaY = e.clientY - previousMousePosition.y;
@@ -750,12 +889,21 @@ const { profileImage, imageAlt } = Astro.props;
     });
 
     container.addEventListener('mouseup', () => {
+      if (clickedOnUI) {
+        clickedOnUI = false;
+        return;
+      }
       isUserDragging = false;
       lastInteractionTime = clock.getElapsedTime();
       if (!hasMoved) handleShrineClick();
     });
 
     container.addEventListener('touchstart', (e) => {
+      if (isUIElement(e.target)) {
+        clickedOnUI = true;
+        return;
+      }
+      clickedOnUI = false;
       isUserDragging = true;
       hasMoved = false;
       lastInteractionTime = clock.getElapsedTime();
@@ -763,7 +911,7 @@ const { profileImage, imageAlt } = Astro.props;
     }, { passive: true });
 
     container.addEventListener('touchmove', (e) => {
-      if (!isUserDragging) return;
+      if (!isUserDragging || clickedOnUI) return;
 
       const deltaX = e.touches[0].clientX - previousMousePosition.x;
       const deltaY = e.touches[0].clientY - previousMousePosition.y;
@@ -779,24 +927,47 @@ const { profileImage, imageAlt } = Astro.props;
     }, { passive: true });
 
     container.addEventListener('touchend', () => {
+      if (clickedOnUI) {
+        clickedOnUI = false;
+        return;
+      }
       isUserDragging = false;
       lastInteractionTime = clock.getElapsedTime();
       if (!hasMoved) handleShrineClick();
     });
+
+    const badgeButtons = document.querySelectorAll<HTMLButtonElement>('[data-shrine-badge]');
+    badgeButtons.forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const label = btn.getAttribute('data-label') || DEFAULT_LABEL;
+        const emoji = btn.getAttribute('data-emoji') || DEFAULT_EMOJI;
+        const petalType = parseInt(btn.getAttribute('data-petal-type') || '-1', 10);
+        const amount = parseInt(btn.getAttribute('data-amount') || String(DEFAULT_RAIN_AMOUNT), 10);
+
+        handleShrineClick({ amount, label, emoji, petalType });
+      });
+    });
   }
 
   // ==========================================
-  // ۷. منطق کلیک
+  // ۷. منطق کلیک و ارسال همگانی
   // ==========================================
-  function handleShrineClick() {
+  function handleShrineClick(customPayload?: FlowerPayload) {
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      navigator.vibrate([60, 40, 60]);
+      navigator.vibrate([50, 30, 50]);
     }
 
-    (window as any).triggerFlowerRain(10);
+    const payload: FlowerPayload = customPayload || { amount: DEFAULT_RAIN_AMOUNT };
+
+    (window as any).triggerFlowerRain(payload.amount, payload.petalType);
+
+    if (payload.label) {
+      spawnFloatingTribute(payload.label, payload.emoji);
+    }
 
     if (sendFlowerClick) {
-      sendFlowerClick({ amount: 10 });
+      sendFlowerClick(payload);
     }
   }
 

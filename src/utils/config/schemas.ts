@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 const hexColor = z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'رنگ باید hex 6 رقمی باشد');
 const shamsiDateRegex = /^[\d۰-۹]{4}\/[\d۰-۹]{2}\/[\d۰-۹]{2}$/;
+
 export const siteConfigSchema = z.object({
   title: z.string().min(1, 'عنوان سایت الزامی است'),
   description: z.string().min(1),
@@ -82,7 +83,7 @@ export const themeConfigSchema = z.object({
 });
 
 export const tabConfigSchema = z.object({
-  id: z.enum(['biography', 'gallery', 'timeline', 'navigate', 'contacts','candles']),
+  id: z.enum(['biography', 'gallery', 'timeline', 'navigate', 'contacts', 'candles']),
   label: z.string().min(1),
   icon: z.string().min(1),
   enabled: z.boolean(),
@@ -189,4 +190,45 @@ export const familyConfigSchema = z.object({
   siblings: z.array(familySiblingSchema).min(1, 'حداقل یک خواهر یا برادر لازم است'),
   spouse: familySpouseSchema,
   children: z.array(familyChildSchema).min(1),
+});
+
+// ============================================================
+// Live 3D Shrine & Emotional Badges
+// ============================================================
+
+export const shrineEmotionalBadgeSchema = z.object({
+  id: z.string().min(1, 'شناسه بج الزامی است'),
+  label: z.string().min(1, 'متن بج الزامی است'),
+  emoji: z.string().min(1, 'ایموجی بج الزامی است'),
+  petalType: z.union([
+    z.literal(-1),
+    z.literal(0),
+    z.literal(1),
+    z.literal(2),
+    z.literal(3),
+  ]),
+  amount: z.number().int().positive('تعداد گلبرگ باید عددی مثبت باشد'),
+  gradient: z.string().min(1, 'کلاس‌های گرادینت بج الزامی است'),
+});
+
+export const shrineConfigSchema = z.object({
+  panoramaUrl: z.union([
+    z.url('آدرس تصویر ۳۶۰ درجه باید URL معتبر یا مسیر محلی باشد'),
+    z.string().startsWith('/'),
+  ]),
+  defaultRainAmount: z.number().int().positive(),
+  uiStrings: z.object({
+    avatarHoverText: z.string().min(1),
+    avatarTitle: z.string().min(1),
+    badgeTitle: z.string().min(1),
+    onlineSuffix: z.string().min(1),
+    enterCtaText: z.string().min(1),
+    modalOnlineSuffix: z.string().min(1),
+    shrineHint: z.string().min(1),
+    defaultTributeLabel: z.string().min(1),
+    defaultTributeEmoji: z.string().min(1),
+  }),
+  emotionalBadges: z
+    .array(shrineEmotionalBadgeSchema)
+    .min(1, 'حداقل یک بج احساسی در محراب الزامی است'),
 });
