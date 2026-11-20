@@ -230,5 +230,5 @@ export const shrineConfigSchema = z.object({
   }),
   emotionalBadges: z
     .array(shrineEmotionalBadgeSchema)
-    .min(1, 'حداقل یک بج احساسی در محراب الزامی است'),
+    .min(1, 'حداقل یک بج احساسی در آرامگاه الزامی است'),
 });
