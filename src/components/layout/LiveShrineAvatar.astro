@@ -9,6 +9,7 @@ interface Props {
 
 const { profileImage, imageAlt } = Astro.props;
 const { uiStrings, emotionalBadges, panoramaUrl, defaultRainAmount } = config.shrine;
+const resolvedPanoramaUrl = panoramaUrl.startsWith('/') ? withBase(panoramaUrl) : panoramaUrl;
 ---
 
 <!-- عکس پروفایل و شمارنده زنده -->
@@ -89,7 +90,7 @@ const { uiStrings, emotionalBadges, panoramaUrl, defaultRainAmount } = config.sh
 <div
   id="shrine-modal"
   class="fixed inset-0 z-[99999] hidden opacity-0 transition-opacity duration-500 bg-black select-none"
-  data-panorama-url={panoramaUrl}
+  data-panorama-url={resolvedPanoramaUrl}
   data-default-rain={defaultRainAmount}
   data-default-label={uiStrings.defaultTributeLabel}
   data-default-emoji={uiStrings.defaultTributeEmoji}
@@ -655,13 +656,34 @@ const { uiStrings, emotionalBadges, panoramaUrl, defaultRainAmount } = config.sh
 
     textureLoader.load(PANORAMA_URL, (texture) => {
       texture.colorSpace = THREE.SRGBColorSpace;
+
+      // محاسبه نسبت ابعاد واقعی عکس برای جلوگیری از کشیدگی
+      const imgAspect = texture.image.width / texture.image.height;
+      const planeHeight = 36;
+      const planeWidth = planeHeight * imgAspect;
+
+      // ایجاد صفحه با انحنای سینمایی بسیار ملایم (Curved Cinema Plane)
+      const geometry = new THREE.PlaneGeometry(planeWidth, planeHeight, 32, 16);
+      const pos = geometry.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i);
+        // انحنای ملایم لبه‌ها به سمت دوربین برای حس غوطه‌وری
+        const bend = (x * x) * 0.008;
+        pos.setZ(i, bend);
+      }
+      geometry.computeVertexNormals();
+
       const material = new THREE.MeshStandardMaterial({
         map: texture,
         roughness: 0.85,
         metalness: 0.05,
       });
-      const sphere = new THREE.Mesh(geometry, material);
-      scene.add(sphere);
+
+      const backdrop = new THREE.Mesh(geometry, material);
+      // قرار دادن عکس روبروی دوربین (در راستای lon = 0)
+      backdrop.position.set(22, 0, 0);
+      backdrop.rotation.y = -Math.PI / 2;
+      scene.add(backdrop);
     });
 
     window.addEventListener('resize', onWindowResize, false);
@@ -988,7 +1010,9 @@ const { uiStrings, emotionalBadges, panoramaUrl, defaultRainAmount } = config.sh
       lat += Math.cos(elapsed * 0.25) * 0.015 * driftFactor;
     }
 
-    lat = Math.max(-85, Math.min(85, lat));
+    // محدود کردن زاویه دید به کادر عکس برای ایجاد افکت پارالاکس ۲.۵ بعدی
+    lon = Math.max(-16, Math.min(16, lon));
+    lat = Math.max(-10, Math.min(10, lat));
 
     smoothLon += (lon - smoothLon) * Math.min(1, delta * 10);
     smoothLat += (lat - smoothLat) * Math.min(1, delta * 10);

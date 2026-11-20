@@ -26,7 +26,7 @@ export interface ShrineConfig {
 }
 
 export const shrineConfig: ShrineConfig = {
-  panoramaUrl: 'https://threejs.org/examples/textures/2294472375_24a3b8ef46_o.jpg',
+  panoramaUrl: '/images/shrine.jpg',
   defaultRainAmount: 10,
   uiStrings: {
     avatarHoverText: 'مشاهده آرامگاه 🌸',
